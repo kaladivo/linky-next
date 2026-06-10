@@ -1,33 +1,35 @@
-# Mint Management
+# Mints
 
-Scope: Main mint selection, mint metadata, multi-mint balances, npub.cash hosted preference sync, and consolidation.
+Scope: Main mint selection, mint metadata, multi-mint balances, hosted address preference sync, and consolidation.
+
+Multi-mint handling follows common Cashu wallet patterns. Linky is opinionated on top of them: one strong "main mint" preference, automatic consolidation toward it, and the main mint kept in sync with the hosted Lightning address service.
 
 ## Features
 
 | ID | Feature | What It Does | Entry Points | Notes |
 |---|---|---|---|---|
-| `mints.select-main` | Main mint | Chooses preferred mint for receive/consolidation. | Mint settings | Production and test defaults differ by env. |
-| `mints.add-custom` | Custom mint | Accepts custom mint URL. | Mint settings | URL normalization matters. |
-| `mints.presets` | Preset mints | Shows known standard and test mints. | Mint settings | Test mints visibly separated. |
-| `mints.fetch-info` | Mint info | Caches info, fees, icon, and runtime status. | Background, mint detail | Used for display and fee hints. |
-| `mints.refresh-delete` | Refresh/delete mint | Refreshes mint metadata and removes a mint after armed confirmation. | Mint detail | Deletion should not silently strand spendable funds. |
-| `mints.sync-npubcash` | Hosted preference sync | Updates hosted npub.cash-compatible main mint. | Main mint change | Must fail safely. |
-| `mints.melt-to-main` | Melt to main mint | Moves largest foreign-mint accepted balance to main mint. | Token list, mint settings | Retries lower amount when fees require. |
-| `mints.autoswap` | Auto-swap | Debounced automatic melt to main mint. | Background | Disabled for test mints in PoC. |
+| `mints.select-main` | Main mint | Chooses the preferred mint for receive and consolidation. | Mint settings | Defaults are configurable per environment via env vars; for now `cashu.cz` in production and `testnut.cashu.space` in development. |
+| `mints.add-custom` | Custom mint | Accepts a custom mint URL. | Mint settings | URL normalization matters. |
+| `mints.presets` | Preset mints | Shows known standard and test mints. | Mint settings | Test mints are visibly separated. |
+| `mints.fetch-info` | Mint info | Caches mint info, fees, icon, and reachability status. | Background, mint detail | Used for display and fee hints. |
+| `mints.refresh-delete` | Refresh/delete mint | Refreshes mint metadata and removes a mint after armed confirmation. | Mint detail | Deletion must not silently strand spendable funds. |
+| `mints.sync-hosted` | Hosted preference sync | Updates the hosted Lightning-address service (npub.cash-compatible) with the chosen main mint. | Main mint change | Must fail safely. |
+| `mints.melt-to-main` | Consolidate to main mint | Moves the largest foreign-mint balance to the main mint. | Token list, mint settings | Retries a lower amount when fees require it. |
+| `mints.autoswap` | Auto-consolidation | Automatically consolidates foreign-mint balance to the main mint. | Background | Follows how established Cashu wallets handle consolidation. Disabled for test mints in PoC. |
 
 ## Flows
 
-- `mints.select-main`: validate mint, optionally warn about balance swap, sync hosted preference, then persist local selection.
-- `mints.melt-to-main`: choose largest non-main mint balance, pay top-up quote on main mint, store new main-mint token and remainder.
+- `mints.select-main`: validate mint, optionally warn about balance consolidation, sync hosted preference, then persist the local selection.
+- `mints.melt-to-main`: choose the largest non-main mint balance, move it into the main mint, keep the new balance and any remainder.
 
 ## Contracts
 
-- Do not split one outgoing payment across mints.
-- Do not persist hosted main-mint choice if hosted sync failed.
-- Selecting a test mint must not silently enable production behavior.
-- Mint deletion/removal should be explicit and should not imply token deletion or successful consolidation.
+- One outgoing payment never splits across mints.
+- The hosted main-mint choice is not persisted locally if hosted sync failed.
+- Selecting a test mint must not silently enable real-funds behavior.
+- Removing a mint is explicit and does not imply token deletion or successful consolidation.
+- Preset mints per environment are configurable via env vars, not hard-coded.
 
 ## Open Questions
 
-- Does autoswap ship in first release?
-- Which preset mints belong in each environment profile?
+- None.
