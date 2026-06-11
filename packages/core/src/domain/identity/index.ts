@@ -5,6 +5,7 @@ export * from "./backupPhraseInput.js";
 export * from "./slip39Wordlist.js";
 export * from "./DerivedIdentities.js";
 export * from "./deriveNostrIdentity.js";
+export * from "./customNostrKey.js";
 export * from "./deriveCashuWallet.js";
 export * from "./deriveOwnerLane.js";
 export * from "./identitySession.js";

@@ -6,7 +6,12 @@
  * discriminated result drives the root gate: `NoIdentity` → onboarding
  * (#17, placeholder for now), `IdentityLoaded` → the normal app.
  */
-import type { IdentitySessionCorruptedError, SecureStorageError, SessionState } from "@linky/core";
+import type {
+  CustomNostrKeyCorruptedError,
+  IdentitySessionCorruptedError,
+  SecureStorageError,
+  SessionState,
+} from "@linky/core";
 import { loadSession } from "@linky/core";
 import { useSyncExternalStore } from "react";
 
@@ -16,7 +21,7 @@ import { getSessionVersion, subscribeToSessionVersion } from "./sessionStore";
 
 export type SessionQueryState = EffectQueryState<
   SessionState,
-  SecureStorageError | IdentitySessionCorruptedError
+  SecureStorageError | IdentitySessionCorruptedError | CustomNostrKeyCorruptedError
 >;
 
 export function useSession(): SessionQueryState {

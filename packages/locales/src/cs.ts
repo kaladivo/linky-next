@@ -757,4 +757,16 @@ export const cs = {
   devShowDemoToast: "Zobrazit ukázkový toast",
   devDemoToastMessage: "Tohle je ukázkový toast.",
   devStartupToast: "Dev: odložený start proběhl ({tasks} úloh).",
+
+  // Custom Nostr key override (#20), advanced settings.
+  nostrKeySourceDerived: "Derivovaný (výchozí)",
+  nostrKeySourceCustom: "Vlastní",
+  nostrCopyNpub: "Zkopírovat npub",
+  nostrCopyNsec: "Zkopírovat nsec",
+  nostrCopyNsecArmedHint:
+    "nsec je váš privátní klíč — kdokoli ho má, může vystupovat jako vy. Pro zkopírování klepněte ještě jednou.",
+  nostrPastePlaceholder: "nsec1…",
+  nostrActivateCustomKey: "Použít vložený klíč",
+  nostrRevertToDerived: "Použít derivovaný klíč",
+  nostrKeyUpdateFailed: "Nepodařilo se změnit Nostr klíče.",
 } as const satisfies Readonly<Record<keyof typeof en, string>>;
