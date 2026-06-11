@@ -2,5 +2,36 @@
   "name": "@linky/mobile",
   "version": "0.0.0",
   "private": true,
-  "description": "Linky mobile app (Expo). Placeholder — real Expo scaffold lands in issue #3."
+  "description": "Linky mobile app (Expo custom dev client, CNG, Expo Router).",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "prebuild": "expo prebuild",
+    "ios": "expo run:ios",
+    "android": "expo run:android",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "echo \"@linky/mobile: no tests yet\""
+  },
+  "dependencies": {
+    "expo": "~56.0.11",
+    "expo-constants": "~56.0.18",
+    "expo-dev-client": "~56.0.20",
+    "expo-linking": "~56.0.14",
+    "expo-router": "~56.2.10",
+    "expo-status-bar": "~56.0.4",
+    "react": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-gesture-handler": "~2.31.1",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.25.2",
+    "react-native-worklets": "0.8.3"
+  },
+  "devDependencies": {
+    "@linky/config": "workspace:*",
+    "@types/react": "~19.2.2",
+    "eslint": "^9.39.0",
+    "typescript": "~5.9.3"
+  }
 }

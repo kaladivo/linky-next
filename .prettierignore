@@ -3,5 +3,11 @@ dist/
 .turbo/
 pnpm-lock.yaml
 
+# expo generated files
+.expo/
+expo-env.d.ts
+apps/mobile/ios/
+apps/mobile/android/
+
 # authored docs keep their hand-written markdown formatting
 docs/
