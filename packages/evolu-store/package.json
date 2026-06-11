@@ -10,11 +10,18 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "echo \"@linky/evolu-store: no tests yet\""
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@evolu/common": "7.4.1"
   },
   "devDependencies": {
+    "@evolu/nodejs": "2.4.0",
     "@linky/config": "workspace:*",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.1.1",
     "eslint": "^9.39.0",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.8"
   }
 }

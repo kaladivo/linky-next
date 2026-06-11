@@ -1,5 +1,6 @@
 import { describeEnvironment } from "@linky/core";
 import { Button, Surface, Text } from "@linky/ui";
+import { Link } from "expo-router";
 import { View } from "react-native";
 
 import { useEffectQuery } from "../../src/runtime";
@@ -41,6 +42,10 @@ export default function SettingsScreen() {
         <Button label="Backup" variant="secondary" />
         <Button label="Delete account" variant="danger" />
       </Surface>
+      {/* TEMPORARY: storage-spike dev screen (issue #9), removed with #15. */}
+      <Link href="/dev/evolu-spike" className="p-4">
+        <Text className="text-primary">Evolu spike (dev)</Text>
+      </Link>
     </View>
   );
 }
