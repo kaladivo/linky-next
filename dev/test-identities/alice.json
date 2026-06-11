@@ -1,0 +1,9 @@
+{
+  "$comment": "THROWAWAY DEV IDENTITY — committed to the repo, test-mint funds only, NEVER real funds. See README.md.",
+  "label": "alice",
+  "slip39Mnemonic": "rich busy academic academic carpet decent royal picture declare bucket bracelet brother fangs wavy ancestor scandal retailer rocky drift unwrap",
+  "slip39Passphrase": "",
+  "masterSecretHex": "a55f0daa6a56b47237b5e9dd747e235e",
+  "nostrPublicKeyHex": "1af20e896eca5cefb89c0d866d3a1bbd8ddd4413b615689c9c61513043966b7c",
+  "npub": "npub1rteqaztwefwwlwyupkrx6wsmhkxa63qnkc2k38yuv9gnqsukdd7qw8qw9d"
+}

@@ -1,0 +1,9 @@
+{
+  "$comment": "THROWAWAY DEV IDENTITY — committed to the repo, test-mint funds only, NEVER real funds. See README.md.",
+  "label": "bob",
+  "slip39Mnemonic": "dismiss apart academic academic born losing software elite mortgage episode rich spew injury junk oral repair eyebrow diminish priest inside",
+  "slip39Passphrase": "",
+  "masterSecretHex": "6d32dc62d5565c9be0c03172fd7dd9e1",
+  "nostrPublicKeyHex": "83beffec065f05ea4b58bb4050c7f358283e27c5556874ddab279dfdd6cef670",
+  "npub": "npub1swl0lmqxtuz75j6chdq9p3lntq5ruf792458fhdty7wlm4kw7ecq47mgja"
+}

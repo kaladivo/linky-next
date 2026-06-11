@@ -30,6 +30,16 @@ Day-to-day JS development only needs the dev client installed once; after that,
 `pnpm start` (Metro) and reloading is enough. Rebuild the native app only when
 native dependencies or config change.
 
+## Two-instance verification
+
+Linky is two-sided (chat + payments), so the standard verification scenario is
+two app instances with two test identities on testnet. From the repo root,
+`scripts/dev-two-sims.sh` boots two simulators, builds once, installs the dev
+app on both against a single Metro instance, and `scripts/verify-app.sh <udid>`
+checks each instance rendered via agent-device. See
+[`scripts/README.md`](../../scripts/README.md) and the throwaway identities in
+[`dev/test-identities/`](../../dev/test-identities/README.md).
+
 ## Routes
 
 Expo Router, file-based, under `app/`:
