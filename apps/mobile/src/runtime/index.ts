@@ -4,5 +4,6 @@
  * src/runtime/.
  */
 export { useEffectQuery } from "./useEffectQuery";
+export { runAppEffect } from "./runAppEffect";
 export type { EffectQueryState } from "./queryState";
 export type { AppServices } from "./appLayer";

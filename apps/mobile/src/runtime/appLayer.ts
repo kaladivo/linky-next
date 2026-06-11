@@ -10,6 +10,7 @@
  * Layer (see runtime.ts).
  */
 import { CurrentEnvironment } from "@linky/core";
+import { RandomnessLive, SecureStorageLive } from "@linky/platform";
 import { Layer } from "effect";
 
 import { environment } from "../environment";
@@ -24,11 +25,13 @@ const environmentLayer = Layer.succeed(CurrentEnvironment, environment);
 
 export const appLayer = Layer.mergeAll(
   environmentLayer,
-  // #8 platform Layers slot in here, e.g.:
-  //   secureStorageLayer,   (expo-secure-store → SecureStorage)
-  //   keyValueStorageLayer, (AsyncStorage → KeyValueStore)
-  //   httpClientLayer,      (FetchHttpClient.layer)
-  //   randomnessLayer,      (expo-crypto → Randomness)
+  // #14 session persistence: keychain-backed secrets + CSPRNG entropy.
+  SecureStorageLive,
+  RandomnessLive,
+  // Remaining #8 platform Layers slot in here as features need them, e.g.:
+  //   KeyValueStorageLive, (AsyncStorage → KeyValueStore)
+  //   HttpClientLive,      (FetchHttpClient.layer)
+  //   ClipboardLive / DeepLinksLive
 );
 
 /** Everything the app runtime can provide; hooks accept Effects needing at most this. */
