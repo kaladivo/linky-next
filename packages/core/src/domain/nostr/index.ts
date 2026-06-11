@@ -10,4 +10,5 @@ export * from "./filter.js";
 export * from "./relayMessages.js";
 export * from "./RelayPool.js";
 export * from "./NostrPendingQueue.js";
+export * from "./relayLists.js";
 export * from "./fakeRelay.js";

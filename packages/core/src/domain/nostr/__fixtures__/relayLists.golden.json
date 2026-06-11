@@ -1,0 +1,63 @@
+{
+  "generator": "nostr-tools@2.23.5 finalizeEvent (PoC dependency), bun script mirroring useRelayDomain.publishNostrRelayLists — see README.md",
+  "secretKeyHex": "5c0c523f52a5b6fad39ed2403092df8cebc36318b39383bca6c00808626fab3a",
+  "publicKeyHex": "87d3561f19b74adbe8bf840682992466068830a9d8c36b4a0c99d36f826cb6cb",
+  "createdAt": 1718001000,
+  "relayUrls": [
+    "wss://relay.damus.io",
+    "wss://nos.lol",
+    "wss://relay.0xchat.com"
+  ],
+  "events": [
+    {
+      "name": "NIP-65 relay list (kind 10002)",
+      "event": {
+        "kind": 10002,
+        "created_at": 1718001000,
+        "tags": [
+          [
+            "r",
+            "wss://relay.damus.io"
+          ],
+          [
+            "r",
+            "wss://nos.lol"
+          ],
+          [
+            "r",
+            "wss://relay.0xchat.com"
+          ]
+        ],
+        "content": "",
+        "pubkey": "87d3561f19b74adbe8bf840682992466068830a9d8c36b4a0c99d36f826cb6cb",
+        "id": "94fa60992affad336220f8785fc9f75a1e9e33e9328bf8607365490d3e21c6f8",
+        "sig": "266c79b6b24e75d953ac8dac536619eb85150c2af569136137e6fffaaef096753e80160740843fb4cb2b0a9d4478cd3e12a9f9042e8e48f148e8be1ff568bf40"
+      }
+    },
+    {
+      "name": "NIP-17 inbox relay list (kind 10050)",
+      "event": {
+        "kind": 10050,
+        "created_at": 1718001000,
+        "tags": [
+          [
+            "relay",
+            "wss://relay.damus.io"
+          ],
+          [
+            "relay",
+            "wss://nos.lol"
+          ],
+          [
+            "relay",
+            "wss://relay.0xchat.com"
+          ]
+        ],
+        "content": "",
+        "pubkey": "87d3561f19b74adbe8bf840682992466068830a9d8c36b4a0c99d36f826cb6cb",
+        "id": "09361287aa8f4e4eb2870446cb0897bc7694b8f4ba97c97b116db2ad1c29ede3",
+        "sig": "d0dc1a16cad0663afd3697206fcf85ad6cda9f14f27bef5b044dd5c7678ce073db39033511ae92f459ede6474e6bcb52be63f78772583d9f39616d476fe7d802"
+      }
+    }
+  ]
+}
