@@ -1,4 +1,12 @@
 {
   "extends": "@linky/config/tsconfig.base.json",
-  "include": ["src"]
+  "compilerOptions": {
+    // Unlike publishable packages (core), evolu-store is private and consumed
+    // as TypeScript source by Metro (apps/mobile) and vitest. Metro does not
+    // rewrite NodeNext-style ".js" import extensions to ".ts", so this
+    // package uses bundler resolution with extensionless relative imports.
+    "module": "preserve",
+    "moduleResolution": "bundler"
+  },
+  "include": ["src", "test", "vitest.config.ts"]
 }

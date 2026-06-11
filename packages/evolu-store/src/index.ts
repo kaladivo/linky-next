@@ -1,7 +1,9 @@
 /**
  * @linky/evolu-store — Evolu schema, queries, and repository adapters.
  *
- * Scaffold stub. The real schema and repository adapters land with the
- * storage spike (Evolu version is pinned there).
+ * Storage spike scaffold (issue #9): pinned Evolu version, schema module
+ * pattern, owner-lane helpers. The real domain schema lands with issue #15.
  */
-export const EVOLU_STORE_PACKAGE_NAME = "@linky/evolu-store";
+export * from "./createLinkyEvolu";
+export * from "./owner";
+export * from "./schema";
