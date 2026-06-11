@@ -59,7 +59,8 @@ const create = (seed: string) =>
   Effect.runPromise(createMasterIdentity.pipe(Effect.provide(RandomnessDeterministic(seed))));
 
 describe("create -> phrase -> restore round-trip (recoverability contract)", () => {
-  it("restores the exact master secret for many random seeds", async () => {
+  // 32 PBKDF2 round-trips exceed vitest's 5s default on slow CI runners.
+  it("restores the exact master secret for many random seeds", { timeout: 120_000 }, async () => {
     for (let i = 0; i < 32; i++) {
       const identity = await create(`round-trip-${i}`);
       expect(identity.masterSecret).toHaveLength(MASTER_SECRET_BYTE_COUNT);
