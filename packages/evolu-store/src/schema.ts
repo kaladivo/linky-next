@@ -7,18 +7,46 @@
  * `domains.ts`); all of a domain's rows are written to that domain's derived
  * owner lane (issue #13: master secret -> lane mnemonic -> Evolu owner).
  *
- * | Table           | Domain         | Rows                                  |
- * | --------------- | -------------- | ------------------------------------- |
- * | `contact`       | `contacts`     | Address-book entries                  |
- * | `cashuToken`    | `wallet`       | Cashu ecash tokens                    |
- * | `message`       | `messages`     | Decrypted NIP-17 chat messages        |
- * | `transaction`   | `transactions` | Wallet history entries                |
- * | `nostrIdentity` | `identity`     | Active/previous Nostr identities      |
- * | `metaEntry`     | `meta`         | Cross-device key/value coordination   |
+ * | Table            | Domain         | Rows                                  |
+ * | ---------------- | -------------- | ------------------------------------- |
+ * | `contact`        | `contacts`     | Address-book entries                  |
+ * | `blockedSender`  | `contacts`     | Blocked sender npubs (survive sync)   |
+ * | `cashuToken`     | `wallet`       | Cashu ecash tokens                    |
+ * | `message`        | `messages`     | Decrypted NIP-17 chat messages        |
+ * | `reaction`       | `messages`     | NIP-17 emoji reactions                |
+ * | `transaction`    | `transactions` | Wallet history entries                |
+ * | `nostrIdentity`  | `identity`     | Active/previous Nostr identities      |
+ * | `metaEntry`      | `meta`         | Cross-device key/value coordination   |
+ * | `_unknownThread` | local-only     | Inbound threads from unsaved senders  |
  *
- * Columns are the minimal-but-real base set informed by the PoC
- * (`linky-poc/apps/web-app/src/evolu.ts`); they grow with issues #25/#35.
- * Evolu schema evolution is additive, so extending tables later is safe.
+ * `_unknownThread` is a **local-only** table: Evolu treats every table whose
+ * name starts with `_` as device-local (verified in 7.4.1 — mutations on `_`
+ * tables bypass the CRDT/sync pipeline entirely, never reach `evolu_history`,
+ * and `isDeleted` physically deletes the row). That matches the feature map's
+ * `contacts.unknown` contract: an unknown thread is a local safety boundary,
+ * not synced data, so blocking/removing it on one device can never be undone
+ * by sync. The thread's *messages* still live in the synced `message` table
+ * (keyed by `peerNpub`), which is what makes `contacts.promote-unknown` and
+ * `contacts.delete-to-unknown` pure metadata operations — no message rows
+ * move between tables.
+ *
+ * Columns are informed by the PoC (`linky-poc/apps/web-app/src/evolu.ts`);
+ * they grow with issue #35. Evolu schema evolution is additive, so extending
+ * tables later is safe.
+ *
+ * ## Conversation identity (decided here, issue #25)
+ *
+ * Chat rows reference conversations by the peer's NIP-19 npub (`peerNpub`),
+ * NOT by `contactId`. A conversation with a saved contact is the one whose
+ * `contact.npub` equals the message's `peerNpub`; a conversation without a
+ * matching contact is an unknown thread. Consequences:
+ *
+ * - Promoting an unknown sender to a contact, or deleting a contact back to
+ *   an unknown thread, never rewrites message rows.
+ * - Messages survive `chat.retention` (no caps) and contact churn alike.
+ * - Dedup is by `rumorId` (the inner unsigned kind-14 event id), the key the
+ *   NIP-17 engine (#22) hands to storage — enforced by `MessagesRepository`
+ *   (Evolu has no unique constraints).
  *
  * ## Conventions (fixed now, relied on by every later issue)
  *
@@ -65,6 +93,15 @@ export type NostrIdentityId = typeof NostrIdentityId.Type;
 export const MetaEntryId = id("MetaEntry");
 export type MetaEntryId = typeof MetaEntryId.Type;
 
+export const ReactionId = id("Reaction");
+export type ReactionId = typeof ReactionId.Type;
+
+export const BlockedSenderId = id("BlockedSender");
+export type BlockedSenderId = typeof BlockedSenderId.Type;
+
+export const UnknownThreadId = id("UnknownThread");
+export type UnknownThreadId = typeof UnknownThreadId.Type;
+
 export const linkySchema = {
   /** `contacts` domain — one row per address-book entry. */
   contact: {
@@ -98,21 +135,62 @@ export const linkySchema = {
     error: nullOr(NonEmptyString1000),
   },
 
-  /** `messages` domain — one row per decrypted NIP-17 chat message. */
+  /**
+   * `messages` domain — one row per decrypted NIP-17 chat message.
+   *
+   * Dedup key is `rumorId` (unique per store, enforced by
+   * `MessagesRepository.applyChatEvent`). No retention caps: the PoC's
+   * 500/contact limit is intentionally dropped (`chat.retention`); storage
+   * is bounded by sync storage rotation (#54), not by deleting history.
+   */
   message: {
     id: MessageId,
-    contactId: ContactId,
+    /** Inner (rumor, unsigned kind 14) event id — THE de-duplication key. */
+    rumorId: NonEmptyString1000,
+    /** NIP-19 npub of the conversation peer (contact or unknown sender). */
+    peerNpub: NonEmptyString1000,
     /** "in" | "out". */
     direction: NonEmptyString100,
-    /** Decrypted plaintext content. */
+    /** Decrypted plaintext content (current, i.e. after edits). */
     content: NonEmptyString,
-    /** Gift-wrap event id (kind 1059) — de-duplication key. */
-    wrapId: NonEmptyString1000,
-    /** Inner (rumor) event id (kind 14) when available. */
-    rumorId: nullOr(NonEmptyString1000),
-    /** Sender pubkey hex of the inner event; null for local placeholders. */
-    senderPubkey: nullOr(NonEmptyString1000),
+    /** NIP-19 npub of the rumor author; null for local placeholders. */
+    senderNpub: nullOr(NonEmptyString1000),
+    /** Gift-wrap event id (kind 1059); null until the wrap is known. */
+    wrapId: nullOr(NonEmptyString1000),
     /** `created_at` (unix seconds) of the inner event. */
+    sentAtSec: PositiveInt,
+    /** "pending" | "sent" for optimistic sends; null once settled. */
+    status: nullOr(NonEmptyString100),
+    /** Rumor id of the message this one replies to (NIP-10 style). */
+    replyToRumorId: nullOr(NonEmptyString1000),
+    /** Unix seconds of the latest applied edit; null = never edited. */
+    editedAtSec: nullOr(PositiveInt),
+    /**
+     * JSON array of applied edits, oldest first:
+     * `[{ editId, previousContent, editedAtSec }]`. The first entry's
+     * `previousContent` is the original content — preserved locally per the
+     * feature map (`chat.edit-message`). `editId` (the edit event's rumor
+     * id) makes re-applied edit events no-ops.
+     */
+    editHistoryJson: nullOr(NonEmptyString),
+  },
+
+  /**
+   * `messages` domain — one row per NIP-17 emoji reaction event. Display
+   * semantics ("latest reaction per person", `chat.react`) are a query
+   * concern: all reaction events are kept (deduped by `rumorId`), and
+   * `MessagesRepository.latestReactions` reduces to one per reactor.
+   */
+  reaction: {
+    id: ReactionId,
+    /** The reaction event's own rumor id — de-duplication key. */
+    rumorId: NonEmptyString1000,
+    /** Rumor id of the message being reacted to. */
+    messageRumorId: NonEmptyString1000,
+    /** NIP-19 npub of the reactor. */
+    reactorNpub: NonEmptyString1000,
+    emoji: NonEmptyString100,
+    /** `created_at` (unix seconds) of the reaction event. */
     sentAtSec: PositiveInt,
     /** "pending" | "sent" for optimistic sends; null once settled. */
     status: nullOr(NonEmptyString100),
@@ -171,9 +249,52 @@ export const linkySchema = {
     key: NonEmptyString100,
     value: NonEmptyString1000,
   },
+
+  /**
+   * `contacts` domain — blocked senders (`contacts.block`). Synced on
+   * purpose (unlike the PoC's localStorage list): the block must survive
+   * restore and reach every device so sync can never recreate a blocked
+   * thread. Deliberately NOT on the `messages` lane — storage rotation
+   * (#54) must never rotate a block away. Unblock = Evolu soft delete
+   * (tombstone syncs too).
+   */
+  blockedSender: {
+    id: BlockedSenderId,
+    /** NIP-19 npub of the blocked sender. */
+    npub: NonEmptyString1000,
+    /** Unix seconds when the block was created. */
+    blockedAtSec: nullOr(PositiveInt),
+  },
+
+  /**
+   * LOCAL-ONLY (leading `_`, never syncs) — one row per unknown thread:
+   * an inbound conversation from a sender who is not a saved contact
+   * (`contacts.unknown`). The messages themselves are in the synced
+   * `message` table; this row is only the device-local inbox entry.
+   * Removing it (promote/block) physically deletes the row.
+   */
+  _unknownThread: {
+    id: UnknownThreadId,
+    /** NIP-19 npub of the unknown sender (unique per store, repo-enforced). */
+    npub: NonEmptyString1000,
+    /** Unix seconds of the message that created the thread. */
+    firstSeenAtSec: nullOr(PositiveInt),
+    /** Unix seconds of the latest message in the thread. */
+    lastActivityAtSec: nullOr(PositiveInt),
+  },
 };
 
 export type LinkySchema = typeof linkySchema;
 
 /** All Linky table names. */
 export type LinkyTableName = keyof LinkySchema;
+
+/** Local-only tables (leading `_`): Evolu never syncs them. */
+export type LocalOnlyTableName = Extract<LinkyTableName, `_${string}`>;
+
+/** Tables that sync on a domain owner lane. */
+export type SyncedTableName = Exclude<LinkyTableName, LocalOnlyTableName>;
+
+/** Whether a table is local-only (leading `_`, Evolu convention). */
+export const isLocalOnlyTable = (table: LinkyTableName): table is LocalOnlyTableName =>
+  table.startsWith("_");

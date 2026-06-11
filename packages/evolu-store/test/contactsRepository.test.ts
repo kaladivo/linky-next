@@ -13,7 +13,12 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { OwnerId } from "@evolu/common";
 import { deriveOwnerLane, MasterSecret } from "@linky/core";
 
-import { createContactsRepository, createLinkyStore, SYNC_DOMAINS } from "../src/index";
+import {
+  createContactsRepository,
+  createLinkyStore,
+  createMessagesRepository,
+  SYNC_DOMAINS,
+} from "../src/index";
 import type { ContactsRepository, LaneMnemonics, LinkyStore } from "../src/index";
 import { createNodeEvoluDeps } from "./nodeEvoluDeps";
 
@@ -127,6 +132,16 @@ describe("ContactsRepository", () => {
     expect(result.error.reason.length).toBeGreaterThan(0);
   });
 
+  it("filters by archived state", async () => {
+    const active = await repository.list({ archived: false });
+    const archived = await repository.list({ archived: true });
+    expect(archived.some((contact) => contact.name === "Bobby")).toBe(true);
+    expect(active.some((contact) => contact.name === "Bobby")).toBe(false);
+    expect(active.some((contact) => contact.name === "Alice")).toBe(true);
+    // Archiving never deletes: the contact is still in the unfiltered list.
+    expect((await repository.list()).some((contact) => contact.name === "Bobby")).toBe(true);
+  });
+
   it("returns a tagged error for an invalid contact id", () => {
     const updated = repository.update("definitely-not-an-id", { name: "X" });
     expect(updated.ok).toBe(false);
@@ -140,5 +155,76 @@ describe("ContactsRepository", () => {
     expect(removed.ok).toBe(false);
     if (removed.ok) return;
     expect(removed.error._tag).toBe("InvalidContactIdError");
+  });
+});
+
+describe("contact list queries (search, groups, previews)", () => {
+  const DANA_NPUB = "npub1danadanadanadanadanadanadanadanadanadanadanadanadana";
+  const EVE_NPUB = "npub1eveeveeveeveeveeveeveeveeveeveeveeveeveeveeveeveeveeve";
+
+  beforeAll(() => {
+    expect(repository.insert({ name: "Dana", npub: DANA_NPUB, groupName: "family" }).ok).toBe(true);
+    expect(repository.insert({ name: "Eve", npub: EVE_NPUB, groupName: "work" }).ok).toBe(true);
+    expect(repository.insert({ name: "Frank", groupName: "work" }).ok).toBe(true);
+  });
+
+  it("searches by name and npub, case-insensitively (contacts.search)", async () => {
+    expect((await repository.list({ search: "dAn" })).map((c) => c.name)).toEqual(["Dana"]);
+    expect((await repository.list({ search: "npub1eve" })).map((c) => c.name)).toEqual(["Eve"]);
+    expect(await repository.list({ search: "no-such-contact" })).toEqual([]);
+    // LIKE wildcards in user input match literally, not as wildcards.
+    expect(await repository.list({ search: "%a%" })).toEqual([]);
+  });
+
+  it("filters by group, by no-group, and combines with search (contacts.filter-group)", async () => {
+    const work = await repository.list({ group: "work" });
+    expect(work.map((c) => c.name).sort()).toEqual(["Eve", "Frank"]);
+
+    const ungrouped = await repository.list({ group: null });
+    expect(ungrouped.some((c) => c.name === "Alice")).toBe(true);
+    expect(ungrouped.some((c) => c.name === "Dana")).toBe(false);
+
+    const combined = await repository.list({ group: "work", search: "eve" });
+    expect(combined.map((c) => c.name)).toEqual(["Eve"]);
+  });
+
+  it("lists the distinct group names in use", async () => {
+    expect(await repository.listGroups()).toEqual(["family", "work"]);
+  });
+
+  it("finds an active contact by npub (duplicate detection)", async () => {
+    expect((await repository.findByNpub(DANA_NPUB))?.name).toBe("Dana");
+    expect(await repository.findByNpub("npub1nobodynobodynobodynobody")).toBeNull();
+  });
+
+  it("pairs contacts with last-message previews, latest conversation first (contacts.list)", async () => {
+    const messages = createMessagesRepository(store);
+    const send = (rumorId: string, peerNpub: string, content: string, sentAtSec: number) =>
+      messages.applyChatEvent({
+        kind: "message",
+        rumorId,
+        peerNpub,
+        senderNpub: peerNpub,
+        direction: "in",
+        content,
+        sentAtSec,
+      });
+    expect((await send("rumor-dana-1", DANA_NPUB, "older from Dana", 1_718_100_000)).ok).toBe(true);
+    expect((await send("rumor-eve-1", EVE_NPUB, "newer from Eve", 1_718_100_100)).ok).toBe(true);
+
+    const items = await repository.listWithPreviews({ archived: false });
+    expect(items[0]?.contact.name).toBe("Eve");
+    expect(items[0]?.preview).toEqual({
+      kind: "message",
+      rumorId: "rumor-eve-1",
+      direction: "in",
+      content: "newer from Eve",
+      sentAtSec: 1_718_100_100,
+    });
+    expect(items[1]?.contact.name).toBe("Dana");
+    // Contacts without a conversation follow, without previews.
+    const frank = items.find((item) => item.contact.name === "Frank");
+    expect(frank?.preview).toBeNull();
+    expect(items.indexOf(frank!)).toBeGreaterThan(1);
   });
 });

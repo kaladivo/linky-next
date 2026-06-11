@@ -31,6 +31,7 @@ import { createLinkyEvolu } from "./createLinkyEvolu";
 import type { LinkyEvolu } from "./createLinkyEvolu";
 import { domainOwnersFromLaneMnemonics, SYNC_DOMAINS, tableSyncDomain } from "./domains";
 import type { DomainOwners, InvalidLaneMnemonicError, LaneMnemonics } from "./domains";
+import { isLocalOnlyTable } from "./schema";
 import type { LinkyTableName } from "./schema";
 
 /** The database name was not a valid Evolu `SimpleName` (1-42 chars, alphanumeric + dash). */
@@ -113,12 +114,19 @@ export const createLinkyStore = (
     unuseOwners.push(evolu.useOwner(owners.value[domain]));
   }
 
-  const laneOwnerId = (table: LinkyTableName): OwnerId => owners.value[tableSyncDomain[table]].id;
+  // Local-only tables (leading `_`) bypass the sync pipeline; Evolu stamps
+  // their rows with the AppOwner id (= meta lane owner) and ignores any
+  // `ownerId` mutation option, so no option is passed for them.
+  const laneOwnerId = (table: LinkyTableName): OwnerId =>
+    isLocalOnlyTable(table) ? owners.value.meta.id : owners.value[tableSyncDomain[table]].id;
 
-  const withLane = (table: LinkyTableName, options?: MutationOptions): MutationOptions => ({
-    ownerId: laneOwnerId(table),
-    ...options,
-  });
+  const withLane = (table: LinkyTableName, options?: MutationOptions): MutationOptions =>
+    isLocalOnlyTable(table)
+      ? { ...options }
+      : {
+          ownerId: laneOwnerId(table),
+          ...options,
+        };
 
   const insert: LinkyEvolu["insert"] = (table, props, options) =>
     evolu.insert(table, props, withLane(table, options));
