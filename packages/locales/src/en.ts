@@ -741,6 +741,15 @@ export const en = {
   shellChatPlaceholder: "Chat with {id} lands with the messaging feature.",
   shellTokenDetailPlaceholder: "Token {id} detail lands with the wallet feature.",
   shellAdvancedPlaceholder: "Advanced settings land with the settings feature.",
+  // Backup screen (#19): warning gate + word grid + copy/export.
+  backupTitle: "Backup keys",
+  backupWarningTitle: "Sensitive information",
+  backupWarningBody:
+    "Your 20 backup words are about to be shown. Anyone with these words controls your funds and messages. Make sure nobody can see your screen.",
+  backupWarningConfirm: "I understand, show the words",
+  backupWordsHint:
+    "Save all 20 words in order — to your password manager or written down somewhere safe. Never share them with anyone.",
+  backupCopyFailed: "Copy failed.",
   devShowDemoToast: "Show demo toast",
   devDemoToastMessage: "This is a demo toast.",
   devStartupToast: "Dev: deferred startup ran ({tasks} task(s)).",
