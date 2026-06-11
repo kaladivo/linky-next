@@ -5,6 +5,17 @@
  * any client's tailwind.config.js); runtime token values are re-exported here.
  */
 export { colors, fontFamily, spacing, lineHeight } from "./tokens";
+export {
+  AMOUNT_DISPLAY_UNITS,
+  DEFAULT_AMOUNT_DISPLAY_UNIT,
+  HIDDEN_AMOUNT_PLACEHOLDER,
+  formatAmountParts,
+  nextAmountDisplayUnit,
+  parseAmountDisplayUnit,
+} from "./amount/displayUnit";
+export type { AmountDisplayUnit, AmountParts, FormatAmountOptions } from "./amount/displayUnit";
+export { Amount } from "./components/Amount";
+export type { AmountProps, AmountSize } from "./components/Amount";
 export { Button } from "./components/Button";
 export type { ButtonProps, ButtonVariant } from "./components/Button";
 export { Text } from "./components/Text";

@@ -762,6 +762,16 @@ export const cs = {
   devDemoToastMessage: "Tohle je ukázkový toast.",
   devStartupToast: "Dev: odložený start proběhl ({tasks} úloh).",
 
+  // Wallet home (#36): balance, display units, hidden mode, paid overlay.
+  walletTotalBalance: "Celkový zůstatek",
+  walletHideAmounts: "Skrýt částky",
+  walletShowAmounts: "Zobrazit částky",
+  shellWalletReceivePlaceholder: "Zástupná obrazovka — příjem/dobití dorazí s funkcí příjmu.",
+  shellWalletSendPlaceholder: "Zástupná obrazovka — odeslání/skener dorazí s funkcí odeslání.",
+  shellWalletTransactionsPlaceholder:
+    "Zástupná obrazovka — historie plateb dorazí s funkcí transakcí.",
+  devShowPaidOverlay: "Zobrazit overlay zaplaceno",
+
   // Custom Nostr key override (#20), advanced settings.
   nostrKeySourceDerived: "Derivovaný (výchozí)",
   nostrKeySourceCustom: "Vlastní",

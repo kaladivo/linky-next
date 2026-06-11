@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./amount": "./src/amount/displayUnit.ts",
     "./tailwind-preset": "./tailwind/preset.cjs",
     "./tokens": "./tailwind/tokens.cjs",
     "./assets/*": "./assets/*"
@@ -13,7 +14,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "echo \"@linky/ui: no tests yet\""
+    "test": "vitest run"
   },
   "dependencies": {
     "tailwind-merge": "^2.6.1"
@@ -31,6 +32,7 @@
     "react": "19.2.3",
     "react-native": "0.85.3",
     "tailwindcss": "^3.4.19",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.8"
   }
 }

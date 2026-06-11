@@ -18,8 +18,10 @@ void SplashScreen.preventAutoHideAsync();
 
 import { EnvironmentBadge } from "../src/components/EnvironmentBadge";
 import { LocaleProvider, useTranslator } from "../src/locales";
+import { PaidOverlayHost } from "../src/paidOverlay";
 import { DeferredStartup } from "../src/startup/DeferredStartup";
 import { ToastHost } from "../src/toast";
+import { AmountDisplayProvider } from "../src/wallet/AmountDisplayProvider";
 
 /**
  * Route map (shell.navigate):
@@ -57,6 +59,16 @@ function RootNavigator() {
       <Stack.Screen name="contact/[id]" options={{ headerShown: true }} />
       <Stack.Screen name="chat/[id]" options={{ headerShown: true }} />
       <Stack.Screen name="wallet/token/[id]" options={{ headerShown: true }} />
+      {/* Wallet home entry points (#36); the flows land with #37/#39/#43. */}
+      <Stack.Screen
+        name="wallet/receive"
+        options={{ headerShown: true, title: t("walletReceive") }}
+      />
+      <Stack.Screen name="wallet/send" options={{ headerShown: true, title: t("walletSend") }} />
+      <Stack.Screen
+        name="wallet/transactions"
+        options={{ headerShown: true, title: t("transactionsTitle") }}
+      />
     </Stack>
   );
 }
@@ -78,15 +90,19 @@ export default function RootLayout() {
     return null;
   }
 
-  // Order matters for the overlays: toasts paint above the navigator, the
-  // environment badge above everything.
+  // Order matters for the overlays: the paid overlay paints above the
+  // navigator, toasts above it (PoC z-order), the environment badge above
+  // everything.
   return (
     <LocaleProvider>
-      <RootNavigator />
-      <DeferredStartup />
-      <ToastHost />
-      <EnvironmentBadge />
-      <StatusBar style="light" />
+      <AmountDisplayProvider>
+        <RootNavigator />
+        <DeferredStartup />
+        <PaidOverlayHost />
+        <ToastHost />
+        <EnvironmentBadge />
+        <StatusBar style="light" />
+      </AmountDisplayProvider>
     </LocaleProvider>
   );
 }

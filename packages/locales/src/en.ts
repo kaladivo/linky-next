@@ -758,6 +758,16 @@ export const en = {
   devDemoToastMessage: "This is a demo toast.",
   devStartupToast: "Dev: deferred startup ran ({tasks} task(s)).",
 
+  // Wallet home (#36): balance, display units, hidden mode, paid overlay.
+  walletTotalBalance: "Total balance",
+  walletHideAmounts: "Hide amounts",
+  walletShowAmounts: "Show amounts",
+  shellWalletReceivePlaceholder: "Placeholder — receive/top-up lands with the receive feature.",
+  shellWalletSendPlaceholder: "Placeholder — send/scan lands with the send feature.",
+  shellWalletTransactionsPlaceholder:
+    "Placeholder — payment history lands with the transactions feature.",
+  devShowPaidOverlay: "Show paid overlay",
+
   // Custom Nostr key override (#20), advanced settings.
   nostrKeySourceDerived: "Derived (default)",
   nostrKeySourceCustom: "Custom",
