@@ -8,7 +8,9 @@
  * also declared in `apps/mobile/package.json`.
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { FetchHttpClient } from "@effect/platform";
+import { FetchHttpClient, Socket } from "@effect/platform";
+import { layerNostrTransportSocket } from "@linky/core";
+import { Layer } from "effect";
 import * as ExpoClipboard from "expo-clipboard";
 import * as ExpoCrypto from "expo-crypto";
 import * as ExpoLinking from "expo-linking";
@@ -43,3 +45,18 @@ export const DeepLinksLive = layerDeepLinks(ExpoLinking);
  * fetch and must not be relied on.
  */
 export const HttpClientLive = FetchHttpClient.layer;
+
+/**
+ * `Socket.WebSocketConstructor` backed by the global `WebSocket` — React
+ * Native (and the browser) provide it natively, no Expo module involved.
+ */
+export const WebSocketConstructorLive = Socket.layerWebSocketConstructorGlobal;
+
+/**
+ * `NostrTransport` for relay connections: core's Socket-backed Layer wired
+ * to the global WebSocket. Pure re-wiring (the logic lives, and is tested,
+ * in @linky/core), same pattern as `HttpClientLive`.
+ */
+export const NostrTransportLive = layerNostrTransportSocket().pipe(
+  Layer.provide(WebSocketConstructorLive),
+);

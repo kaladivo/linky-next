@@ -4,18 +4,21 @@ Expo implementations (Effect Layers) of the [`@linky/core`](../core/README.md) p
 
 ## Implemented Layers
 
-| Layer                 | Port (in `@linky/core`)                                | Backed by                                                  |
-| --------------------- | ------------------------------------------------------ | ---------------------------------------------------------- |
-| `SecureStorageLive`   | `SecureStorage`                                        | `expo-secure-store` (iOS Keychain / Android Keystore)      |
-| `KeyValueStorageLive` | `KeyValueStorage` (`@effect/platform` `KeyValueStore`) | `@react-native-async-storage/async-storage`                |
-| `RandomnessLive`      | `Randomness`                                           | `expo-crypto` (`getRandomBytesAsync`, platform CSPRNG)     |
-| `ClipboardLive`       | `Clipboard`                                            | `expo-clipboard`                                           |
-| `DeepLinksLive`       | `DeepLinks`                                            | `expo-linking` (initial URL + `"url"` event stream)        |
-| `HttpClientLive`      | `HttpClient` (`@effect/platform`)                      | `FetchHttpClient.layer` over React Native's global `fetch` |
+| Layer                      | Port (in `@linky/core`)                                | Backed by                                                              |
+| -------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------- |
+| `SecureStorageLive`        | `SecureStorage`                                        | `expo-secure-store` (iOS Keychain / Android Keystore)                  |
+| `KeyValueStorageLive`      | `KeyValueStorage` (`@effect/platform` `KeyValueStore`) | `@react-native-async-storage/async-storage`                            |
+| `RandomnessLive`           | `Randomness`                                           | `expo-crypto` (`getRandomBytesAsync`, platform CSPRNG)                 |
+| `ClipboardLive`            | `Clipboard`                                            | `expo-clipboard`                                                       |
+| `DeepLinksLive`            | `DeepLinks`                                            | `expo-linking` (initial URL + `"url"` event stream)                    |
+| `HttpClientLive`           | `HttpClient` (`@effect/platform`)                      | `FetchHttpClient.layer` over React Native's global `fetch`             |
+| `WebSocketConstructorLive` | `Socket.WebSocketConstructor` (`@effect/platform`)     | `Socket.layerWebSocketConstructorGlobal` over RN's global `WebSocket`  |
+| `NostrTransportLive`       | `NostrTransport`                                       | core's `layerNostrTransportSocket` wired to `WebSocketConstructorLive` |
 
 Notes:
 
 - **HTTP**: RN/Hermes ships `fetch`, `Headers`, `AbortController` — everything `FetchHttpClient` needs for plain request/response bodies (verified on-device via the dev smoke-test panel). RN's fetch does **not** support response streaming; don't build on `response.stream`.
+- **WebSocket / Nostr**: React Native exposes a global `WebSocket`, so no Expo module is involved; the transport logic itself lives (and is unit-tested with a scripted fake WebSocket) in `@linky/core` — this package only injects the constructor, same pattern as `HttpClientLive`.
 - **Structure**: `src/adapters/*` contains the native-module-injected adapters (`make*` / `layer*`) where all error mapping lives and is unit-tested with fake natives; `src/layers.ts` is the only module importing Expo APIs and wires the real modules into the `*Live` Layers.
 
 ## Rules

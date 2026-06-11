@@ -1,0 +1,47 @@
+{
+  "generator": "nostr-tools@2.23.5 finalizeEvent (PoC dependency), bun script — see README.md",
+  "secretKeyHex": "5c0c523f52a5b6fad39ed2403092df8cebc36318b39383bca6c00808626fab3a",
+  "publicKeyHex": "87d3561f19b74adbe8bf840682992466068830a9d8c36b4a0c99d36f826cb6cb",
+  "events": [
+    {
+      "name": "simple text note",
+      "event": {
+        "kind": 1,
+        "created_at": 1718000000,
+        "tags": [],
+        "content": "hello nostr",
+        "pubkey": "87d3561f19b74adbe8bf840682992466068830a9d8c36b4a0c99d36f826cb6cb",
+        "id": "b8d0907a014f954f5095992931841162422d7f0e6f26a61b4b8abea68c797566",
+        "sig": "c9757400b1e0e4c1618ba02eb79a3f5ffa0cd0a4544d4cb3473b59c51e4d865e9158f24fb0cb0f308bc8b38a43d71c92a01d79383abfef768a5da6a43c69e902"
+      }
+    },
+    {
+      "name": "tricky content escaping + tags",
+      "event": {
+        "kind": 14,
+        "created_at": 1718000123,
+        "tags": [
+          ["p", "82341f882b6eabcd2ba7f1ef90aad961cf074af15b9ef44a09f9d2a8fbfbe6a2"],
+          ["e", "a1b2c3", "", "root"],
+          ["client", "linky"]
+        ],
+        "content": "line1\nline2\t\"quoted\" \\backslash\\ emoji 🦀 cz: příliš žluťoučký kůň",
+        "pubkey": "87d3561f19b74adbe8bf840682992466068830a9d8c36b4a0c99d36f826cb6cb",
+        "id": "ea7c115f876d6a284569890aa6322efb0327dee0cb6d33a2b55db318bc0359c9",
+        "sig": "1706307bfbc6432468aaf916cf547a26e6768c5f8a579906a21c9996b15a81c1cf569d3632187ee0c61415d96d4bdb407ac312e77ad52e44107e300ac271d952"
+      }
+    },
+    {
+      "name": "profile metadata kind 0",
+      "event": {
+        "kind": 0,
+        "created_at": 1718000456,
+        "tags": [],
+        "content": "{\"name\":\"alice\",\"lud16\":\"alice@npub.cash\"}",
+        "pubkey": "87d3561f19b74adbe8bf840682992466068830a9d8c36b4a0c99d36f826cb6cb",
+        "id": "b25e13bb6047ef2b07e7ee2e3f96ff2b0f34986a7179f7b194cfff5344667fd9",
+        "sig": "ec112530c7670b63f6ea6eb5087c5de1e943711817a1021d394832d353b083aeebfdad2a9440e7b8fb71ab50640bf9353494675edd5a32096e962c7faf32ce56"
+      }
+    }
+  ]
+}
