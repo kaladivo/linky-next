@@ -1,4 +1,10 @@
 {
   "extends": "@linky/config/tsconfig.base.json",
+  "compilerOptions": {
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "jsxImportSource": "nativewind"
+  },
   "include": ["src"]
 }

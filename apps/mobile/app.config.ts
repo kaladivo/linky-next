@@ -1,5 +1,7 @@
 import type { ExpoConfig } from "expo/config";
 
+import { colors } from "@linky/ui/tokens";
+
 /**
  * All native configuration lives here (CNG): `npx expo prebuild` regenerates
  * the gitignored ios/ and android/ projects from this file and the config
@@ -16,6 +18,9 @@ const config: ExpoConfig = {
   scheme: "linky",
   version: "0.0.1",
   orientation: "portrait",
+  icon: "./assets/icon.png",
+  userInterfaceStyle: "dark",
+  backgroundColor: colors.background,
   ios: {
     bundleIdentifier: "fit.linky.app.dev",
     supportsTablet: false,
@@ -23,7 +28,17 @@ const config: ExpoConfig = {
   android: {
     package: "fit.linky.app.dev",
   },
-  plugins: ["expo-router"],
+  plugins: [
+    "expo-router",
+    [
+      "expo-splash-screen",
+      {
+        backgroundColor: colors.background,
+        image: "./assets/splash-icon.png",
+        imageWidth: 200,
+      },
+    ],
+  ],
   experiments: {
     typedRoutes: true,
   },
