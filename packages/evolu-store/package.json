@@ -13,12 +13,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@evolu/common": "7.4.1"
+    "@evolu/common": "7.4.1",
+    "@linky/core": "workspace:*"
   },
   "devDependencies": {
     "@evolu/nodejs": "2.4.0",
     "@linky/config": "workspace:*",
-    "@linky/core": "workspace:*",
     "effect": "^3.21.3",
     "@types/better-sqlite3": "^7.6.13",
     "better-sqlite3": "^12.1.1",

@@ -72,23 +72,23 @@ Confirmed in `@evolu/common@7.4.1` — everything the spec / issue #13 needs:
   `evolu.useOwner(syncOwner)` where a `SyncOwner` can carry its own
   `transports`. Marked `@experimental` upstream but present and typed.
 - Golden values for the test mnemonic are pinned in
-  `packages/evolu-store/test/integration.test.ts`; same-version-as-PoC means
-  the derivation matches production data.
+  `packages/evolu-store/test/ownerDerivation.test.ts`; same-version-as-PoC
+  means the derivation matches production data.
 
-## What the integration test covers
+## What the integration tests cover
 
-`packages/evolu-store/test/integration.test.ts` (vitest, node environment,
-Evolu on real local SQLite via `@evolu/nodejs`'s better-sqlite3 driver,
-`transports: []` so no network):
+The spike's `integration.test.ts` was superseded by the issue #15 base-schema
+suite (vitest, node environment, Evolu on real local SQLite via
+`@evolu/nodejs`'s better-sqlite3 driver, `transports: []` so no network):
 
-1. Table creation, insert, and query through the Linky schema module.
-2. Rows physically present in the SQLite file (verified by opening the `.db`
-   file with better-sqlite3 directly, independent of Evolu).
-3. Deterministic owner derivation from mnemonic and from raw 32-byte entropy,
-   including rejection of invalid input, plus golden owner-id snapshots.
-4. Distinct + deterministic `ShardOwner` lanes (`deriveShardOwner` paths and
-   independent secrets).
-5. Mutations targeting a derived owner lane via `{ ownerId }`.
+- `packages/evolu-store/test/ownerDerivation.test.ts` — deterministic owner
+  derivation from mnemonics / raw entropy, golden owner-id snapshots,
+  `ShardOwner` lanes.
+- `packages/evolu-store/test/store.integration.test.ts` — six-domain schema
+  creation, per-domain owner-lane assignment, offline reads, and the
+  restore-reconnect approximation (live relay sync belongs to #53/#58).
+- `packages/evolu-store/test/contactsRepository.test.ts` — the repository
+  adapter conventions.
 
 ## Device verification
 
@@ -96,8 +96,9 @@ Dev client built from this worktree on the iPhone 17 simulator
 (`npx expo run:ios`, Metro :8083). Temporary route
 `apps/mobile/app/dev/evolu-spike.tsx`, opened via the temporary "Evolu spike
 (dev)" link on the Settings tab (in the dev client, `linky://` scheme links
-launch the app but do not navigate to the route). Route + link are deleted
-with issue #15. Verified with agent-device:
+launch the app but do not navigate to the route). Issue #15 kept the route
+but pointed it at the real schema's `metaEntry` table (the spike's
+`spikeNote` table is gone). Verified with agent-device:
 
 - Creates the Evolu instance with `evoluReactNativeDeps`
   (`@evolu/react-native/expo-sqlite`) and an `externalAppOwner` from a fixed

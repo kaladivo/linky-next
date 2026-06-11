@@ -12,7 +12,8 @@
  *   owner (Evolu 7.4.1 exposes no public sync-state API — `useSyncState` is
  *   disabled upstream — so like the PoC we probe the relay WebSocket).
  *
- * This screen will be deleted once the real Evolu wiring lands (issue #15).
+ * Issue #15 replaced the spike's `spikeNote` table with the real six-domain
+ * schema; this screen now writes `metaEntry` rows (meta domain) instead.
  */
 // MUST stay the first import: installs crypto.getRandomValues for Evolu.
 import "../../lib/cryptoPolyfill";
@@ -42,7 +43,7 @@ const evolu = createLinkyEvolu(evoluReactNativeDeps, {
 
 const notesQuery = evolu.createQuery((db) =>
   db
-    .selectFrom("spikeNote")
+    .selectFrom("metaEntry")
     .selectAll()
     .where("isDeleted", "is not", 1)
     .orderBy("createdAt", "asc"),
@@ -51,7 +52,7 @@ const notesQuery = evolu.createQuery((db) =>
 type RelayStatus = "checking" | "connected" | "disconnected";
 
 export default function EvoluSpikeScreen() {
-  const [rows, setRows] = useState<ReadonlyArray<{ content: string | null }>>([]);
+  const [rows, setRows] = useState<ReadonlyArray<{ value: string | null }>>([]);
   const [relayStatus, setRelayStatus] = useState<RelayStatus>("checking");
   const [lastError, setLastError] = useState<string | null>(null);
 
@@ -113,8 +114,9 @@ export default function EvoluSpikeScreen() {
   }, []);
 
   const addNote = useCallback(() => {
-    const result = evolu.insert("spikeNote", {
-      content: `note ${new Date().toISOString()}`,
+    const result = evolu.insert("metaEntry", {
+      key: "dev.note",
+      value: `note ${new Date().toISOString()}`,
     });
     if (!result.ok) setLastError(JSON.stringify(result.error));
   }, []);
@@ -150,7 +152,7 @@ export default function EvoluSpikeScreen() {
       <View style={{ gap: 4 }}>
         {rows.map((row, i) => (
           <Text key={i} style={{ fontVariant: ["tabular-nums"] }}>
-            {row.content}
+            {row.value}
           </Text>
         ))}
       </View>

@@ -213,6 +213,9 @@ importers:
       '@evolu/common':
         specifier: 7.4.1
         version: 7.4.1
+      '@linky/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       '@evolu/nodejs':
         specifier: 2.4.0
@@ -220,9 +223,6 @@ importers:
       '@linky/config':
         specifier: workspace:*
         version: link:../config
-      '@linky/core':
-        specifier: workspace:*
-        version: link:../core
       '@types/better-sqlite3':
         specifier: ^7.6.13
         version: 7.6.13
