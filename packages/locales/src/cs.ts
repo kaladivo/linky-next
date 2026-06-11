@@ -467,6 +467,8 @@ export const cs = {
   addContact: "Přidat kontakt",
   contactLoadQr: "Načíst QR",
   noContactsYet: "Zatím žádné kontakty.",
+  // Contacts tab empty state (#26).
+  contactsEmptyHint: "Přidejte si první kontakt a začněte si psát a posílat satoshi.",
 
   edit: "Upravit",
   delete: "Smazat",

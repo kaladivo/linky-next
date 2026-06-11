@@ -464,6 +464,8 @@ export const en = {
   addContact: "Add contact",
   contactLoadQr: "Load QR",
   noContactsYet: "No contacts yet.",
+  // Contacts tab empty state (#26).
+  contactsEmptyHint: "Add your first contact to start chatting and sending sats.",
 
   edit: "Edit",
   delete: "Delete",

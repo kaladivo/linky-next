@@ -11,16 +11,20 @@
 import { clearIdentitySession, clearLocalProfile } from "@linky/core";
 
 import { runAppEffect } from "../runtime";
+import { teardownStore } from "../store/storeManager";
 import { invalidateSession } from "./sessionStore";
 
 /**
  * `identity.logout`: clears local session secrets plus the local profile
  * (#17 — a later account on this device must not inherit the previous
- * user's name/avatar). Nothing is deleted remotely — synced data and funds
- * stay recoverable from the backup phrase.
+ * user's name/avatar) and tears down the session-scoped Evolu store (#26 —
+ * a later account must never read the previous account's data; it boots
+ * its own per-identity database). Nothing is deleted remotely — synced
+ * data and funds stay recoverable from the backup phrase.
  */
 export const logout = async (): Promise<void> => {
   await runAppEffect(clearIdentitySession);
   await runAppEffect(clearLocalProfile);
+  teardownStore();
   invalidateSession();
 };

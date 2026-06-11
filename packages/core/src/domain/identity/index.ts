@@ -8,6 +8,7 @@ export * from "./deriveNostrIdentity.js";
 export * from "./customNostrKey.js";
 export * from "./deriveCashuWallet.js";
 export * from "./deriveOwnerLane.js";
+export * from "./deriveOwnerLaneMnemonics.js";
 export * from "./identitySession.js";
 export * from "./copyBackupPhrase.js";
 // Intentionally not exported (internal): `slip39.js` (SLIP-39 codec),

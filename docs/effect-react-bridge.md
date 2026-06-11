@@ -31,6 +31,17 @@ export type AppServices = Layer.Layer.Success<typeof appLayer>;
 
 It provides `CurrentEnvironment` (the decoded `EnvironmentConfig` from `src/environment.ts`, wrapped in the service tag that `@linky/core` defines — core owns service definitions, the app owns the values) plus the Expo-backed platform Layers from `@linky/platform` (#8): `SecureStorageLive`, `KeyValueStorageLive`, `RandomnessLive`, `ClipboardLive`, `DeepLinksLive`, `HttpClientLive`. New implementations are added as another argument to `Layer.mergeAll(...)`; `AppServices` widens automatically, so workflows requiring those ports immediately become runnable from hooks — no hook or component changes.
 
+## The session-scoped Evolu store (#26)
+
+The Linky store (`createLinkyStore` from `@linky/evolu-store`) is the one piece of app state that does NOT fit the one-runtime shape: `appLayer` is composed once per JS context, but the store must be **created when a session loads and torn down on logout** (and a different identity must get a different store). It therefore lives outside the Layer system, in [`apps/mobile/src/store/storeManager.ts`](../apps/mobile/src/store/storeManager.ts) — a module singleton in the style of `src/session/sessionStore.ts`:
+
+- **Boot**: the session gate (`app/(tabs)/_layout.tsx`) calls `ensureStoreForSession(session)` once the identity loads. The lane mnemonics come from core's `deriveOwnerLaneMnemonics` (run via `runAppEffect` — the derivation is a core workflow, the manager only orchestrates); sync transports come from the profile's `evoluSyncUrls`. Idempotent per identity.
+- **Identity isolation**: the SQLite database name is `linky-<fnv1a(npub)>` (the PoC's scheme) — one database per identity. Logout → new identity boots a *different, empty* database; restoring the same identity reattaches to its data and its sync lanes.
+- **Teardown**: `logout` (`src/session/sessionActions.ts`) calls `teardownStore()` — lane sync stops and the reference is dropped, so no screen can read the previous account's data. Evolu 7.4.1 cannot dispose instances (`[Symbol.dispose]` throws upstream) and caches them per name; the per-identity name is what guarantees isolation, teardown is the sync/reference half.
+- **Consumption**: components use `useLinkyStore()` (`useSyncExternalStore` over the manager) and pass the store to the plain-TypeScript repositories from `@linky/evolu-store`. Repository reads are one-shot promises; write paths call `invalidateStoreData()` so mounted lists re-query (`useContactsScreenData` is the reference consumer). When live Evolu query subscriptions become necessary (#29 chat), that is a deliberate extension of this seam, not a per-screen decision.
+
+Why not a Layer in `appLayer`? A per-session Layer would require either rebuilding the runtime per login (forbidden — one-runtime rule) or a mutable service holding "maybe a store", which moves the same lifecycle problem behind a Tag without removing it. Why not React context? The store is consumed on screens outside the gate's subtree (Settings is pushed above the tabs), and teardown must be reachable from the non-React logout action. The module singleton keeps one owner for boot (the gate), one for teardown (logout), and read-only subscription everywhere else.
+
 ## The hook pattern: `useEffectQuery`
 
 [`apps/mobile/src/runtime/useEffectQuery.ts`](../apps/mobile/src/runtime/useEffectQuery.ts) is the bridge for read-style workflows:
