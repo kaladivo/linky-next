@@ -730,6 +730,15 @@ export const cs = {
   shellChatPlaceholder: "Chat s {id} dorazí s funkcí zpráv.",
   shellTokenDetailPlaceholder: "Detail tokenu {id} dorazí s funkcí peněženky.",
   shellAdvancedPlaceholder: "Pokročilá nastavení dorazí s funkcí nastavení.",
+  // Backup screen (#19): warning gate + word grid + copy/export.
+  backupTitle: "Zálohovat klíče",
+  backupWarningTitle: "Citlivé údaje",
+  backupWarningBody:
+    "Za chvíli se zobrazí vašich 20 záložních slov. Kdokoli s těmito slovy ovládá vaše prostředky i zprávy. Ujistěte se, že vám nikdo nevidí na obrazovku.",
+  backupWarningConfirm: "Rozumím, zobrazit slova",
+  backupWordsHint:
+    "Uložte si všech 20 slov ve správném pořadí — do správce hesel, nebo si je zapište na bezpečné místo. Nikdy je nikomu nesdělujte.",
+  backupCopyFailed: "Kopírování se nepovedlo.",
   devShowDemoToast: "Zobrazit ukázkový toast",
   devDemoToastMessage: "Tohle je ukázkový toast.",
   devStartupToast: "Dev: odložený start proběhl ({tasks} úloh).",

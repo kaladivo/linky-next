@@ -50,6 +50,10 @@ function RootNavigator() {
         name="settings/advanced"
         options={{ headerShown: true, title: t("advanced") }}
       />
+      <Stack.Screen
+        name="settings/backup"
+        options={{ headerShown: true, title: t("backupTitle") }}
+      />
       <Stack.Screen name="contact/[id]" options={{ headerShown: true }} />
       <Stack.Screen name="chat/[id]" options={{ headerShown: true }} />
       <Stack.Screen name="wallet/token/[id]" options={{ headerShown: true }} />
