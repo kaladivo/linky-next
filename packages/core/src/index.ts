@@ -1,23 +1,25 @@
 /**
  * @linky/core — Effect-based domain logic and protocol workflows for Linky.
  *
- * This is a scaffold stub. Domain workflows (identity derivation, Cashu token
- * lifecycle, Lightning/LNURL, NIP-17 messaging, contacts, mints) land in later
- * issues. Side effects enter only through ports (Effect service tags); this
- * package never imports React, Expo, the Evolu runtime, or platform code.
+ * Architecture (see README.md for the full conventions contract):
+ *
+ * - `src/ports/`   Effect service tags through which ALL side effects enter
+ *                  (secure storage, key-value storage, HTTP, randomness).
+ *                  Implementations live in `packages/platform`; tests provide
+ *                  in-memory Layers.
+ * - `src/domain/`  Domain workflows (identity, Cashu, Lightning/LNURL,
+ *                  NIP-17 messaging, contacts, mints). Empty for now; each
+ *                  workflow lands in its own issue.
+ *
+ * Time is NOT a custom port: workflows use Effect's built-in `Clock` service
+ * (`Clock.currentTimeMillis`, `Effect.sleep`, ...) and tests control it with
+ * `TestClock`. Likewise, non-secret randomness uses Effect's built-in
+ * `Random`; only cryptographic entropy goes through the `Randomness` port.
+ *
+ * This package never imports React, Expo, the Evolu runtime, or other
+ * workspace packages (enforced by ESLint) — it stays publishable and runs
+ * identically under the app runtime and under test Layers.
  */
 
-/** Package version marker until real exports exist. */
-export const CORE_PACKAGE_NAME = "@linky/core";
-
-/**
- * Formats an integer satoshi amount with thousands separators, e.g. 21000 -> "21 000 sats".
- * Trivial placeholder so the package has something real to type, lint, and test.
- */
-export const formatSats = (amount: number): string => {
-  if (!Number.isSafeInteger(amount) || amount < 0) {
-    throw new RangeError("amount must be a non-negative safe integer");
-  }
-  const grouped = amount.toLocaleString("en-US").replaceAll(",", " ");
-  return `${grouped} sats`;
-};
+// Ports
+export * from "./ports/index.js";
