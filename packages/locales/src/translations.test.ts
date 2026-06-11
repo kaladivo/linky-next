@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { cs } from "./cs.js";
-import { en } from "./en.js";
-import type { TemplateParams, TranslationKey } from "./translate.js";
-import { createTranslator, interpolate, translate } from "./translate.js";
+import { cs } from "./cs";
+import { en } from "./en";
+import type { TemplateParams, TranslationKey } from "./translate";
+import { createTranslator, interpolate, translate } from "./translate";
 
 // --- Type-level checks (fail `tsc --noEmit`, not the vitest run) ---------
 

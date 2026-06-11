@@ -1,20 +1,21 @@
 /**
- * runAppEffect — the imperative half of the Effect ↔ React bridge.
+ * runAppEffect — the imperative seam of the Effect ↔ React bridge.
  *
- * For one-shot workflows triggered by user actions (button handlers,
- * session create/logout): runs the Effect on the app's single
- * ManagedRuntime and returns a Promise. Components that *read* data render
- * through `useEffectQuery`; this is only for fire-on-press mutations whose
- * result is handled imperatively (navigation, store invalidation, toasts).
+ * For the few places that must trigger a workflow outside the render cycle
+ * (the deferred-startup coordinator, fire-and-forget persistence like the
+ * locale preference). Components reading data keep using `useEffectQuery`;
+ * this exists so nothing outside src/runtime/ ever touches `appRuntime` or
+ * calls `Effect.runPromise` directly (docs/effect-react-bridge.md).
  *
- * Typed errors and defects both reject the Promise (as FiberFailure) —
- * callers `.catch` and decide what to surface. Keeps the one-runtime rule:
- * nothing outside src/runtime/ touches `appRuntime` directly.
+ * The returned promise rejects on typed failures and defects alike — the
+ * caller decides whether that is fire-and-forget (log it) or awaited.
  */
 import type { Effect } from "effect";
 
 import type { AppServices } from "./appLayer";
 import { appRuntime } from "./runtime";
 
-export const runAppEffect = <A, E>(effect: Effect.Effect<A, E, AppServices>): Promise<A> =>
-  appRuntime.runPromise(effect);
+export const runAppEffect = <A, E>(
+  effect: Effect.Effect<A, E, AppServices>,
+  options?: { readonly signal?: AbortSignal },
+): Promise<A> => appRuntime.runPromise(effect, options);

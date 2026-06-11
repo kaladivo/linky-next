@@ -1,4 +1,10 @@
 {
   "extends": "@linky/config/tsconfig.base.json",
+  "compilerOptions": {
+    // Source package consumed directly by Metro (like @linky/ui):
+    // extensionless relative imports + bundler resolution.
+    "module": "preserve",
+    "moduleResolution": "bundler"
+  },
   "include": ["src", "vitest.config.ts"]
 }

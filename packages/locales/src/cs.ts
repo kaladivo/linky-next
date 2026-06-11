@@ -1,4 +1,4 @@
-import type { en } from "./en.js";
+import type { en } from "./en";
 
 /**
  * Czech translations.
@@ -722,4 +722,15 @@ export const cs = {
   copyTokenTitle: "Klikni pro zkopírování tokenu",
   tokenReceivedClickToCopy: "Přijato {amount} {unit}. Klikni pro zkopírování tokenu.",
   tokenReceived: "Token přijat. Klikni pro zkopírování tokenu.",
+  // App shell (#16): placeholder screens, dev/demo toast strings.
+  shellContactsPlaceholder: "Zástupný obsah — seznam kontaktů dorazí s funkcí kontaktů.",
+  shellWalletPlaceholder: "Zástupný obsah — Cashu peněženka dorazí s funkcí peněženky.",
+  shellSettingsPlaceholder: "Zástupný obsah — nastavení dorazí s funkcí nastavení.",
+  shellContactDetailPlaceholder: "Detail kontaktu {id} dorazí s funkcí kontaktů.",
+  shellChatPlaceholder: "Chat s {id} dorazí s funkcí zpráv.",
+  shellTokenDetailPlaceholder: "Detail tokenu {id} dorazí s funkcí peněženky.",
+  shellAdvancedPlaceholder: "Pokročilá nastavení dorazí s funkcí nastavení.",
+  devShowDemoToast: "Zobrazit ukázkový toast",
+  devDemoToastMessage: "Tohle je ukázkový toast.",
+  devStartupToast: "Dev: odložený start proběhl ({tasks} úloh).",
 } as const satisfies Readonly<Record<keyof typeof en, string>>;

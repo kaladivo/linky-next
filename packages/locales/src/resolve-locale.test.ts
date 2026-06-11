@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { FALLBACK_LOCALE, isSupportedLocale, resolveLocale } from "./resolve-locale.js";
+import { FALLBACK_LOCALE, isSupportedLocale, resolveLocale } from "./resolve-locale";
 
 describe("resolveLocale", () => {
   it("prefers a valid persisted preference over device locales", () => {

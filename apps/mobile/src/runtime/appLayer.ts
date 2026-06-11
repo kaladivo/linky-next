@@ -2,15 +2,20 @@
  * appLayer — the single composition point for every production Layer the
  * app provides to @linky/core.
  *
- * When new platform implementations land (issue #8: secure storage,
- * key-value storage, HTTP, randomness from packages/platform), they join
- * the `Layer.mergeAll(...)` below — nothing else in the app changes.
  * Components never see this module; they go through the hooks in
  * `useEffectQuery.ts`, which run against the one runtime built from this
- * Layer (see runtime.ts).
+ * Layer (see runtime.ts). New platform implementations join the
+ * `Layer.mergeAll(...)` below — nothing else in the app changes.
  */
 import { CurrentEnvironment } from "@linky/core";
-import { RandomnessLive, SecureStorageLive } from "@linky/platform";
+import {
+  ClipboardLive,
+  DeepLinksLive,
+  HttpClientLive,
+  KeyValueStorageLive,
+  RandomnessLive,
+  SecureStorageLive,
+} from "@linky/platform";
 import { Layer } from "effect";
 
 import { environment } from "../environment";
@@ -25,13 +30,13 @@ const environmentLayer = Layer.succeed(CurrentEnvironment, environment);
 
 export const appLayer = Layer.mergeAll(
   environmentLayer,
-  // #14 session persistence: keychain-backed secrets + CSPRNG entropy.
-  SecureStorageLive,
-  RandomnessLive,
-  // Remaining #8 platform Layers slot in here as features need them, e.g.:
-  //   KeyValueStorageLive, (AsyncStorage → KeyValueStore)
-  //   HttpClientLive,      (FetchHttpClient.layer)
-  //   ClipboardLive / DeepLinksLive
+  // Platform ports (#8), Expo-backed:
+  SecureStorageLive, // expo-secure-store → SecureStorage (#14 session secrets)
+  KeyValueStorageLive, // AsyncStorage → KeyValueStorage (KeyValueStore)
+  RandomnessLive, // expo-crypto → Randomness
+  ClipboardLive, // expo-clipboard → Clipboard
+  DeepLinksLive, // expo-linking → DeepLinks
+  HttpClientLive, // RN fetch → HttpClient
 );
 
 /** Everything the app runtime can provide; hooks accept Effects needing at most this. */
