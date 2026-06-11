@@ -95,7 +95,11 @@ export const cs = {
   onboardingLanguageContinue: "Pokračovat",
   onboardingCreating: "Vytváříme váš účet…",
   onboardingBackupLater: "Uložím si je později",
-  onboardingRestoreStub: "Obnova účtu bude brzy k dispozici. Mějte svých 20 slov po ruce.",
+  // Restore flow (#18)
+  onboardingRestoring: "Obnovuji váš účet…",
+  onboardingRestoreChecksum:
+    "Tato slova netvoří platnou zálohu. Zkontrolujte překlepy a pořadí slov.",
+  onboardingRestoreFailed: "Účet se nepodařilo obnovit.",
   onboardingAvatarControlTop: "Účes",
   onboardingAvatarControlHairColor: "Barva vlasů",
   onboardingAvatarControlAccessories: "Doplňky",

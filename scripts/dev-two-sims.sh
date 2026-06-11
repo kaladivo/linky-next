@@ -11,7 +11,16 @@
 #   4. Installs the same .app build product onto sim B via `simctl install`
 #      and launches it — no second build.
 #   5. Points both dev clients at the shared Metro instance via deep link.
-#   6. Identity restore (alice on A, bob on B): placeholder until issue #18.
+#   6. Restores the committed throwaway identities (alice on A, bob on B) by
+#      driving the onboarding restore flow (#18) with `agent-device` UI
+#      automation: language → "I'm returning" → type the 20-word mnemonic →
+#      confirm. Targets stable testIDs, so it works in any UI language.
+#      Re-run just this step any time with:
+#        scripts/dev-two-sims.sh restore-only
+#      (Why not a deep link? A dev-gated /dev/restore?phrase= route exists,
+#      but expo-dev-launcher swallows external linky-dev:// URLs in
+#      development builds — verified on-device — so URLs never reach
+#      expo-router. See apps/mobile/app/dev/restore.tsx.)
 #
 # Usage:
 #   pnpm install                  # once, repo root
@@ -38,9 +47,59 @@ sim_name() {
   xcrun simctl list devices | grep -F "$1" | head -n1 | sed 's/ (.*//' | sed 's/^ *//'
 }
 
+# Restores a committed dev identity by driving the onboarding restore screen
+# (#18) with agent-device. Expects the dev app running and logged out (the
+# fresh state this script produces). Steps before the restore screen are
+# tolerant (|| true) so a re-run from the create screen still works; the
+# restore screen steps are strict.
+restore_identity() {
+  local udid="$1" file="$2" label="$3" phrase session
+  phrase="$(node -p 'require(process.argv[1]).slip39Mnemonic' "$file")"
+  session="linky-restore-$label"
+  log "Restoring $label onto $(sim_name "$udid") ($udid) via agent-device (testID-driven, locale-independent)"
+  # Every call pins --udid so nothing can stray to another device; the named
+  # session must not be held elsewhere (agent-device close --session <name>).
+  ad() { agent-device "$@" --udid "$udid" --session "$session"; }
+  ad open "$BUNDLE_ID" >/dev/null
+  # Onboarding: language -> create screen -> "I'm returning" (skip steps that
+  # are already behind us).
+  ad find "language-continue" click >/dev/null 2>&1 || true
+  ad wait 1000 >/dev/null 2>&1 || true
+  ad find "onboarding-restore-link" click >/dev/null 2>&1 || true
+  ad wait 1000 >/dev/null 2>&1 || true
+  # Restore screen: focus the word input, type the full phrase (fills all 20
+  # word chips), confirm. The phrase is typed, not pasted, to avoid the iOS
+  # pasteboard permission alert.
+  ad find "restore-word-input" click >/dev/null
+  ad type "$phrase" >/dev/null
+  ad find "restore-confirm" click >/dev/null
+  # Tabs header (testID open-settings) = restore succeeded, app entered.
+  ad wait "open-settings" 20000 >/dev/null
+  ad close >/dev/null 2>&1 || true
+  log "$label restored — app shows the main tabs."
+}
+
+restore_both() {
+  if ! command -v agent-device >/dev/null 2>&1; then
+    log "SKIPPED identity restore: agent-device CLI not found."
+    log "  Install it, or restore manually: onboarding -> 'I'm returning' ->"
+    log "  paste the mnemonic from dev/test-identities/{alice,bob}.json."
+    return 0
+  fi
+  restore_identity "$SIM_A_UDID" "$REPO_ROOT/dev/test-identities/alice.json" "alice"
+  restore_identity "$SIM_B_UDID" "$REPO_ROOT/dev/test-identities/bob.json" "bob"
+}
+
 if [ "$SIM_A_UDID" = "$SIM_B_UDID" ]; then
   echo "SIM_A_UDID and SIM_B_UDID must differ" >&2
   exit 1
+fi
+
+# `restore-only`: skip boot/build/launch and just re-drive the restore step
+# (both apps must already be running, e.g. after a full run of this script).
+if [ "${1:-}" = "restore-only" ]; then
+  restore_both
+  exit 0
 fi
 
 # --- 1. Boot both simulators -------------------------------------------------
@@ -103,17 +162,12 @@ sleep 2
 xcrun simctl openurl "$SIM_A_UDID" "$DEV_CLIENT_URL"
 xcrun simctl openurl "$SIM_B_UDID" "$DEV_CLIENT_URL"
 
-# --- 6. Restore test identities (placeholder) ----------------------------------
-# TODO(#18): the app has no identity-restore flow yet (onboarding restore is
-# issue #18; SLIP-39 identity primitives are issue #12). Once #18 lands, this
-# step restores the committed throwaway identities from dev/test-identities/:
-#   - alice on sim A ($SIM_A_UDID)
-#   - bob   on sim B ($SIM_B_UDID)
-# e.g. by driving the restore screen with agent-device (fill the 20-word
-# SLIP-39 mnemonic from dev/test-identities/{alice,bob}.json) or via a
-# dev-only deep link.
-log "SKIPPED identity restore: app has no restore flow yet (issue #18)."
-log "  Once #18 lands: alice → sim A, bob → sim B (mnemonics in dev/test-identities/)."
+# --- 6. Restore test identities ------------------------------------------------
+# Give the freshly-connected dev clients a moment to load the JS bundle so
+# the onboarding UI is mounted (worst case: re-run restore-only).
+log "Waiting for the JS bundles to load before restoring identities..."
+sleep 8
+restore_both
 
 log "Done. Two dev app instances are running:"
 log "  A: $(sim_name "$SIM_A_UDID") ($SIM_A_UDID)"

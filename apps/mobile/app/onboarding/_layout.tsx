@@ -3,7 +3,7 @@
  *
  *   index    language choice (cs/en) BEFORE account setup
  *   create   welcome + create account (core createIdentitySession)
- *   restore  "I'm returning" — stub route, filled by #18
+ *   restore  "I'm returning" — 20-word backup restore (#18)
  *   profile  name + deterministic avatar (+ optional custom photo)
  *   backup   20-word backup prompt — strongly prompted, never blocking
  *

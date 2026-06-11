@@ -3,7 +3,7 @@
  * runs core's createIdentitySession (fresh SLIP-39 identity + derivations,
  * persisted via SecureStorage). Progress while it runs, typed error + retry
  * on failure, then on to profile setup. "I'm returning" routes to the
- * restore stub that issue #18 fills in.
+ * restore flow (#18).
  */
 import { Button, Surface, Text } from "@linky/ui";
 import { useRouter } from "expo-router";
