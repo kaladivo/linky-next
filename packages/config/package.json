@@ -1,0 +1,21 @@
+{
+  "name": "@linky/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared tsconfig, ESLint, and formatting config for the Linky monorepo.",
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./eslint": "./eslint/base.js",
+    "./prettier": "./prettier/index.js"
+  },
+  "dependencies": {
+    "@eslint/js": "^9.39.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.5.0",
+    "typescript-eslint": "^8.61.0"
+  },
+  "peerDependencies": {
+    "eslint": "^9.0.0"
+  }
+}

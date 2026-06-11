@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.turbo/
+pnpm-lock.yaml
+
+# authored docs keep their hand-written markdown formatting
+docs/
