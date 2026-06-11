@@ -718,4 +718,15 @@ export const en = {
   copyTokenTitle: "Click to copy token",
   tokenReceivedClickToCopy: "Received {amount} {unit}. Click to copy token.",
   tokenReceived: "Token accepted. Click to copy token.",
+  // App shell (#16): placeholder screens, dev/demo toast strings.
+  shellContactsPlaceholder: "Placeholder — the contact list lands with the contacts feature.",
+  shellWalletPlaceholder: "Placeholder — the Cashu wallet lands with the wallet feature.",
+  shellSettingsPlaceholder: "Placeholder — settings land with the settings feature.",
+  shellContactDetailPlaceholder: "Contact detail for {id} lands with the contacts feature.",
+  shellChatPlaceholder: "Chat with {id} lands with the messaging feature.",
+  shellTokenDetailPlaceholder: "Token {id} detail lands with the wallet feature.",
+  shellAdvancedPlaceholder: "Advanced settings land with the settings feature.",
+  devShowDemoToast: "Show demo toast",
+  devDemoToastMessage: "This is a demo toast.",
+  devStartupToast: "Dev: deferred startup ran ({tasks} task(s)).",
 } as const;

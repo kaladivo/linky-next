@@ -1,11 +1,12 @@
 import { describeEnvironment } from "@linky/core";
 import { Button, Surface, Text } from "@linky/ui";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { ScrollView } from "react-native";
 
 import { PlatformSmokeTestPanel } from "../../src/dev/PlatformSmokeTestPanel";
-
+import { useTranslator } from "../../src/locales";
 import { useEffectQuery } from "../../src/runtime";
+import { toast } from "../../src/toast";
 
 /**
  * The "Environment" card is the reference example for the Effect ↔ React
@@ -17,13 +18,14 @@ import { useEffectQuery } from "../../src/runtime";
  */
 function EnvironmentSummary() {
   const summary = useEffectQuery(describeEnvironment);
+  const t = useTranslator();
 
   return (
     <Surface className="gap-2" testID="environment-summary">
       <Text weight="semibold" className="text-primary">
         Environment
       </Text>
-      {summary.status === "loading" && <Text className="text-sm">Loading…</Text>}
+      {summary.status === "loading" && <Text className="text-sm">{t("loadingMore")}</Text>}
       {summary.status === "error" && (
         <Text className="text-sm text-danger">Could not read environment.</Text>
       )}
@@ -32,18 +34,43 @@ function EnvironmentSummary() {
   );
 }
 
+/** Dev-only: exercises the toast overlay (variants, auto-dismiss). */
+function DevToastDemo() {
+  const t = useTranslator();
+
+  if (!__DEV__) return null;
+
+  return (
+    <Surface className="gap-3">
+      <Text weight="semibold" className="text-primary">
+        Toasts (dev)
+      </Text>
+      <Button
+        label={t("devShowDemoToast")}
+        variant="secondary"
+        testID="dev-show-toast"
+        onPress={() => toast.success(t("devDemoToastMessage"))}
+      />
+    </Surface>
+  );
+}
+
 export default function SettingsScreen() {
+  const t = useTranslator();
+  const router = useRouter();
+
   return (
     <ScrollView className="flex-1 bg-background" contentContainerClassName="gap-4 px-6 pb-8 pt-4">
-      <Text weight="bold" className="text-2xl">
-        Settings
-      </Text>
       <EnvironmentSummary />
       <Surface className="gap-3">
-        <Text>Placeholder — settings land with the settings feature.</Text>
-        <Button label="Backup" variant="secondary" />
-        <Button label="Delete account" variant="danger" />
+        <Text>{t("shellSettingsPlaceholder")}</Text>
+        <Button
+          label={t("advanced")}
+          variant="secondary"
+          onPress={() => router.push("/settings/advanced")}
+        />
       </Surface>
+      <DevToastDemo />
       {/* TEMPORARY: storage-spike dev screen (issue #9), removed with #15. */}
       <Link href="/dev/evolu-spike" className="p-4">
         <Text className="text-primary">Evolu spike (dev)</Text>

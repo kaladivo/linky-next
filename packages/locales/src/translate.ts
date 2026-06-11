@@ -4,9 +4,9 @@
  * via template-literal types — a missing key or a missing/extra placeholder
  * value is a compile-time error.
  */
-import { cs } from "./cs.js";
-import { en } from "./en.js";
-import type { SupportedLocale } from "./resolve-locale.js";
+import { cs } from "./cs";
+import { en } from "./en";
+import type { SupportedLocale } from "./resolve-locale";
 
 export const translations = { en, cs } as const;
 

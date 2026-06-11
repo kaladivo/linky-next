@@ -29,9 +29,7 @@ export const appLayer = Layer.mergeAll(
 export type AppServices = Layer.Layer.Success<typeof appLayer>;
 ```
 
-Today it provides only `CurrentEnvironment` (the decoded `EnvironmentConfig` from `src/environment.ts`, wrapped in the service tag that `@linky/core` defines — core owns service definitions, the app owns the values).
-
-**How platform Layers join later (issue #8):** when `packages/platform` ships implementations (expo-secure-store → `SecureStorage`, expo-crypto → `Randomness`, `FetchHttpClient.layer` → `HttpClient`, AsyncStorage → `KeyValueStore`), each is added as another argument to `Layer.mergeAll(...)`. `AppServices` widens automatically, so workflows requiring those ports immediately become runnable from hooks — no hook or component changes.
+It provides `CurrentEnvironment` (the decoded `EnvironmentConfig` from `src/environment.ts`, wrapped in the service tag that `@linky/core` defines — core owns service definitions, the app owns the values) plus the Expo-backed platform Layers from `@linky/platform` (#8): `SecureStorageLive`, `KeyValueStorageLive`, `RandomnessLive`, `ClipboardLive`, `DeepLinksLive`, `HttpClientLive`. New implementations are added as another argument to `Layer.mergeAll(...)`; `AppServices` widens automatically, so workflows requiring those ports immediately become runnable from hooks — no hook or component changes.
 
 ## The hook pattern: `useEffectQuery`
 
@@ -61,6 +59,7 @@ Hand-rolled on purpose: no react-query/effect-rx at this stage. If a workflow ne
   ```
 
 - A screen needs to **trigger a workflow on user action** (send payment, save contact) → that is a mutation, not a query; add a small `useEffectMutation`-style hook in `src/runtime/` when the first real mutation lands, following the same Exit-mapping rules below.
+- Code must run a workflow **outside the render cycle** (the deferred-startup coordinator, fire-and-forget persistence like the locale preference) → `runAppEffect` from `src/runtime/` (#16), the one sanctioned imperative escape hatch. It runs the Effect on the app runtime and returns a promise that rejects on failures and defects alike; callers decide whether that is awaited or logged.
 - A component wants to **import `effect`, a Layer, or `appRuntime`** → stop; that logic belongs in core (workflow) or `src/runtime/` (bridge).
 
 ### Error mapping rules

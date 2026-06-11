@@ -61,6 +61,9 @@ const config: ExpoConfig = {
     // requireAuthentication later). CNG rule: this entry is the only place
     // the native projects learn about it.
     "expo-secure-store",
+    // expo-localization: exposes the device locale list to JS; the
+    // LocaleProvider resolves persisted preference vs. device locales.
+    "expo-localization",
     [
       "expo-splash-screen",
       {
