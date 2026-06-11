@@ -14,6 +14,10 @@
  * | ---------------------------------- | -------------------------------------- |
  * | `linky.identity.backupPhrase.v1`   | canonical 20-word SLIP-39 phrase       |
  *
+ * (The custom Nostr key override `linky.identity.customNostrKey.v1` is owned
+ * by `customNostrKey.ts`; this module consumes it via
+ * `resolveActiveNostrIdentity` and clears it on logout.)
+ *
  * Bump the `.v1` suffix only with a migration that reads the old key.
  *
  * Everything handled here is secret material: workflows never log it, and
@@ -31,6 +35,8 @@ import type { Randomness } from "../../ports/Randomness.js";
 import type { SecureStorageError } from "../../ports/SecureStorage.js";
 import { SecureStorage } from "../../ports/SecureStorage.js";
 import { createMasterIdentity } from "./createMasterIdentity.js";
+import type { ActiveNostrIdentity, CustomNostrKeyCorruptedError } from "./customNostrKey.js";
+import { resolveActiveNostrIdentity, revertToDerivedNostrKey } from "./customNostrKey.js";
 import { deriveCashuWallet } from "./deriveCashuWallet.js";
 import { deriveNostrIdentity } from "./deriveNostrIdentity.js";
 import type { CashuWallet, NostrIdentity } from "./DerivedIdentities.js";
@@ -47,11 +53,19 @@ export const BACKUP_PHRASE_STORAGE_KEY = "linky.identity.backupPhrase.v1";
  * derived per sync domain on demand (`deriveOwnerLane`) because rotating
  * lanes need a rotation index that lives in synced meta state.
  *
- * Every field except `nostr.publicKeyHex`/`nostr.npub` is secret material.
+ * `nostr` is always the DERIVED default (NIP-06 from the master secret);
+ * `activeNostr` is the single source of truth for which Nostr identity the
+ * app acts as (#20) — equal to `nostr` unless a custom `nsec` override is
+ * stored. Consumers that sign/decrypt (#21+) MUST use `activeNostr`.
+ *
+ * Every field except the public halves (`publicKeyHex`/`npub`) is secret.
  */
 export interface IdentitySession {
   readonly masterIdentity: MasterIdentity;
+  /** The derived default Nostr identity (`identity.derive-nostr`). */
   readonly nostr: NostrIdentity;
+  /** The ACTIVE Nostr identity: derived default or custom override (#20). */
+  readonly activeNostr: ActiveNostrIdentity;
   readonly cashuWallet: CashuWallet;
 }
 
@@ -80,14 +94,23 @@ export class IdentitySessionCorruptedError extends Data.TaggedError(
   readonly reason: InvalidBackupPhraseError["reason"];
 }> {}
 
-/** Derives the in-memory session from a master identity. Pure derivation. */
+/**
+ * Builds the in-memory session from a master identity: pure derivation of
+ * the default identities plus resolution of the active Nostr identity
+ * against the stored custom-key override (#20).
+ */
 export const deriveIdentitySession = (
   masterIdentity: MasterIdentity,
-): Effect.Effect<IdentitySession> =>
+): Effect.Effect<
+  IdentitySession,
+  SecureStorageError | CustomNostrKeyCorruptedError,
+  SecureStorage
+> =>
   Effect.gen(function* () {
     const nostr = yield* deriveNostrIdentity(masterIdentity.masterSecret);
     const cashuWallet = yield* deriveCashuWallet(masterIdentity.masterSecret);
-    return { masterIdentity, nostr, cashuWallet };
+    const activeNostr = yield* resolveActiveNostrIdentity(nostr);
+    return { masterIdentity, nostr, activeNostr, cashuWallet };
   });
 
 /**
@@ -105,7 +128,9 @@ export const persistIdentity = (
 
 /**
  * `identity.create` + persistence: generates a fresh master identity, saves
- * it, and returns the active session. The returned values are secrets.
+ * it, and returns the active session. Any stale custom Nostr key override
+ * from a previous identity is cleared first — a fresh identity always
+ * starts on the derived default. The returned values are secrets.
  */
 export const createIdentitySession: Effect.Effect<
   IdentitySession,
@@ -113,21 +138,34 @@ export const createIdentitySession: Effect.Effect<
   Randomness | SecureStorage
 > = Effect.gen(function* () {
   const masterIdentity = yield* createMasterIdentity;
+  yield* revertToDerivedNostrKey;
   yield* persistIdentity(masterIdentity);
-  return yield* deriveIdentitySession(masterIdentity);
+  return yield* deriveIdentitySession(masterIdentity).pipe(
+    // The override was just deleted, so a corrupted override is impossible
+    // here — if it happens anyway it is a bug, not an expected failure.
+    Effect.catchTag("CustomNostrKeyCorruptedError", (error) => Effect.die(error)),
+  );
 });
 
 /**
  * `identity.restore` + persistence: restores from raw backup-word input,
- * saves the canonical phrase, and returns the active session.
+ * saves the canonical phrase, and returns the active session. Restore
+ * starts on the derived default locally (any stale local override is
+ * cleared); a custom override that the account synced via the Evolu
+ * `nostrIdentity` row is re-applied by the M2 Evolu mirror, not here
+ * (see `customNostrKey.ts`).
  */
 export const restoreIdentitySession = (
   input: string,
 ): Effect.Effect<IdentitySession, InvalidBackupPhraseError | SecureStorageError, SecureStorage> =>
   Effect.gen(function* () {
     const masterIdentity = yield* restoreMasterIdentity(input);
+    yield* revertToDerivedNostrKey;
     yield* persistIdentity(masterIdentity);
-    return yield* deriveIdentitySession(masterIdentity);
+    return yield* deriveIdentitySession(masterIdentity).pipe(
+      // Override was just deleted; corruption here would be a bug.
+      Effect.catchTag("CustomNostrKeyCorruptedError", (error) => Effect.die(error)),
+    );
   });
 
 /**
@@ -141,7 +179,7 @@ export const restoreIdentitySession = (
  */
 export const loadSession: Effect.Effect<
   SessionState,
-  SecureStorageError | IdentitySessionCorruptedError,
+  SecureStorageError | IdentitySessionCorruptedError | CustomNostrKeyCorruptedError,
   SecureStorage
 > = Effect.gen(function* () {
   const storage = yield* SecureStorage;
@@ -161,12 +199,13 @@ export const loadSession: Effect.Effect<
 
 /**
  * `identity.logout`: clears LOCAL session secrets only — removes the stored
- * backup phrase from this device. Nothing is deleted remotely; synced data
- * and funds remain recoverable by restoring from the backup phrase.
- * Idempotent (logging out twice succeeds).
+ * backup phrase AND the custom Nostr key override from this device. Nothing
+ * is deleted remotely; synced data and funds remain recoverable by restoring
+ * from the backup phrase. Idempotent (logging out twice succeeds).
  */
 export const clearIdentitySession: Effect.Effect<void, SecureStorageError, SecureStorage> =
   Effect.gen(function* () {
     const storage = yield* SecureStorage;
     yield* storage.delete(BACKUP_PHRASE_STORAGE_KEY);
+    yield* revertToDerivedNostrKey;
   });

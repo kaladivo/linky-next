@@ -142,16 +142,26 @@ export const linkySchema = {
     detailsJson: nullOr(NonEmptyString),
   },
 
-  /** `identity` domain — Nostr identities the user activated. */
+  /**
+   * `identity` domain — Nostr identities the user activated.
+   *
+   * M2 mirror of the custom-key override (#20): the local source of truth
+   * is SecureStorage (`linky.identity.customNostrKey.v1`, owned by
+   * `@linky/core` `domain/identity/customNostrKey.ts`); when the Evolu
+   * store joins the app runtime (#21+), activate/revert additionally
+   * upsert this row so the override syncs across devices like the PoC
+   * (encrypted per-lane; PoC table `nostrIdentity`, row
+   * `active-nostr-identity`, column `switchedAtSec` = our `activatedAtSec`).
+   */
   nostrIdentity: {
     id: NostrIdentityId,
     /** NIP-19 nsec. Secret — never log query results from this table. */
     nsec: NonEmptyString1000,
     /** NIP-19 npub matching `nsec`. */
     npub: nullOr(NonEmptyString1000),
-    /** "derived" (from master identity) | "imported". */
+    /** "derived" (from master identity) | "custom" (pasted nsec override). */
     source: nullOr(NonEmptyString100),
-    /** Unix seconds when this identity became the active one. */
+    /** Unix seconds when this identity became the active one (null = derived). */
     activatedAtSec: nullOr(PositiveInt),
   },
 

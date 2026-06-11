@@ -167,9 +167,10 @@ This extends to **error `cause` chains**: a typed error's `cause` (and anything 
 
 Secrets at rest go through the `SecureStorage` port only. The stored keys are owned and documented by the module that writes them; currently:
 
-| Key                              | Value                            | Owner module                          |
-| -------------------------------- | -------------------------------- | ------------------------------------- |
-| `linky.identity.backupPhrase.v1` | canonical 20-word SLIP-39 phrase | `src/domain/identity/identitySession` |
+| Key                                | Value                                              | Owner module                          |
+| ---------------------------------- | -------------------------------------------------- | ------------------------------------- |
+| `linky.identity.backupPhrase.v1`   | canonical 20-word SLIP-39 phrase                   | `src/domain/identity/identitySession` |
+| `linky.identity.customNostrKey.v1` | JSON `{ nsec, activatedAtSec }` custom-key override | `src/domain/identity/customNostrKey`  |
 
 ## The ports
 

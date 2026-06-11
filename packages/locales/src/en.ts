@@ -729,4 +729,16 @@ export const en = {
   devShowDemoToast: "Show demo toast",
   devDemoToastMessage: "This is a demo toast.",
   devStartupToast: "Dev: deferred startup ran ({tasks} task(s)).",
+
+  // Custom Nostr key override (#20), advanced settings.
+  nostrKeySourceDerived: "Derived (default)",
+  nostrKeySourceCustom: "Custom",
+  nostrCopyNpub: "Copy npub",
+  nostrCopyNsec: "Copy nsec",
+  nostrCopyNsecArmedHint:
+    "The nsec is your private key — anyone who has it can act as you. Tap once more to copy.",
+  nostrPastePlaceholder: "nsec1…",
+  nostrActivateCustomKey: "Use pasted key",
+  nostrRevertToDerived: "Use derived key",
+  nostrKeyUpdateFailed: "Couldn't update Nostr keys.",
 } as const;
