@@ -10,11 +10,12 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "echo \"@linky/locales: no tests yet\""
+    "test": "vitest run"
   },
   "devDependencies": {
     "@linky/config": "workspace:*",
     "eslint": "^9.39.0",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.8"
   }
 }
