@@ -18,6 +18,8 @@
   "devDependencies": {
     "@evolu/nodejs": "2.4.0",
     "@linky/config": "workspace:*",
+    "@linky/core": "workspace:*",
+    "effect": "^3.21.3",
     "@types/better-sqlite3": "^7.6.13",
     "better-sqlite3": "^12.1.1",
     "eslint": "^9.39.0",

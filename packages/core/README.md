@@ -157,7 +157,7 @@ Compatibility invariants (same mnemonic → same master secret / npub / Cashu se
 - Fixtures are generated **from the PoC's own dependencies before the new implementation is written** — never from code in this repo, which would make the test circular. They are committed and never regenerated casually.
 - The corresponding `<name>.golden.test.ts` loads the JSON with `fs.readFileSync(new URL(...))` (tests are excluded from the build, so fixtures never end up in `dist/`).
 
-First instance: `src/domain/identity/__fixtures__/slip39.golden.json` (SLIP-39 backup phrase ↔ master secret, generated from `slip39-ts@0.1.13`).
+Instances: `src/domain/identity/__fixtures__/slip39.golden.json` (SLIP-39 backup phrase ↔ master secret, generated from `slip39-ts@0.1.13`) and `src/domain/identity/__fixtures__/derivedIdentities.golden.json` (master secret → Nostr keys / Cashu seed / owner-lane mnemonics, generated from the PoC's identity code and pinned deps; the Evolu owner-id end of the chain is pinned in `packages/evolu-store/test/__fixtures__/ownerLanes.golden.json`).
 
 ### 7. Secrets
 

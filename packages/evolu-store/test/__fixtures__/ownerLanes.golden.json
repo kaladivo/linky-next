@@ -1,0 +1,909 @@
+{
+  "$note": "GOLDEN FIXTURES - generated from the PoC (lane mnemonics from linky-poc identity code; owners from @evolu/common@7.4.1 createAppOwner(mnemonicToOwnerSecret(...)), the PoC web app production path). Do not edit by hand. See README.md in this directory.",
+  "generator": {
+    "source": "linky-poc/apps/web-app toAppOwnerFromMnemonic equivalent, @evolu/common@7.4.1",
+    "date": "2026-06-11"
+  },
+  "lanes": [
+    {
+      "name": "alice (dev/test-identities)",
+      "masterSecretHex": "a55f0daa6a56b47237b5e9dd747e235e",
+      "domain": "meta",
+      "index": 0,
+      "mnemonic": "differ seat eyebrow law bundle barely select reform grief short fabric setup",
+      "ownerId": "1hHJaBfyQ2V7948G8b2MCA",
+      "encryptionKeyHex": "e035b965b0c5f18c3fb2973b978333f3b54b861aeea3d1dba23f6dccf3c51a06",
+      "writeKeyHex": "7a74ae095d2c715ea1b1a87b8a2aac01"
+    },
+    {
+      "name": "alice (dev/test-identities)",
+      "masterSecretHex": "a55f0daa6a56b47237b5e9dd747e235e",
+      "domain": "identity",
+      "index": 0,
+      "mnemonic": "eyebrow trigger define clog dinner clock satoshi evil winner behind gossip crack",
+      "ownerId": "jPHRDom3aWWMpqZuRBlFqw",
+      "encryptionKeyHex": "a5b40830b575e62021a5bd687b1223c25bde5ea1f47c0e3901792cd4f38f5e0e",
+      "writeKeyHex": "dadd50121d0d5db04c90e6c0da00513e"
+    },
+    {
+      "name": "alice (dev/test-identities)",
+      "masterSecretHex": "a55f0daa6a56b47237b5e9dd747e235e",
+      "domain": "contacts",
+      "index": 0,
+      "mnemonic": "rare youth fetch power cost never chaos glue easy crane jeans skate",
+      "ownerId": "VEj0PG9vQEDvlNp9nsVC3w",
+      "encryptionKeyHex": "a7056c7c8089ce4373e24427c0c45820355722653ab84c719d404077c968cdd8",
+      "writeKeyHex": "3b59c448ae64802fd7b9a6138f4fd9ca"
+    },
+    {
+      "name": "alice (dev/test-identities)",
+      "masterSecretHex": "a55f0daa6a56b47237b5e9dd747e235e",
+      "domain": "contacts",
+      "index": 1,
+      "mnemonic": "media either venture around boost annual jeans warm license trial virtual fossil",
+      "ownerId": "pZTrUW1bem3u9TcI45PqoQ",
+      "encryptionKeyHex": "c319d185dcaef42d1d4705a434ff7e70d505a618634584ffc67f6ad81e23aa4e",
+      "writeKeyHex": "350e41a22b051636320934898d80bc0a"
+    },
+    {
+      "name": "alice (dev/test-identities)",
+      "masterSecretHex": "a55f0daa6a56b47237b5e9dd747e235e",
+      "domain": "wallet",
+      "index": 0,
+      "mnemonic": "term sting napkin trade afraid pottery enough police pair unfair skill scissors",
+      "ownerId": "xNo6nT9BVymegjmVXiW8QA",
+      "encryptionKeyHex": "2c642f65e126eb3582f8482972e4d4a065a11c01ed4fbaa133414ab77917e9bc",
+      "writeKeyHex": "400c54ded63b6eefffbf9b280ff1c621"
+    },
+    {
+      "name": "alice (dev/test-identities)",
+      "masterSecretHex": "a55f0daa6a56b47237b5e9dd747e235e",
+      "domain": "wallet",
+      "index": 1,
+      "mnemonic": "warfare potato custom bread sport decade choose cable rely eight left gather",
+      "ownerId": "MggUr5i25UOdkfngf6KZig",
+      "encryptionKeyHex": "438edb450d2a5f2874fc86431c1f11d072e5b81d32b11c87d5b822d3b1208add",
+      "writeKeyHex": "1a49e6b415e27b4a5cc6d85e8a054ee3"
+    },
+    {
+      "name": "alice (dev/test-identities)",
+      "masterSecretHex": "a55f0daa6a56b47237b5e9dd747e235e",
+      "domain": "messages",
+      "index": 0,
+      "mnemonic": "eyebrow trigger define clog dinner clock satoshi evil winner behind gossip crack",
+      "ownerId": "jPHRDom3aWWMpqZuRBlFqw",
+      "encryptionKeyHex": "a5b40830b575e62021a5bd687b1223c25bde5ea1f47c0e3901792cd4f38f5e0e",
+      "writeKeyHex": "dadd50121d0d5db04c90e6c0da00513e"
+    },
+    {
+      "name": "alice (dev/test-identities)",
+      "masterSecretHex": "a55f0daa6a56b47237b5e9dd747e235e",
+      "domain": "messages",
+      "index": 1,
+      "mnemonic": "issue sketch chaos obtain wasp age skull begin noise box caution impulse",
+      "ownerId": "qv5oXuJbPbaiWCc30cSx_w",
+      "encryptionKeyHex": "732fe6a43a0898ea1b59bb782ade8bad4ff2ce50f3d380d5601a96b21f5774de",
+      "writeKeyHex": "b74c90715873a589e4e82600a390001d"
+    },
+    {
+      "name": "alice (dev/test-identities)",
+      "masterSecretHex": "a55f0daa6a56b47237b5e9dd747e235e",
+      "domain": "transactions",
+      "index": 0,
+      "mnemonic": "chuckle alley mechanic protect target spring palm rural ritual luxury salt unhappy",
+      "ownerId": "mhe_qNsHj8XVT9ayTZlOEA",
+      "encryptionKeyHex": "7a690634185120b910db3b8e687fb895806ed8dfd2dd884160e2a1b5cd24537f",
+      "writeKeyHex": "b64e0a834aaaa573256ffb4e027db0ad"
+    },
+    {
+      "name": "alice (dev/test-identities)",
+      "masterSecretHex": "a55f0daa6a56b47237b5e9dd747e235e",
+      "domain": "transactions",
+      "index": 1,
+      "mnemonic": "agent trumpet write weapon fit surface wait warfare royal worry end tape",
+      "ownerId": "v4ea3wKdSbv7sRCxd5BEHQ",
+      "encryptionKeyHex": "4b4319a602541369f588441494cbda19bfa080b617d83e69be639c0d746c9325",
+      "writeKeyHex": "ef0d1fa24e654c03be639955f218ade8"
+    },
+    {
+      "name": "bob (dev/test-identities)",
+      "masterSecretHex": "6d32dc62d5565c9be0c03172fd7dd9e1",
+      "domain": "meta",
+      "index": 0,
+      "mnemonic": "only flavor arrive permit useful wolf list explain tail version release stuff",
+      "ownerId": "mJj7wCpz_fC5EA6RpuqVMw",
+      "encryptionKeyHex": "4b8d91c9f917f8bfea2f3cc4468b16dafe33b13f9c1bc640b40ee4a2aecc6f2f",
+      "writeKeyHex": "3ae261d3f16bbdf11db4e9a210d0fe07"
+    },
+    {
+      "name": "bob (dev/test-identities)",
+      "masterSecretHex": "6d32dc62d5565c9be0c03172fd7dd9e1",
+      "domain": "identity",
+      "index": 0,
+      "mnemonic": "unique acquire client sentence coyote era balcony grab route hedgehog lens task",
+      "ownerId": "29QPnFeIpUiYDQEeCJer7g",
+      "encryptionKeyHex": "8ebccdfa6ee52ff13748b2b21ac4ac5143fa32ba3c92c098327455faf4b93a21",
+      "writeKeyHex": "4698b356e6d66a26effc0626e17796e3"
+    },
+    {
+      "name": "bob (dev/test-identities)",
+      "masterSecretHex": "6d32dc62d5565c9be0c03172fd7dd9e1",
+      "domain": "contacts",
+      "index": 0,
+      "mnemonic": "unaware taste acoustic equal record blossom jar tribe plug few dial bottom",
+      "ownerId": "tQAjFs7uSkLy6A0D2vq4lA",
+      "encryptionKeyHex": "d296f3e9cad150435712a3aada8c28c5c60eef2f27e4674a9a18eb84d278a7f5",
+      "writeKeyHex": "4e212cd82dfd4d076caef74c049067fe"
+    },
+    {
+      "name": "bob (dev/test-identities)",
+      "masterSecretHex": "6d32dc62d5565c9be0c03172fd7dd9e1",
+      "domain": "contacts",
+      "index": 1,
+      "mnemonic": "soft park ginger winner pupil bracket demise type teach long furnace heart",
+      "ownerId": "JaTe_GQwWf23JTd00nqLlw",
+      "encryptionKeyHex": "ffeeefd3fa1dd5a729f073f4d89f57a83aac1e9d269fc7cab5b22b24c90318df",
+      "writeKeyHex": "6d70b39f4006317cb142dda8c7c13e7a"
+    },
+    {
+      "name": "bob (dev/test-identities)",
+      "masterSecretHex": "6d32dc62d5565c9be0c03172fd7dd9e1",
+      "domain": "wallet",
+      "index": 0,
+      "mnemonic": "wine sight engine riot north patrol supreme oxygen update settle small snack",
+      "ownerId": "P-CMDgxNCKR5FasmGDe7lg",
+      "encryptionKeyHex": "c44d780e0b1c5621dc852b97cb9633ab8ad20648da21763ff2cc2397c892b720",
+      "writeKeyHex": "a001d57645f480d562609158c09859fc"
+    },
+    {
+      "name": "bob (dev/test-identities)",
+      "masterSecretHex": "6d32dc62d5565c9be0c03172fd7dd9e1",
+      "domain": "wallet",
+      "index": 1,
+      "mnemonic": "ancient disease tired offer mushroom west empower arrive bulk brush release dolphin",
+      "ownerId": "L9uuLFM5m0hgZbCFfDG3Yg",
+      "encryptionKeyHex": "885c48cd35bd8321f4eadf6e73181c04884b790dc5e24811ef20c6fd45352b4e",
+      "writeKeyHex": "e7118ed39259e623cc92abff2661782a"
+    },
+    {
+      "name": "bob (dev/test-identities)",
+      "masterSecretHex": "6d32dc62d5565c9be0c03172fd7dd9e1",
+      "domain": "messages",
+      "index": 0,
+      "mnemonic": "unique acquire client sentence coyote era balcony grab route hedgehog lens task",
+      "ownerId": "29QPnFeIpUiYDQEeCJer7g",
+      "encryptionKeyHex": "8ebccdfa6ee52ff13748b2b21ac4ac5143fa32ba3c92c098327455faf4b93a21",
+      "writeKeyHex": "4698b356e6d66a26effc0626e17796e3"
+    },
+    {
+      "name": "bob (dev/test-identities)",
+      "masterSecretHex": "6d32dc62d5565c9be0c03172fd7dd9e1",
+      "domain": "messages",
+      "index": 1,
+      "mnemonic": "awkward maze diet menu enroll air crowd slogan alarm rough extend system",
+      "ownerId": "YwWn8eSa8jH01VSN8dESEw",
+      "encryptionKeyHex": "44cac62fb095bf897eee17b6c2db2739a692e2ba91db5231da5c4d391ef33dd4",
+      "writeKeyHex": "6c151d20bc249d33b46a5903cb55cbfd"
+    },
+    {
+      "name": "bob (dev/test-identities)",
+      "masterSecretHex": "6d32dc62d5565c9be0c03172fd7dd9e1",
+      "domain": "transactions",
+      "index": 0,
+      "mnemonic": "main rule chicken keen addict alone symbol slogan change giraffe remember crowd",
+      "ownerId": "FXa2d-vZ5LYfNhluyRTPZw",
+      "encryptionKeyHex": "36f2e681b1dc1184c26a0528a60cabbfc2c7be6e47271c59fd96076e658d458d",
+      "writeKeyHex": "2df8d2d9161dafa57469aa8c405929f2"
+    },
+    {
+      "name": "bob (dev/test-identities)",
+      "masterSecretHex": "6d32dc62d5565c9be0c03172fd7dd9e1",
+      "domain": "transactions",
+      "index": 1,
+      "mnemonic": "swift heart switch trigger paper argue room syrup aim fork brush buzz",
+      "ownerId": "HPiYBS_p-0l-0lNIBRiEmg",
+      "encryptionKeyHex": "3cc3e70084e132f70c86f1364ae8c725158e047f25d1c81e0b01a024413fd476",
+      "writeKeyHex": "9f587cabe8031da073974c85636bd1ab"
+    },
+    {
+      "name": "all-zero entropy",
+      "masterSecretHex": "00000000000000000000000000000000",
+      "domain": "meta",
+      "index": 0,
+      "mnemonic": "path tower have canyon wasp fringe floor leave calm myth planet capital",
+      "ownerId": "RDdF-Jddr4iTMWaQRjRVAg",
+      "encryptionKeyHex": "a288ad5e6461441a7bc479ec781c9dd1d728039a3abd30a180c7ac8b72145e7a",
+      "writeKeyHex": "34c51d612ebee5fef76b5e3cae80f3a8"
+    },
+    {
+      "name": "all-zero entropy",
+      "masterSecretHex": "00000000000000000000000000000000",
+      "domain": "identity",
+      "index": 0,
+      "mnemonic": "joy regular arctic weekend vibrant guilt east club razor job joy topple",
+      "ownerId": "8qy4MIQO-Jj2vj6mPqnzYg",
+      "encryptionKeyHex": "243f95c2199e3aea25561d748575ca8b11d48b6f9fad41bbbaf744603aca53bc",
+      "writeKeyHex": "35bf496f50219770f9f58c528fec9d14"
+    },
+    {
+      "name": "all-zero entropy",
+      "masterSecretHex": "00000000000000000000000000000000",
+      "domain": "contacts",
+      "index": 0,
+      "mnemonic": "forest energy unfair velvet improve couch approve issue milk timber urge doll",
+      "ownerId": "aWw0u44vJUFi4ufV52i3EQ",
+      "encryptionKeyHex": "97033cdb91f8202c7e70241526ccbfe0639137e61764a0e853cc03b36ebaf2ea",
+      "writeKeyHex": "8db1ccee66cf56f3331d84f49a6e9b36"
+    },
+    {
+      "name": "all-zero entropy",
+      "masterSecretHex": "00000000000000000000000000000000",
+      "domain": "contacts",
+      "index": 1,
+      "mnemonic": "kite aim thought lock believe vote monster hunt achieve style wedding trim",
+      "ownerId": "rxSb7Flh478cMz3FWB4S_w",
+      "encryptionKeyHex": "240489e65aef72f39eb8eeb0ec9a9f0db42e922537301e0ded790bbc22c595e8",
+      "writeKeyHex": "3cd738c636a7a1cbb94b0f7d7c7a7053"
+    },
+    {
+      "name": "all-zero entropy",
+      "masterSecretHex": "00000000000000000000000000000000",
+      "domain": "wallet",
+      "index": 0,
+      "mnemonic": "snap soccer update unaware pepper armor vacant similar regular biology mixed hour",
+      "ownerId": "fsI9BT8skdgnzIF-naa6Eg",
+      "encryptionKeyHex": "0622cc789f9499658101bdc3666b315abed62dd8ffc19fc5b38df27f75b1c11e",
+      "writeKeyHex": "af40c5aa94327b34d820eca4139fbd19"
+    },
+    {
+      "name": "all-zero entropy",
+      "masterSecretHex": "00000000000000000000000000000000",
+      "domain": "wallet",
+      "index": 1,
+      "mnemonic": "announce art window addict physical wait defy pioneer repair staff catch hockey",
+      "ownerId": "AP9ZemrA9Oa-ILxEz4XoWA",
+      "encryptionKeyHex": "e6a1844fedfa6a205e2e5f24bb91433a09785a716f4f001551560a78f8f3d0ce",
+      "writeKeyHex": "5f1cd5cfb629fba2a9975f2c3c08c12d"
+    },
+    {
+      "name": "all-zero entropy",
+      "masterSecretHex": "00000000000000000000000000000000",
+      "domain": "messages",
+      "index": 0,
+      "mnemonic": "joy regular arctic weekend vibrant guilt east club razor job joy topple",
+      "ownerId": "8qy4MIQO-Jj2vj6mPqnzYg",
+      "encryptionKeyHex": "243f95c2199e3aea25561d748575ca8b11d48b6f9fad41bbbaf744603aca53bc",
+      "writeKeyHex": "35bf496f50219770f9f58c528fec9d14"
+    },
+    {
+      "name": "all-zero entropy",
+      "masterSecretHex": "00000000000000000000000000000000",
+      "domain": "messages",
+      "index": 1,
+      "mnemonic": "sudden supreme test spoil wagon search age best educate magnet hazard shaft",
+      "ownerId": "j9sqJzJhp__s5DZ4yUevKw",
+      "encryptionKeyHex": "a286cc0ccfa8d862b672748a5dda243ab72cc9fb53f63a026452e858ee478b41",
+      "writeKeyHex": "7d1693f36502d9da57f9c54b7c80aeef"
+    },
+    {
+      "name": "all-zero entropy",
+      "masterSecretHex": "00000000000000000000000000000000",
+      "domain": "transactions",
+      "index": 0,
+      "mnemonic": "brand poem brain siren base speed pair pupil wild sure legend bench",
+      "ownerId": "tfK4ZlZLD_fYN7PHwLdO6g",
+      "encryptionKeyHex": "293d9fd4867a07815e924027d3e863b97b83353767bc5a304c54654d78d72e07",
+      "writeKeyHex": "5cdbe54d8ad20406784bd8a5afd4080a"
+    },
+    {
+      "name": "all-zero entropy",
+      "masterSecretHex": "00000000000000000000000000000000",
+      "domain": "transactions",
+      "index": 1,
+      "mnemonic": "move whale drastic point keen alert place reform unusual onion crucial asthma",
+      "ownerId": "rW8QAovyfHTxHg10hjd2FA",
+      "encryptionKeyHex": "4029f8df0dc08145cebff8756d5a2e684aae4af31f69f90badc7fb100f5a82e7",
+      "writeKeyHex": "fcf81f312a2b422e160ed0aec50f81c2"
+    },
+    {
+      "name": "all-ff entropy",
+      "masterSecretHex": "ffffffffffffffffffffffffffffffff",
+      "domain": "meta",
+      "index": 0,
+      "mnemonic": "museum adult moment razor parade fat off boss fatal used joy flock",
+      "ownerId": "j3y4IZc-fU1pn7nQP9Ok5g",
+      "encryptionKeyHex": "5dbc5a5e7f5c3d4fcf13931a72081d1542ee0a1f6f5e14622718a8fcb9d46d90",
+      "writeKeyHex": "bfa38285f990c039595c2e8bda7fd6ff"
+    },
+    {
+      "name": "all-ff entropy",
+      "masterSecretHex": "ffffffffffffffffffffffffffffffff",
+      "domain": "identity",
+      "index": 0,
+      "mnemonic": "brass vicious drip pull online mind route coral coffee stand entire achieve",
+      "ownerId": "FkeTkq8eZ4wCyIJ31qpETw",
+      "encryptionKeyHex": "e7173b2df5008c8d2dbffddcda35ce8bd45da12cc6b8224122a6afbdd82d937e",
+      "writeKeyHex": "c6352241aeaa3814db5cf5f298106ba6"
+    },
+    {
+      "name": "all-ff entropy",
+      "masterSecretHex": "ffffffffffffffffffffffffffffffff",
+      "domain": "contacts",
+      "index": 0,
+      "mnemonic": "movie sponsor lucky fruit topic define neutral shy canal health alter stage",
+      "ownerId": "RurqDMG1V_em4EwBHQbX6A",
+      "encryptionKeyHex": "fc5565d47bf73d89a28692e657cbf88a42cb2a2386ffb2d6b3b9b7edd2be73fd",
+      "writeKeyHex": "4221e7a7c0bc42e8c4ff58e030bf395e"
+    },
+    {
+      "name": "all-ff entropy",
+      "masterSecretHex": "ffffffffffffffffffffffffffffffff",
+      "domain": "contacts",
+      "index": 1,
+      "mnemonic": "tail brief jewel all mule battle arena shop slice sea develop caution",
+      "ownerId": "iTDRQfBd1Ik-ZyCzqeMNPg",
+      "encryptionKeyHex": "741d16b4cac506d99fa905b1b51748f3baed6464a84ca6582bb2f138ee36435d",
+      "writeKeyHex": "ceaf23ce8d41c4017aa022c81705e907"
+    },
+    {
+      "name": "all-ff entropy",
+      "masterSecretHex": "ffffffffffffffffffffffffffffffff",
+      "domain": "wallet",
+      "index": 0,
+      "mnemonic": "found bracket trust swarm gasp canvas trumpet cup anxiety stove wood pipe",
+      "ownerId": "ZIQYGnx8NnnT0MkWwT3N8A",
+      "encryptionKeyHex": "00081328dde7a0b7ad1ac717f262a63a7a58ec7b9fab1eca0821c53677897867",
+      "writeKeyHex": "71364e01ee3b942f6165cd9e786092fb"
+    },
+    {
+      "name": "all-ff entropy",
+      "masterSecretHex": "ffffffffffffffffffffffffffffffff",
+      "domain": "wallet",
+      "index": 1,
+      "mnemonic": "wash chase toe parrot dad shaft stable shoulder pave depart smooth slim",
+      "ownerId": "DCXIdZNIEhFF2F1lTaZbxg",
+      "encryptionKeyHex": "a73dfcbe9fa0fc327112b1dcbc83fedf15ba278461be59078ce710aca681a9b6",
+      "writeKeyHex": "c0730d209276895c2728f29eb78ddf28"
+    },
+    {
+      "name": "all-ff entropy",
+      "masterSecretHex": "ffffffffffffffffffffffffffffffff",
+      "domain": "messages",
+      "index": 0,
+      "mnemonic": "brass vicious drip pull online mind route coral coffee stand entire achieve",
+      "ownerId": "FkeTkq8eZ4wCyIJ31qpETw",
+      "encryptionKeyHex": "e7173b2df5008c8d2dbffddcda35ce8bd45da12cc6b8224122a6afbdd82d937e",
+      "writeKeyHex": "c6352241aeaa3814db5cf5f298106ba6"
+    },
+    {
+      "name": "all-ff entropy",
+      "masterSecretHex": "ffffffffffffffffffffffffffffffff",
+      "domain": "messages",
+      "index": 1,
+      "mnemonic": "mouse style arrive exist swarm pull omit gym excite boss can oil",
+      "ownerId": "gSMfKC7BlsQswsph2lvD5w",
+      "encryptionKeyHex": "fd4b12f2a029c380fb2a1a91a1e94b4da914b6f16b4cee125eeca85b19dc3057",
+      "writeKeyHex": "dd65a3d26878a4d2ae22c11945918ae4"
+    },
+    {
+      "name": "all-ff entropy",
+      "masterSecretHex": "ffffffffffffffffffffffffffffffff",
+      "domain": "transactions",
+      "index": 0,
+      "mnemonic": "clog wonder update phone impact empty tell traffic next cherry quote usage",
+      "ownerId": "HcrLQB13KGPEDUp8-4ZqNw",
+      "encryptionKeyHex": "c0f9b7b8eb7bf2fae4ee0626f7422d0b8765dba1916c91340153e328a007d6a9",
+      "writeKeyHex": "69a4c80431f7fc40673e6df115565652"
+    },
+    {
+      "name": "all-ff entropy",
+      "masterSecretHex": "ffffffffffffffffffffffffffffffff",
+      "domain": "transactions",
+      "index": 1,
+      "mnemonic": "company liar vault bench silly maze morning false include high private edge",
+      "ownerId": "r5CfUbRzyPFQ9rgDwJV1KA",
+      "encryptionKeyHex": "4db88e0b78ebae9cb8877eeea4216d5ef015eaf85820bd000aed496da2aec698",
+      "writeKeyHex": "0191e6523ce80be7e24faffc472209fc"
+    },
+    {
+      "name": "sequential bytes",
+      "masterSecretHex": "000102030405060708090a0b0c0d0e0f",
+      "domain": "meta",
+      "index": 0,
+      "mnemonic": "diet swift world sand heart donate squeeze never inner glove ability exist",
+      "ownerId": "AYFnTLng9r9QedjMIoFYrA",
+      "encryptionKeyHex": "d9e2fd68ffee7c9a50d717e09f3cc432c4213f74e9c850a5cdddd0f9bdde26be",
+      "writeKeyHex": "dc5b7686589535d34b5adca7bd8e18fc"
+    },
+    {
+      "name": "sequential bytes",
+      "masterSecretHex": "000102030405060708090a0b0c0d0e0f",
+      "domain": "identity",
+      "index": 0,
+      "mnemonic": "cactus rigid hard foil vacant wave tobacco tongue twelve atom cigar chase",
+      "ownerId": "xyGdoNiNbKOvaPEU8xuT5Q",
+      "encryptionKeyHex": "660b5b44fd053dfe06d2b7455dac6f1ff514cac47e579a94bdf88710719b49e3",
+      "writeKeyHex": "da18ccd926f88f0534487a780275a526"
+    },
+    {
+      "name": "sequential bytes",
+      "masterSecretHex": "000102030405060708090a0b0c0d0e0f",
+      "domain": "contacts",
+      "index": 0,
+      "mnemonic": "milk material jacket kite brand bubble enlist steel trend electric banner oyster",
+      "ownerId": "t0Y0JIvrINvYbqBRN9VYHQ",
+      "encryptionKeyHex": "9d046a5350e4e40b77e8e9811faaf169014e88fc80ff96a2707bd0d5079fd95c",
+      "writeKeyHex": "c1dd68a07305ebe3e132cb5c4745820c"
+    },
+    {
+      "name": "sequential bytes",
+      "masterSecretHex": "000102030405060708090a0b0c0d0e0f",
+      "domain": "contacts",
+      "index": 1,
+      "mnemonic": "legal have arch laugh trophy old kidney artefact tobacco syrup donkey palace",
+      "ownerId": "AMg3vQCmbsxigcuzgh7Xfw",
+      "encryptionKeyHex": "226e5b0243395aac1b987c5eb68e907427bbc05879766631b988d998d097cf58",
+      "writeKeyHex": "1ae91a8d7eda3d0d982e6f99992ecb37"
+    },
+    {
+      "name": "sequential bytes",
+      "masterSecretHex": "000102030405060708090a0b0c0d0e0f",
+      "domain": "wallet",
+      "index": 0,
+      "mnemonic": "plug glow ivory track rookie biology round muscle define injury pen engine",
+      "ownerId": "kCV_B-5hYdPUTaUo339vjw",
+      "encryptionKeyHex": "8381ea189618f546aabf6c1f0e1aff8b02e62298647a6a1e39e218e2c41b6746",
+      "writeKeyHex": "893c99be88b75e5f37fafcd78a3d2560"
+    },
+    {
+      "name": "sequential bytes",
+      "masterSecretHex": "000102030405060708090a0b0c0d0e0f",
+      "domain": "wallet",
+      "index": 1,
+      "mnemonic": "repair slot include hybrid wrong wild enact jump penalty civil outside travel",
+      "ownerId": "5in66wKYmjhXK3hXyHi6QQ",
+      "encryptionKeyHex": "e25050637da7c323486dde66121b86f8d4c5e4dbe6d49150a56433c6012a06bf",
+      "writeKeyHex": "93982cc4bd0e9e4c21a024d9e86104e3"
+    },
+    {
+      "name": "sequential bytes",
+      "masterSecretHex": "000102030405060708090a0b0c0d0e0f",
+      "domain": "messages",
+      "index": 0,
+      "mnemonic": "cactus rigid hard foil vacant wave tobacco tongue twelve atom cigar chase",
+      "ownerId": "xyGdoNiNbKOvaPEU8xuT5Q",
+      "encryptionKeyHex": "660b5b44fd053dfe06d2b7455dac6f1ff514cac47e579a94bdf88710719b49e3",
+      "writeKeyHex": "da18ccd926f88f0534487a780275a526"
+    },
+    {
+      "name": "sequential bytes",
+      "masterSecretHex": "000102030405060708090a0b0c0d0e0f",
+      "domain": "messages",
+      "index": 1,
+      "mnemonic": "term female few energy glad survey venue butter quarter season cousin undo",
+      "ownerId": "0zwl-wxtL7_4jVPyxJqqKA",
+      "encryptionKeyHex": "19595928a5d90e300ce737dfb629d0ac749330fe6af80df6f7a461902ab2a036",
+      "writeKeyHex": "fd751c3b6528c7d1a015bf29200238b1"
+    },
+    {
+      "name": "sequential bytes",
+      "masterSecretHex": "000102030405060708090a0b0c0d0e0f",
+      "domain": "transactions",
+      "index": 0,
+      "mnemonic": "patient edit uncle pudding hamster rare nature park capital board together bench",
+      "ownerId": "d89Z8AWIWadSzX87dUhrgA",
+      "encryptionKeyHex": "919365ee7a20f4dfe6900e4ad63b56f21e24e3279c59351bd1efd53e99039489",
+      "writeKeyHex": "df295aecea0bb1ca9a02b098ec99f598"
+    },
+    {
+      "name": "sequential bytes",
+      "masterSecretHex": "000102030405060708090a0b0c0d0e0f",
+      "domain": "transactions",
+      "index": 1,
+      "mnemonic": "duck poem cushion suffer milk opera border merit pear pig reform indicate",
+      "ownerId": "RzhkwZ7gXWnJNipAIIOUFA",
+      "encryptionKeyHex": "8721812691b4b11f6cfb2daf1976799fbb51c09e0a368d19d6e5a9e909eb4d33",
+      "writeKeyHex": "7798d0c555e74f1fbbb7db8b539080b1"
+    },
+    {
+      "name": "sha256(linky-golden-1)[0..16]",
+      "masterSecretHex": "a4abd4cfac6dae2a83b165583f8af315",
+      "domain": "meta",
+      "index": 0,
+      "mnemonic": "lounge fly toss still airport tumble divorce another size salute arm pride",
+      "ownerId": "yp525dY_fbvtqIAr_eNosA",
+      "encryptionKeyHex": "f8a8fbc4a5ba30981fee4bafcca5d64be79b26e3ce327c1bb059b86a2b21eb45",
+      "writeKeyHex": "81955d381e427f8bd87806b50cb83b78"
+    },
+    {
+      "name": "sha256(linky-golden-1)[0..16]",
+      "masterSecretHex": "a4abd4cfac6dae2a83b165583f8af315",
+      "domain": "identity",
+      "index": 0,
+      "mnemonic": "harbor barely soft mistake more wasp wall crazy isolate enter mesh pilot",
+      "ownerId": "uDhhSF3sWmLGGQUBjMQWnQ",
+      "encryptionKeyHex": "f3694cf9deb0f514e28833bb38690b88225713f10bedad2c13f5b012bd794ccb",
+      "writeKeyHex": "9d86eb957c8e250444800a211a7e63d2"
+    },
+    {
+      "name": "sha256(linky-golden-1)[0..16]",
+      "masterSecretHex": "a4abd4cfac6dae2a83b165583f8af315",
+      "domain": "contacts",
+      "index": 0,
+      "mnemonic": "sort pistol gravity write any become capital bacon cactus huge federal blush",
+      "ownerId": "kHLJxxHufvUFGOKlBzCLiA",
+      "encryptionKeyHex": "92ac004829aef7bfc1ca9ee3b22830be245064e68cd9443b37b7faa70207a2ad",
+      "writeKeyHex": "aeca58358d3b0392d1ab237bc57f7c5b"
+    },
+    {
+      "name": "sha256(linky-golden-1)[0..16]",
+      "masterSecretHex": "a4abd4cfac6dae2a83b165583f8af315",
+      "domain": "contacts",
+      "index": 1,
+      "mnemonic": "miracle cushion fatigue genius leader orphan primary canoe shiver add casual dismiss",
+      "ownerId": "iZZ-Hx_JDheM9Q9dOM8tMA",
+      "encryptionKeyHex": "d437b3754229a701f2ee3ed5d35c5cdca6268ba908c12a9e2bed3c084d0966d4",
+      "writeKeyHex": "bf95de098b6538c4ef458751d4576fef"
+    },
+    {
+      "name": "sha256(linky-golden-1)[0..16]",
+      "masterSecretHex": "a4abd4cfac6dae2a83b165583f8af315",
+      "domain": "wallet",
+      "index": 0,
+      "mnemonic": "bone mind more oblige goat motor recipe lift tiny almost cattle faith",
+      "ownerId": "YpRwN8-fOBfSSP6u6jt6sw",
+      "encryptionKeyHex": "b1076e251555c7c92da81b52ef693a276837eabc645946f28f6466e01849a94d",
+      "writeKeyHex": "6de424c8ee2dff9e6c6c2c4b94f2dc42"
+    },
+    {
+      "name": "sha256(linky-golden-1)[0..16]",
+      "masterSecretHex": "a4abd4cfac6dae2a83b165583f8af315",
+      "domain": "wallet",
+      "index": 1,
+      "mnemonic": "stable sketch bike off suggest danger shaft garbage once brain glad spray",
+      "ownerId": "nuO9TfQ8y2-VRo7-ki4IVg",
+      "encryptionKeyHex": "609b8e2e19d6a7ea4ea147064b54cfefdce030e516d3f7982a4c4f6a151af819",
+      "writeKeyHex": "1bc11e6a0f8f6262bedf473d05a58fb3"
+    },
+    {
+      "name": "sha256(linky-golden-1)[0..16]",
+      "masterSecretHex": "a4abd4cfac6dae2a83b165583f8af315",
+      "domain": "messages",
+      "index": 0,
+      "mnemonic": "harbor barely soft mistake more wasp wall crazy isolate enter mesh pilot",
+      "ownerId": "uDhhSF3sWmLGGQUBjMQWnQ",
+      "encryptionKeyHex": "f3694cf9deb0f514e28833bb38690b88225713f10bedad2c13f5b012bd794ccb",
+      "writeKeyHex": "9d86eb957c8e250444800a211a7e63d2"
+    },
+    {
+      "name": "sha256(linky-golden-1)[0..16]",
+      "masterSecretHex": "a4abd4cfac6dae2a83b165583f8af315",
+      "domain": "messages",
+      "index": 1,
+      "mnemonic": "label health borrow tackle happy vessel wave autumn carpet entry giraffe clean",
+      "ownerId": "m81Zw4wCB1swC209og8tRA",
+      "encryptionKeyHex": "37170fc23c9e3c3c6a1445d4689518522e3ab25bfdd95ff8335501f4200dc767",
+      "writeKeyHex": "b94e4b92e4cee6743c45348201dced01"
+    },
+    {
+      "name": "sha256(linky-golden-1)[0..16]",
+      "masterSecretHex": "a4abd4cfac6dae2a83b165583f8af315",
+      "domain": "transactions",
+      "index": 0,
+      "mnemonic": "explain rent better bitter guard curve term check purse autumn equal aerobic",
+      "ownerId": "DMinOKRmr1O-V5Nc2kkNXw",
+      "encryptionKeyHex": "6f1b6c597aafeeaf1a2d18a139da4183b92fa9330cb1632f4e6c0c38eb200ced",
+      "writeKeyHex": "62a860381d09f25b611b5a0a3abedc63"
+    },
+    {
+      "name": "sha256(linky-golden-1)[0..16]",
+      "masterSecretHex": "a4abd4cfac6dae2a83b165583f8af315",
+      "domain": "transactions",
+      "index": 1,
+      "mnemonic": "treat remember clump venture lawn universe cement enroll skin demand labor immense",
+      "ownerId": "63U_IpWfCpa5moN1-4EqRQ",
+      "encryptionKeyHex": "0a3e8464b5e10913b26d2e09163575c6427b7aa138b5a249ed06c53bbae61777",
+      "writeKeyHex": "05a781904e9456c3b360a37c5e0ef66c"
+    },
+    {
+      "name": "sha256(linky-golden-2)[0..16]",
+      "masterSecretHex": "5ddd8bd24b94269edf30eb68b67ddfbc",
+      "domain": "meta",
+      "index": 0,
+      "mnemonic": "virus bridge rookie arctic ring traffic pizza muscle piano toilet fade sugar",
+      "ownerId": "JaK_aZ-EaLf5FsIrjHAtFg",
+      "encryptionKeyHex": "ec59193dfadfa9b2d693fe9b3b6062a37bb034a7a5b8363ade1e19d157153a39",
+      "writeKeyHex": "4f7bfbd62ff67ee35b3f8379ab46a886"
+    },
+    {
+      "name": "sha256(linky-golden-2)[0..16]",
+      "masterSecretHex": "5ddd8bd24b94269edf30eb68b67ddfbc",
+      "domain": "identity",
+      "index": 0,
+      "mnemonic": "either light cool permit bonus ladder awful sand library kind usual crowd",
+      "ownerId": "v3YjMuMaFj-hyTA__8sOGw",
+      "encryptionKeyHex": "8116737018f00de6bac9b17fbad3d52bf92409364a207e46725dcff1892dda15",
+      "writeKeyHex": "46f83299c44296ccf5994c29ca290675"
+    },
+    {
+      "name": "sha256(linky-golden-2)[0..16]",
+      "masterSecretHex": "5ddd8bd24b94269edf30eb68b67ddfbc",
+      "domain": "contacts",
+      "index": 0,
+      "mnemonic": "salmon horse together retire liberty virus grape slight drum expect senior shaft",
+      "ownerId": "uGphjfMR4qyTrgId4754Eg",
+      "encryptionKeyHex": "c32c1025997388aaf044529453fcf921fff1a5e6e8432545e9c3953cb9d5abaf",
+      "writeKeyHex": "25833e528ed6ddfbf8caf5eceb0fbf77"
+    },
+    {
+      "name": "sha256(linky-golden-2)[0..16]",
+      "masterSecretHex": "5ddd8bd24b94269edf30eb68b67ddfbc",
+      "domain": "contacts",
+      "index": 1,
+      "mnemonic": "have coil tower damp mule rocket easy fault drink battle language agent",
+      "ownerId": "dDWnFrKxmwkvLGdByCNsHQ",
+      "encryptionKeyHex": "2db38d839dde7b39e8ebadf311bebdd0b17adeb320a53256ef79d9ae060da78e",
+      "writeKeyHex": "52964f4314ca1240792574a954bbae5e"
+    },
+    {
+      "name": "sha256(linky-golden-2)[0..16]",
+      "masterSecretHex": "5ddd8bd24b94269edf30eb68b67ddfbc",
+      "domain": "wallet",
+      "index": 0,
+      "mnemonic": "fan fork bread lawn exhibit crucial will knock elegant air crater position",
+      "ownerId": "Z867HugfkZoEPxTQUr0PPw",
+      "encryptionKeyHex": "c0ca0370cbd2a6e2bdddd34600521168b90e3e78c9afda2d0da1dd97a321ae04",
+      "writeKeyHex": "dd642d6239122a652e372248bf2f2b1e"
+    },
+    {
+      "name": "sha256(linky-golden-2)[0..16]",
+      "masterSecretHex": "5ddd8bd24b94269edf30eb68b67ddfbc",
+      "domain": "wallet",
+      "index": 1,
+      "mnemonic": "endorse crunch noise much lemon bless chapter detail wink cool shift civil",
+      "ownerId": "xIX8zeTMfNQt7TKyH4HQKg",
+      "encryptionKeyHex": "d6091814b7cbae0df0a8c6695c3d4b54a54cf30e045cfa78437bc2843bd3b01f",
+      "writeKeyHex": "6eaed568b99bd183a0cf4d474c461d67"
+    },
+    {
+      "name": "sha256(linky-golden-2)[0..16]",
+      "masterSecretHex": "5ddd8bd24b94269edf30eb68b67ddfbc",
+      "domain": "messages",
+      "index": 0,
+      "mnemonic": "either light cool permit bonus ladder awful sand library kind usual crowd",
+      "ownerId": "v3YjMuMaFj-hyTA__8sOGw",
+      "encryptionKeyHex": "8116737018f00de6bac9b17fbad3d52bf92409364a207e46725dcff1892dda15",
+      "writeKeyHex": "46f83299c44296ccf5994c29ca290675"
+    },
+    {
+      "name": "sha256(linky-golden-2)[0..16]",
+      "masterSecretHex": "5ddd8bd24b94269edf30eb68b67ddfbc",
+      "domain": "messages",
+      "index": 1,
+      "mnemonic": "live sugar trigger roof pupil occur fly limb gas menu blanket human",
+      "ownerId": "yeu5t-8n1YW7q9tKb-Dkbw",
+      "encryptionKeyHex": "a3568d8ef2cbed38394769977517b2692ede31ecd8d1f05d49ccc52d29f08b8d",
+      "writeKeyHex": "5dd61355d892fb70746a9a8f37fe1794"
+    },
+    {
+      "name": "sha256(linky-golden-2)[0..16]",
+      "masterSecretHex": "5ddd8bd24b94269edf30eb68b67ddfbc",
+      "domain": "transactions",
+      "index": 0,
+      "mnemonic": "woman health shiver mail answer right company main expect potato victory any",
+      "ownerId": "8TRfdFyqGddbTvsGLlg9EQ",
+      "encryptionKeyHex": "81d8abb96054f95535834651c58247d45535c95e5bc24dc05830ff844cf0f474",
+      "writeKeyHex": "5ad2eb921d2754b59b222fd11b2cd12f"
+    },
+    {
+      "name": "sha256(linky-golden-2)[0..16]",
+      "masterSecretHex": "5ddd8bd24b94269edf30eb68b67ddfbc",
+      "domain": "transactions",
+      "index": 1,
+      "mnemonic": "involve pulp wood bracket immense fence twist bargain canvas illegal base drip",
+      "ownerId": "5tAU4RBbIBzm4ItfKQI8ew",
+      "encryptionKeyHex": "a707e46dcd5162d4b2e4b20eaba035e4e0c93fbc306adbd813f2273902dc0761",
+      "writeKeyHex": "20a2d04c3f43c3d2cc9809fa560ca757"
+    },
+    {
+      "name": "non-extendable share secret",
+      "masterSecretHex": "462ff59deea8371e66392a23c131d1f8",
+      "domain": "meta",
+      "index": 0,
+      "mnemonic": "toast next power used print artist tribe song thrive custom guilt sustain",
+      "ownerId": "dYnWGd30Lea4HPFs3rY3VA",
+      "encryptionKeyHex": "f2e5239480f81e061e1c75491e7662643b9ab1d1502c56c6948eb18467efb30c",
+      "writeKeyHex": "6f6b1956f87fe4ca8d14df71d688b0fc"
+    },
+    {
+      "name": "non-extendable share secret",
+      "masterSecretHex": "462ff59deea8371e66392a23c131d1f8",
+      "domain": "identity",
+      "index": 0,
+      "mnemonic": "hello grit tomato flag embark shoulder toy tonight speak effort east accident",
+      "ownerId": "TUZ_I-MLFvZxI0mPOuxpFw",
+      "encryptionKeyHex": "f44514bcd7380d5ddd1b94e4f23466be800265f7b819a7654f6a346cf7fc0ecd",
+      "writeKeyHex": "6d1533466747e07f8a7257580808f857"
+    },
+    {
+      "name": "non-extendable share secret",
+      "masterSecretHex": "462ff59deea8371e66392a23c131d1f8",
+      "domain": "contacts",
+      "index": 0,
+      "mnemonic": "media wish photo sugar trap solve hedgehog text draw actual breeze famous",
+      "ownerId": "mOaOM-5-xCG4lu4O5lsnZw",
+      "encryptionKeyHex": "f0a290fe814fadb91f303b0c44448e5f3bef47b6273df33791388e2f385bbbca",
+      "writeKeyHex": "1e1f524d95d809cdd5e6171e762bb4a3"
+    },
+    {
+      "name": "non-extendable share secret",
+      "masterSecretHex": "462ff59deea8371e66392a23c131d1f8",
+      "domain": "contacts",
+      "index": 1,
+      "mnemonic": "hair kitten salon scrub asthma table panic sketch share spice grit wrong",
+      "ownerId": "0FKomi5hgHadsmX1qrVDeg",
+      "encryptionKeyHex": "929c6818c18d394bf0c8a26e0b06cce2225d08d348a86c04f6c1d1c4e104c96c",
+      "writeKeyHex": "57397632be2e413cd58361049a1b9a76"
+    },
+    {
+      "name": "non-extendable share secret",
+      "masterSecretHex": "462ff59deea8371e66392a23c131d1f8",
+      "domain": "wallet",
+      "index": 0,
+      "mnemonic": "peasant deal gym slam audit silent box ritual ocean text news shock",
+      "ownerId": "bee-n6xe1ptm2oOQrJ8eug",
+      "encryptionKeyHex": "e05a90d38c348fc32ebddfccee1ba1b4280ad2e5e11052fcde0e51ad2441fcfe",
+      "writeKeyHex": "331f1066fd499bd640af38467c83d578"
+    },
+    {
+      "name": "non-extendable share secret",
+      "masterSecretHex": "462ff59deea8371e66392a23c131d1f8",
+      "domain": "wallet",
+      "index": 1,
+      "mnemonic": "lounge art what pen butter feature purity crop deputy tiger vague bracket",
+      "ownerId": "jjOf09YS_kV6Cc6IBkiJiQ",
+      "encryptionKeyHex": "1b3c96f8f0b877212bf268c5b0d3a1b00d9063146275012d299e60d526a5b2dc",
+      "writeKeyHex": "0b3278d7a55ccb67503f7434886ed019"
+    },
+    {
+      "name": "non-extendable share secret",
+      "masterSecretHex": "462ff59deea8371e66392a23c131d1f8",
+      "domain": "messages",
+      "index": 0,
+      "mnemonic": "hello grit tomato flag embark shoulder toy tonight speak effort east accident",
+      "ownerId": "TUZ_I-MLFvZxI0mPOuxpFw",
+      "encryptionKeyHex": "f44514bcd7380d5ddd1b94e4f23466be800265f7b819a7654f6a346cf7fc0ecd",
+      "writeKeyHex": "6d1533466747e07f8a7257580808f857"
+    },
+    {
+      "name": "non-extendable share secret",
+      "masterSecretHex": "462ff59deea8371e66392a23c131d1f8",
+      "domain": "messages",
+      "index": 1,
+      "mnemonic": "immense input spirit company jaguar foil spring robot foil banner coil current",
+      "ownerId": "VSsz4UDCr7oAgk9qAf8hdg",
+      "encryptionKeyHex": "fb7eeeec38f94fac3331c33fafc4a006b87791a52fe0c1e04075e02d462a818b",
+      "writeKeyHex": "f6904b20f5b6d78d61fd20cfcccf08c9"
+    },
+    {
+      "name": "non-extendable share secret",
+      "masterSecretHex": "462ff59deea8371e66392a23c131d1f8",
+      "domain": "transactions",
+      "index": 0,
+      "mnemonic": "guilt island fade worth offer tennis suit pluck inch chase tuna dream",
+      "ownerId": "S4OmhjPhDnAlDT-VPWeIEQ",
+      "encryptionKeyHex": "77e1181a72d502c926274b90fc981c07055e56dcabef786165185d7176db4791",
+      "writeKeyHex": "01659e792847f1b9286fa9f438a0b998"
+    },
+    {
+      "name": "non-extendable share secret",
+      "masterSecretHex": "462ff59deea8371e66392a23c131d1f8",
+      "domain": "transactions",
+      "index": 1,
+      "mnemonic": "flee nest tip result segment mom rough damage soldier ghost carry amount",
+      "ownerId": "JzYKfua1wchRlQQtn3YTDw",
+      "encryptionKeyHex": "d82c901e33c3c69d261638219acbb44c082bcc770efa9e9eb670c5e93acd6ea3",
+      "writeKeyHex": "5adb6778a7e7159906d78bb636365c0c"
+    },
+    {
+      "name": "iteration-exponent-1 secret",
+      "masterSecretHex": "5f1836f2f17702eefb52060110206eed",
+      "domain": "meta",
+      "index": 0,
+      "mnemonic": "bitter unlock opinion load enough scale member ramp tape oval uphold hurry",
+      "ownerId": "vEkTsuIpcmbFqyC4VpVkxQ",
+      "encryptionKeyHex": "50de4b7a542ccb99882ac8b72172a7b6939b15bf5fc49cfa4d6badc0970cdccb",
+      "writeKeyHex": "dc03513636388864c06a22a3dda429c9"
+    },
+    {
+      "name": "iteration-exponent-1 secret",
+      "masterSecretHex": "5f1836f2f17702eefb52060110206eed",
+      "domain": "identity",
+      "index": 0,
+      "mnemonic": "matrix domain file fame claim risk charge island solution mandate walnut push",
+      "ownerId": "Bbp-RaNWRMy03b7rkS2MoQ",
+      "encryptionKeyHex": "884cbb83cc6aada9e4a2c8e5bff5d1899f80b87e2b825122b964fd86d5b8235b",
+      "writeKeyHex": "a65cc8b807e7bc94cc9d39160156e424"
+    },
+    {
+      "name": "iteration-exponent-1 secret",
+      "masterSecretHex": "5f1836f2f17702eefb52060110206eed",
+      "domain": "contacts",
+      "index": 0,
+      "mnemonic": "casino fall box group remind vessel husband skill smoke waste stone term",
+      "ownerId": "CLmLbO5Oav9Jy7DGXEP7Cg",
+      "encryptionKeyHex": "076b167568775da778e8784b77aae895dbffa23b5e20763f113f6dda38ed4f91",
+      "writeKeyHex": "3e0ed2093589c32c671fb2f4fa773dcf"
+    },
+    {
+      "name": "iteration-exponent-1 secret",
+      "masterSecretHex": "5f1836f2f17702eefb52060110206eed",
+      "domain": "contacts",
+      "index": 1,
+      "mnemonic": "south warm knee innocent common gate weather raw garage senior submit trial",
+      "ownerId": "KgWXaXXWbSeb8FgHrehoVg",
+      "encryptionKeyHex": "14600be87d8af1370107afb024aa57d4bbf54eebb26a201a5297b2f3fd0f83d5",
+      "writeKeyHex": "fddecbd57051071d5a43c0e38bfd6be2"
+    },
+    {
+      "name": "iteration-exponent-1 secret",
+      "masterSecretHex": "5f1836f2f17702eefb52060110206eed",
+      "domain": "wallet",
+      "index": 0,
+      "mnemonic": "peace seed east later gown verify domain diary orphan duty night once",
+      "ownerId": "v9SZRPe8eB_magxuD9Oorg",
+      "encryptionKeyHex": "eba29a75ae11682d465f4e6923d282b68fb189b18c08d2e03abf5d47761ef204",
+      "writeKeyHex": "16d5ea636d8f82710947826d0944ed13"
+    },
+    {
+      "name": "iteration-exponent-1 secret",
+      "masterSecretHex": "5f1836f2f17702eefb52060110206eed",
+      "domain": "wallet",
+      "index": 1,
+      "mnemonic": "destroy oil belt vanish slogan athlete execute bounce jelly human secret display",
+      "ownerId": "yaBoIm1LPyN4qyGg1y9BzA",
+      "encryptionKeyHex": "e4659c680f6d658af232e8acdc8d61230d6ee64dc00efaba05bbdafe7fa7c7ef",
+      "writeKeyHex": "73b45b592a48172d93e0056a0a039d6d"
+    },
+    {
+      "name": "iteration-exponent-1 secret",
+      "masterSecretHex": "5f1836f2f17702eefb52060110206eed",
+      "domain": "messages",
+      "index": 0,
+      "mnemonic": "matrix domain file fame claim risk charge island solution mandate walnut push",
+      "ownerId": "Bbp-RaNWRMy03b7rkS2MoQ",
+      "encryptionKeyHex": "884cbb83cc6aada9e4a2c8e5bff5d1899f80b87e2b825122b964fd86d5b8235b",
+      "writeKeyHex": "a65cc8b807e7bc94cc9d39160156e424"
+    },
+    {
+      "name": "iteration-exponent-1 secret",
+      "masterSecretHex": "5f1836f2f17702eefb52060110206eed",
+      "domain": "messages",
+      "index": 1,
+      "mnemonic": "best camp arctic pipe purse void olive surge mansion debris ceiling dinner",
+      "ownerId": "j-GKE2J9vpNAlysc3wOSoA",
+      "encryptionKeyHex": "c908ec7932b2024a1f2f3841f51612fa91d59323cb0cd2c96b4a99968dcff356",
+      "writeKeyHex": "8ebe0b7aba7d5c2e122e6d39fc809458"
+    },
+    {
+      "name": "iteration-exponent-1 secret",
+      "masterSecretHex": "5f1836f2f17702eefb52060110206eed",
+      "domain": "transactions",
+      "index": 0,
+      "mnemonic": "manual drink cigar tomorrow wall hire industry cannon clinic during upper abstract",
+      "ownerId": "QXyjDg5fWWaUqV4Kf0jPFw",
+      "encryptionKeyHex": "c0a7a6b4a8273739cdd6624dffc5bd9a2c8beea81eaca3a1c96b7297420e3339",
+      "writeKeyHex": "d76f8a1c198d5f83587ee44848460549"
+    },
+    {
+      "name": "iteration-exponent-1 secret",
+      "masterSecretHex": "5f1836f2f17702eefb52060110206eed",
+      "domain": "transactions",
+      "index": 1,
+      "mnemonic": "spider clock morning wash neutral coach law side sign win ketchup old",
+      "ownerId": "mYoPPfxrG9k4lAxZnnZmSQ",
+      "encryptionKeyHex": "5943c2ad6a11837d24c12df0c3bbbf5b091fa4ecace3bc9392a45f13f1b06ddc",
+      "writeKeyHex": "34ba4a1e8ed5df9bfefba431a609f8a3"
+    }
+  ]
+}
