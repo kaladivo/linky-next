@@ -53,11 +53,13 @@ import { Clock, Effect } from "effect";
 import type { Randomness, RandomnessError } from "../../ports/Randomness.js";
 import { CurrentEnvironment } from "../environment/CurrentEnvironment.js";
 import type { ActiveNostrIdentity } from "../identity/customNostrKey.js";
-import type { NostrEvent, NostrEventTemplate } from "./NostrEvent.js";
+import type { NostrEventDelivery } from "./deliver.js";
+import { deliverNostrEvent } from "./deliver.js";
+import type { NostrEventTemplate } from "./NostrEvent.js";
 import { signNostrEvent } from "./NostrEvent.js";
 import type { NostrPendingQueueError } from "./NostrPendingQueue.js";
-import { NostrPendingQueue } from "./NostrPendingQueue.js";
-import { RelayPool } from "./RelayPool.js";
+import type { NostrPendingQueue } from "./NostrPendingQueue.js";
+import type { RelayPool } from "./RelayPool.js";
 
 /** NIP-65 relay metadata. Replaceable. */
 export const RELAY_LIST_KIND = 10002;
@@ -119,17 +121,8 @@ export const relayListTemplates = (
   };
 };
 
-/** How one relay-list event left the device. */
-export interface RelayListDelivery {
-  readonly event: NostrEvent;
-  /**
-   * `"accepted"` — ≥ 1 relay ACKed (the pool keeps retrying the rest in
-   * background). `"queued"` — no relay accepted within the pool's retry
-   * policy (offline); the event sits in `NostrPendingQueue` and goes out on
-   * the next flush.
-   */
-  readonly outcome: "accepted" | "queued";
-}
+/** How one relay-list event left the device (see `deliver.ts`). */
+export type RelayListDelivery = NostrEventDelivery;
 
 export interface PublishRelayListsResult {
   /** The kind 10002 (NIP-65) event. */
@@ -137,18 +130,6 @@ export interface PublishRelayListsResult {
   /** The kind 10050 (NIP-17 inbox) event. */
   readonly inboxRelayList: RelayListDelivery;
 }
-
-const deliver = (
-  event: NostrEvent,
-): Effect.Effect<RelayListDelivery, NostrPendingQueueError, RelayPool | NostrPendingQueue> =>
-  Effect.gen(function* () {
-    const pool = yield* RelayPool;
-    const queue = yield* NostrPendingQueue;
-    const published = yield* pool.publish(event).pipe(Effect.either);
-    if (published._tag === "Right") return { event, outcome: "accepted" as const };
-    yield* queue.enqueue(event);
-    return { event, outcome: "queued" as const };
-  });
 
 /**
  * Publishes the relay lists (kind 10002 + kind 10050) for the active Nostr
@@ -179,7 +160,7 @@ export const publishRelayLists = (
     const inboxRelayListEvent = yield* signNostrEvent(templates.inboxRelayList, secretKey);
 
     const [relayList, inboxRelayList] = yield* Effect.all(
-      [deliver(relayListEvent), deliver(inboxRelayListEvent)],
+      [deliverNostrEvent(relayListEvent), deliverNostrEvent(inboxRelayListEvent)],
       { concurrency: 2 },
     );
     return { relayList, inboxRelayList };

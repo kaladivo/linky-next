@@ -64,3 +64,50 @@ and mirrors the snippet in the section above.
 The golden test asserts our `publishRelayLists` produces byte-identical
 templates and ids under a fixed TestClock; signatures verify on both sides
 (not byte-equal — random aux, see above).
+
+## `profileMetadata.golden.json`
+
+Pins the profile metadata (kind 0) and NIP-38 status (kind 30315) event
+structure (issue #24) against what the PoC publishes:
+
+- kind **0** — `publishKind0ProfileMetadata` in
+  `apps/web-app/src/nostrPublish.ts` with the content record built by
+  `useProfileAuthDomain.publishNewProfileMetadata`: no tags,
+  `content = JSON.stringify(record)` where the record carries (in this key
+  order, empties omitted) `name`, `display_name` (both the profile name),
+  `lud16`, and `picture`/`image` (both the avatar URL). Two fixtures: a full
+  profile and a name-only profile (pins the omission behavior).
+- kind **30315** — `publishNostrGeneralStatus` in
+  `apps/web-app/src/nostrStatus.ts`: a single `["d", "general"]` tag and the
+  raw status string as content (`""` clears). The "text + currencies"
+  fixture's content is the Linky currency-preference encoding produced by
+  the PoC's `buildProfileGeneralStatus`: `"Open for coffee\nBTC, CZK"`.
+
+Generated from the **PoC's own dependency** (`nostr-tools@2.23.3`, resolved
+in `/Users/kaladivo/workspace/linky/linky-poc/apps/web-app`) on 2026-06-11,
+with this bun script run from the PoC web-app dir (same throwaway fixture
+key as `signedEvents.golden.json`, fixed `created_at = 1718001000`):
+
+```ts
+const { finalizeEvent, verifyEvent, getEventHash, getPublicKey } = await import("nostr-tools");
+const hexToBytes = (hex) => Uint8Array.from(hex.match(/.{2}/g).map((b) => parseInt(b, 16)));
+const sk = hexToBytes(secretKeyHex);
+const pubkey = getPublicKey(sk);
+
+// kind 0 content exactly like publishNewProfileMetadata:
+const content = {
+  ...(name ? { name, display_name: name } : {}),
+  ...(lud16 ? { lud16 } : {}),
+  ...(picture ? { picture, image: picture } : {}),
+};
+finalizeEvent({ kind: 0, created_at, tags: [], content: JSON.stringify(content), pubkey }, sk);
+
+// kind 30315 exactly like publishNostrGeneralStatus:
+finalizeEvent({ kind: 30315, created_at, tags: [["d", "general"]], content: status ?? "", pubkey }, sk);
+// each event checked with verifyEvent + getEventHash
+```
+
+The `inputs` field records the source values so the golden test can replay
+them through our `publishProfileMetadata` / `publishProfileGeneralStatus`
+and assert byte-identical events (same ids) under a fixed TestClock;
+signatures verify on both sides (not byte-equal — random aux, see above).

@@ -7,19 +7,24 @@
  * Layer (see runtime.ts). New platform implementations join the
  * `Layer.mergeAll(...)` below — nothing else in the app changes.
  */
-import { CurrentEnvironment } from "@linky/core";
+import {
+  CurrentEnvironment,
+  layerNostrPendingQueue,
+  layerProfilePublisher,
+  layerRelayPool,
+} from "@linky/core";
 import {
   ClipboardLive,
   DeepLinksLive,
   HttpClientLive,
   KeyValueStorageLive,
+  NostrTransportLive,
   RandomnessLive,
   SecureStorageLive,
 } from "@linky/platform";
 import { Layer } from "effect";
 
 import { environment } from "../environment";
-import { ProfilePublisherStub } from "./profilePublisherStub";
 
 /**
  * The decoded build-profile configuration as an Effect service. The value
@@ -28,6 +33,29 @@ import { ProfilePublisherStub } from "./profilePublisherStub";
  * config is trustworthy.
  */
 const environmentLayer = Layer.succeed(CurrentEnvironment, environment);
+
+/**
+ * Nostr relay services (#21), core domain Layers on platform ports. The
+ * Layer references below are shared — Layer memoization guarantees ONE
+ * relay pool (one set of connections) per runtime, no matter how many
+ * services build on it.
+ */
+const relayPoolLayer = layerRelayPool().pipe(
+  Layer.provide(NostrTransportLive), // global WebSocket → NostrTransport
+  Layer.provide(environmentLayer), // relay set
+);
+const nostrPendingQueueLayer = layerNostrPendingQueue.pipe(
+  Layer.provide(relayPoolLayer),
+  Layer.provide(KeyValueStorageLive), // persistent outbox
+);
+
+/** Real Nostr kind-0 profile publishing (#24, replaces the #17 stub). */
+const profilePublisherLayer = layerProfilePublisher.pipe(
+  Layer.provide(relayPoolLayer),
+  Layer.provide(nostrPendingQueueLayer),
+  Layer.provide(RandomnessLive), // BIP-340 aux signing entropy
+  Layer.provide(SecureStorageLive), // session load (active identity)
+);
 
 export const appLayer = Layer.mergeAll(
   environmentLayer,
@@ -38,7 +66,10 @@ export const appLayer = Layer.mergeAll(
   ClipboardLive, // expo-clipboard → Clipboard
   DeepLinksLive, // expo-linking → DeepLinks
   HttpClientLive, // RN fetch → HttpClient
-  ProfilePublisherStub, // logged no-op until real Nostr kind-0 publishing (#24)
+  // Nostr domain services (#21/#24):
+  relayPoolLayer, // relay connections, publish retry, subscriptions, status
+  nostrPendingQueueLayer, // persistent outbox, flushed on reconnect
+  profilePublisherLayer, // kind-0 profile publishing through the relay pool
 );
 
 /** Everything the app runtime can provide; hooks accept Effects needing at most this. */
