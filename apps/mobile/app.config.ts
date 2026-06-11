@@ -56,6 +56,11 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-router",
+    // expo-secure-store config plugin: declares the Keychain/Keystore usage
+    // (incl. the iOS Face ID usage description should we enable
+    // requireAuthentication later). CNG rule: this entry is the only place
+    // the native projects learn about it.
+    "expo-secure-store",
     [
       "expo-splash-screen",
       {

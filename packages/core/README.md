@@ -155,6 +155,8 @@ Error paths are tested by providing a Layer that fails with the port's typed err
 | `KeyValueStorage` | `@effect/platform` `KeyValueStore` (re-exported)                                                                          | `PlatformError`      | Non-secret prefs. Tests use `KeyValueStorage.layerMemory`. Never put secrets here.         |
 | `HttpClient`      | `@effect/platform` `HttpClient` (re-exported, with `HttpClientRequest`/`HttpClientResponse`/`HttpClientError`/`HttpBody`) | `HttpClientError`    | The app wires `FetchHttpClient.layer` or a tuned client; tests stub via `HttpClient.make`. |
 | `Randomness`      | `@linky/core/Randomness`                                                                                                  | `RandomnessError`    | Cryptographically secure bytes for key/secret generation. Implementation MUST be a CSPRNG. |
+| `Clipboard`       | `@linky/core/Clipboard`                                                                                                   | `ClipboardError`     | Copy/read plain text (tokens, invoices). Empty clipboard is `Option.none()`.               |
+| `DeepLinks`       | `@linky/core/DeepLinks`                                                                                                   | `DeepLinksError`     | Launch URL (`initialUrl`) + live URL `Stream` (`urls`). Raw strings; parsing is domain.    |
 
 ### Time and non-secret randomness: built-in services, not ports
 

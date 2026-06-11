@@ -2,7 +2,7 @@
   "name": "@linky/platform",
   "version": "0.0.0",
   "private": true,
-  "description": "Platform port interfaces and Expo implementations for Linky.",
+  "description": "Expo implementations (Layers) of the @linky/core ports.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -10,11 +10,29 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "echo \"@linky/platform: no tests yet\""
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@effect/platform": "^0.96.1",
+    "@linky/core": "workspace:*",
+    "effect": "^3.21.3"
+  },
+  "peerDependencies": {
+    "@react-native-async-storage/async-storage": "*",
+    "expo-clipboard": "*",
+    "expo-crypto": "*",
+    "expo-linking": "*",
+    "expo-secure-store": "*"
   },
   "devDependencies": {
     "@linky/config": "workspace:*",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "eslint": "^9.39.0",
-    "typescript": "~5.9.3"
+    "expo-clipboard": "~56.0.4",
+    "expo-crypto": "~56.0.4",
+    "expo-linking": "~56.0.14",
+    "expo-secure-store": "~56.0.4",
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.8"
   }
 }

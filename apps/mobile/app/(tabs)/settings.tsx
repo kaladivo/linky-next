@@ -1,7 +1,9 @@
 import { describeEnvironment } from "@linky/core";
 import { Button, Surface, Text } from "@linky/ui";
 import { Link } from "expo-router";
-import { View } from "react-native";
+import { ScrollView } from "react-native";
+
+import { PlatformSmokeTestPanel } from "../../src/dev/PlatformSmokeTestPanel";
 
 import { useEffectQuery } from "../../src/runtime";
 
@@ -32,7 +34,7 @@ function EnvironmentSummary() {
 
 export default function SettingsScreen() {
   return (
-    <View className="flex-1 gap-4 bg-background px-6 pt-4">
+    <ScrollView className="flex-1 bg-background" contentContainerClassName="gap-4 px-6 pb-8 pt-4">
       <Text weight="bold" className="text-2xl">
         Settings
       </Text>
@@ -46,6 +48,8 @@ export default function SettingsScreen() {
       <Link href="/dev/evolu-spike" className="p-4">
         <Text className="text-primary">Evolu spike (dev)</Text>
       </Link>
-    </View>
+      {/* TEMPORARY (#8): dev-only platform port smoke test; renders null in production. */}
+      <PlatformSmokeTestPanel />
+    </ScrollView>
   );
 }
