@@ -12,12 +12,14 @@
  * | `contact`        | `contacts`     | Address-book entries                  |
  * | `blockedSender`  | `contacts`     | Blocked sender npubs (survive sync)   |
  * | `cashuToken`     | `wallet`       | Cashu ecash tokens                    |
+ * | `cashuMint`      | `wallet`       | Known mints + cached NUT-06 info      |
  * | `message`        | `messages`     | Decrypted NIP-17 chat messages        |
  * | `reaction`       | `messages`     | NIP-17 emoji reactions                |
  * | `transaction`    | `transactions` | Wallet history entries                |
  * | `nostrIdentity`  | `identity`     | Active/previous Nostr identities      |
  * | `metaEntry`      | `meta`         | Cross-device key/value coordination   |
  * | `_unknownThread` | local-only     | Inbound threads from unsaved senders  |
+ * | `_cashuCounter`  | local-only     | NUT-13 counters + restore cursors     |
  *
  * `_unknownThread` is a **local-only** table: Evolu treats every table whose
  * name starts with `_` as device-local (verified in 7.4.1 — mutations on `_`
@@ -73,13 +75,21 @@ import {
   NonEmptyString1000,
   nullOr,
   PositiveInt,
+  union,
 } from "@evolu/common";
+import type { TokenState } from "@linky/core";
 
 export const ContactId = id("Contact");
 export type ContactId = typeof ContactId.Type;
 
 export const CashuTokenId = id("CashuToken");
 export type CashuTokenId = typeof CashuTokenId.Type;
+
+export const CashuMintId = id("CashuMint");
+export type CashuMintId = typeof CashuMintId.Type;
+
+export const CashuCounterId = id("CashuCounter");
+export type CashuCounterId = typeof CashuCounterId.Type;
 
 export const MessageId = id("Message");
 export type MessageId = typeof MessageId.Type;
@@ -102,6 +112,34 @@ export type BlockedSenderId = typeof BlockedSenderId.Type;
 export const UnknownThreadId = id("UnknownThread");
 export type UnknownThreadId = typeof UnknownThreadId.Type;
 
+/**
+ * The eight token states of the #33 state model (`@linky/core`
+ * `tokenState.ts`), enforced at the column level: Evolu validates every
+ * `cashuToken.state` mutation against this union, so an out-of-model state
+ * can never be persisted. The literal list is duplicated here (instead of
+ * spreading core's `TOKEN_STATES`) to keep the schema module free of runtime
+ * imports; the compile-time assertions below pin it to core's `TokenState`
+ * in both directions.
+ */
+export const CashuTokenState = union(
+  "accepted",
+  "issued",
+  "pending",
+  "reserved",
+  "externalized",
+  "spent",
+  "deleted",
+  "error",
+);
+export type CashuTokenState = typeof CashuTokenState.Type;
+
+// Compile-time: the column union and core's TokenState are the same set.
+type _AssertEveryColumnStateIsCoreState = CashuTokenState extends TokenState ? true : never;
+type _AssertEveryCoreStateIsColumnState = TokenState extends CashuTokenState ? true : never;
+const _columnStatesMatchCore: _AssertEveryColumnStateIsCoreState &
+  _AssertEveryCoreStateIsColumnState = true;
+void _columnStatesMatchCore;
+
 export const linkySchema = {
   /** `contacts` domain — one row per address-book entry. */
   contact: {
@@ -118,21 +156,50 @@ export const linkySchema = {
     archivedAtSec: nullOr(PositiveInt),
   },
 
-  /** `wallet` domain — one row per Cashu token held by the wallet. */
+  /**
+   * `wallet` domain — one row per Cashu token held by the wallet (the #33
+   * `TokenRecord` shape). The serialized token is BEARER MATERIAL: it lives
+   * in this per-lane-encrypted table on purpose (same as the PoC) and must
+   * never be logged or embedded in errors.
+   */
   cashuToken: {
     id: CashuTokenId,
-    /** The current (accepted) serialized Cashu token. */
+    /** The CURRENT serialized Cashu token (post-swap encoding). Secret. */
     token: NonEmptyString,
-    /** Mint URL, when the token references exactly one mint. */
+    /** Normalized mint URL (core `normalizeMintUrl`); repo-enforced. */
     mint: nullOr(NonEmptyString1000),
     /** Currency unit, e.g. "sat". */
     unit: nullOr(NonEmptyString100),
     /** Total amount in `unit` when known. */
     amount: nullOr(PositiveInt),
-    /** "pending" | "accepted" | "error". */
-    state: nullOr(NonEmptyString100),
-    /** Last error message for state "error". */
+    /** #33 token state, constrained to the 8-state union. */
+    state: nullOr(CashuTokenState),
+    /** Last error message; meaningful while `state === "error"`. */
     error: nullOr(NonEmptyString1000),
+  },
+
+  /**
+   * `wallet` domain — one row per known mint (`mints.fetch-info`): the
+   * normalized URL plus the cached NUT-06 info (display name, icon, fee
+   * hints, raw payload) and when it was fetched. Mints are wallet-domain
+   * data (they describe where the wallet's value lives), so they sync on
+   * the wallet lane next to the tokens. The single main-mint PREFERENCE is
+   * deliberately NOT a flag on these rows — see `MintsRepository`.
+   */
+  cashuMint: {
+    id: CashuMintId,
+    /** Normalized mint URL (core `normalizeMintUrl`) — unique per store, repo-enforced. */
+    url: NonEmptyString1000,
+    /** Display name from NUT-06 info. */
+    name: nullOr(NonEmptyString1000),
+    /** Icon URL from NUT-06 info. */
+    iconUrl: nullOr(NonEmptyString1000),
+    /** Raw NUT-06 info payload, JSON-serialized. */
+    infoJson: nullOr(NonEmptyString),
+    /** Extracted fee hints (e.g. ppk), JSON-serialized. */
+    feesJson: nullOr(NonEmptyString),
+    /** Unix seconds when the cached info was last fetched. */
+    infoFetchedAtSec: nullOr(PositiveInt),
   },
 
   /**
@@ -196,7 +263,18 @@ export const linkySchema = {
     status: nullOr(NonEmptyString100),
   },
 
-  /** `transactions` domain — one row per wallet-history entry. */
+  /**
+   * `transactions` domain — one row per wallet-history entry (`tx.record`):
+   * outcome records including errors and intermediate phases. Shape follows
+   * the PoC's phase-rich `transaction` table (direction, status, category,
+   * method, phase, amounts, fees, mint, contact link, error, detailsJson);
+   * the PoC's `iconKind`/`pendingLabel` presentation columns are intentionally
+   * dropped — both derive from category/method/status in the UI.
+   *
+   * `tx.details` contract: `detailsJson` (and `error`/`note`) must never
+   * contain secrets, raw proofs, or private keys — callers serialize
+   * support-safe details only.
+   */
   transaction: {
     id: TransactionId,
     /** Unix seconds when the transaction happened (domain time). */
@@ -207,16 +285,27 @@ export const linkySchema = {
     status: NonEmptyString100,
     /** e.g. "cashu" | "lightning" | "internal". */
     category: NonEmptyString100,
+    /** Payment method detail, e.g. "token" | "invoice" | "lnaddress". */
+    method: nullOr(NonEmptyString100),
+    /**
+     * Last reached flow phase (`tx.record` "intermediate phases"), e.g.
+     * "quote" | "swap" | "melt" | "deliver" | "settle". Free-form: phases
+     * are per-flow telemetry breadcrumbs, not a state machine.
+     */
+    phase: nullOr(NonEmptyString100),
     /** Amount in `unit` when known. */
     amount: nullOr(PositiveInt),
     /** Fee paid, in `unit`. */
     feeAmount: nullOr(PositiveInt),
     unit: nullOr(NonEmptyString100),
+    /** Normalized mint URL when known (`tx.link-mint`). */
     mint: nullOr(NonEmptyString1000),
-    /** Counterparty contact, when the transaction relates to one. */
+    /** Counterparty contact, when the transaction relates to one (`tx.link-contact`). */
     contactId: nullOr(ContactId),
     note: nullOr(NonEmptyString1000),
-    /** Free-form JSON details payload (method-specific). */
+    /** Error message for failed/partial outcomes — kept for support. */
+    error: nullOr(NonEmptyString1000),
+    /** Free-form JSON details payload (method-specific, support-safe). */
     detailsJson: nullOr(NonEmptyString),
   },
 
@@ -281,6 +370,30 @@ export const linkySchema = {
     firstSeenAtSec: nullOr(PositiveInt),
     /** Unix seconds of the latest message in the thread. */
     lastActivityAtSec: nullOr(PositiveInt),
+  },
+
+  /**
+   * LOCAL-ONLY (leading `_`, never syncs) — NUT-13 deterministic counters
+   * and restore cursors for the #32 `CounterStore` port, one row per
+   * canonical counter key (`counterStoreKey`: prefix + mint + unit +
+   * keyset).
+   *
+   * DELIBERATELY DEVICE-LOCAL, matching the PoC (which keeps counters in
+   * localStorage under `linky.cashu.detCounter.v1` /
+   * `linky.cashu.restoreCursor.v1`, never in Evolu). Syncing counters would
+   * be a fund-safety hazard: an Evolu column is a last-writer-wins register,
+   * so a device holding a LOWER counter could overwrite another device's
+   * higher value after a concurrent bump — and a counter moving backwards
+   * means reused blinded messages. Counters are a per-device fast path; a
+   * fresh device after restore starts at 0 and the engine's NUT-09 restore
+   * scan + `ensureCounterAtLeast` re-raise them safely.
+   */
+  _cashuCounter: {
+    id: CashuCounterId,
+    /** Canonical counter key (core `counterStoreKey` output). */
+    key: NonEmptyString1000,
+    /** Stringified non-negative integer. */
+    value: NonEmptyString100,
   },
 };
 

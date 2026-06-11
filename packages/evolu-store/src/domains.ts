@@ -77,6 +77,7 @@ export const tableSyncDomain = {
   contact: "contacts",
   blockedSender: "contacts",
   cashuToken: "wallet",
+  cashuMint: "wallet",
   message: "messages",
   reaction: "messages",
   transaction: "transactions",

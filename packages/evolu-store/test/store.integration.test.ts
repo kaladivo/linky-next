@@ -80,6 +80,10 @@ const writeOneRowPerDomain = (store: LinkyStore) => {
       amount: 21,
       state: "accepted",
     }),
+    cashuMint: store.insert("cashuMint", {
+      url: "https://mint.example.com",
+      name: "Example Mint",
+    }),
     message: store.insert("message", {
       rumorId: "rumor-event-id-1",
       peerNpub: "npub1exampleexampleexampleexampleexampleexampleexampleexample",
@@ -193,9 +197,10 @@ describe("six-domain schema on local SQLite", () => {
       for (const table of Object.keys(tableSyncDomain)) {
         expect(tables, `table ${table}`).toContain(table);
       }
-      // Local-only table (leading underscore) is created too, but never syncs
-      // (see messengerRepositories.integration.test.ts for the sync proof).
+      // Local-only tables (leading underscore) are created too, but never
+      // sync (see messengerInbox.integration.test.ts for the sync proof).
       expect(tables).toContain("_unknownThread");
+      expect(tables).toContain("_cashuCounter");
 
       const contactColumns = db
         .prepare(`select name from pragma_table_info('contact')`)
@@ -223,6 +228,7 @@ describe("six-domain schema on local SQLite", () => {
     expect(message[0]?.rumorId).toBe("rumor-event-id-1");
 
     expect(await loadRows(storeA, "cashuToken")).toHaveLength(1);
+    expect(await loadRows(storeA, "cashuMint")).toHaveLength(1);
     expect(await loadRows(storeA, "reaction")).toHaveLength(1);
     expect(await loadRows(storeA, "blockedSender")).toHaveLength(1);
     expect(await loadRows(storeA, "transaction")).toHaveLength(1);
