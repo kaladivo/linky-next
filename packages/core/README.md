@@ -157,7 +157,7 @@ Compatibility invariants (same mnemonic → same master secret / npub / Cashu se
 - Fixtures are generated **from the PoC's own dependencies before the new implementation is written** — never from code in this repo, which would make the test circular. They are committed and never regenerated casually.
 - The corresponding `<name>.golden.test.ts` loads the JSON with `fs.readFileSync(new URL(...))` (tests are excluded from the build, so fixtures never end up in `dist/`).
 
-Instances: `src/domain/identity/__fixtures__/slip39.golden.json` (SLIP-39 backup phrase ↔ master secret, generated from `slip39-ts@0.1.13`) and `src/domain/identity/__fixtures__/derivedIdentities.golden.json` (master secret → Nostr keys / Cashu seed / owner-lane mnemonics, generated from the PoC's identity code and pinned deps; the Evolu owner-id end of the chain is pinned in `packages/evolu-store/test/__fixtures__/ownerLanes.golden.json`).
+Instances: `src/domain/identity/__fixtures__/slip39.golden.json` (SLIP-39 backup phrase ↔ master secret, generated from `slip39-ts@0.1.13`), `src/domain/identity/__fixtures__/derivedIdentities.golden.json` (master secret → Nostr keys / Cashu seed / owner-lane mnemonics, generated from the PoC's identity code and pinned deps; the Evolu owner-id end of the chain is pinned in `packages/evolu-store/test/__fixtures__/ownerLanes.golden.json`), and `src/domain/cashu/__fixtures__/cashuWallet.golden.json` (seed + keyset + counter → NUT-13 secrets / blinding factors / blinded messages, token V3/V4 encodings, linky.fit wrapped-link formats and token-extraction behavior, generated from the PoC's `@cashu/cashu-ts@2.9.0` and verbatim PoC token code).
 
 ### 7. Secrets
 
@@ -179,9 +179,14 @@ Secrets at rest go through the `SecureStorage` port only. The stored keys are ow
 | `KeyValueStorage` | `@effect/platform` `KeyValueStore` (re-exported)                                                                          | `PlatformError`      | Non-secret prefs. Tests use `KeyValueStorage.layerMemory`. Never put secrets here.         |
 | `HttpClient`      | `@effect/platform` `HttpClient` (re-exported, with `HttpClientRequest`/`HttpClientResponse`/`HttpClientError`/`HttpBody`) | `HttpClientError`    | The app wires `FetchHttpClient.layer` or a tuned client; tests stub via `HttpClient.make`. |
 | `Randomness`      | `@linky/core/Randomness`                                                                                                  | `RandomnessError`    | Cryptographically secure bytes for key/secret generation. Implementation MUST be a CSPRNG. |
+| `CounterStore`    | `@linky/core/CounterStore`                                                                                                | `CounterStoreError`  | Cashu deterministic counters + restore cursors per (mint, unit, keyset) with a per-keyset lock. Production Layer comes from `evolu-store` (#35); `CounterStoreMemory` / `CounterStoreKeyValue` ship here. Counters are not secrets, but their key semantics are a funds contract — see the module doc. |
 | `Clipboard`       | `@linky/core/Clipboard`                                                                                                   | `ClipboardError`     | Copy/read plain text (tokens, invoices). Empty clipboard is `Option.none()`.               |
 | `DeepLinks`       | `@linky/core/DeepLinks`                                                                                                   | `DeepLinksError`     | Launch URL (`initialUrl`) + live URL `Stream` (`urls`). Raw strings; parsing is domain.    |
 | `ProfilePublisher` | `@linky/core/ProfilePublisher`                                                                                           | `ProfilePublishError` | Publishes own profile metadata (Nostr kind 0). Stub Layer in `apps/mobile` until #24.     |
+
+### Protocol libraries and the network
+
+cashu-ts would perform its own `fetch` by default — a side effect outside the ports. The Cashu engine therefore injects a custom request implementation into every `CashuMint` (`src/domain/cashu/internal/transport.ts`), built on the `HttpClient` port and reproducing cashu-ts's native error mapping. No code in core calls `fetch`; tests run the full engine against an in-process fake mint provided as an `HttpClient` Layer (`src/domain/cashu/__tests__/fakeMint.ts`) and never touch a real mint.
 
 ### Time and non-secret randomness: built-in services, not ports
 

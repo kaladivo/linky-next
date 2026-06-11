@@ -5,6 +5,7 @@
 export * from "./SecureStorage.js";
 export * from "./Randomness.js";
 export * from "./KeyValueStorage.js";
+export * from "./CounterStore.js";
 export * from "./Http.js";
 export * from "./Clipboard.js";
 export * from "./DeepLinks.js";
