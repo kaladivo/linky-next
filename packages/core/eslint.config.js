@@ -8,6 +8,10 @@ export default [
     // tags) that other workspaces implement.
     files: ["src/**/*.ts"],
     rules: {
+      // Core handles secret material (master secret, backup phrase, derived
+      // keys). Nothing in this package may write to the console — secrets
+      // must never be logged (account-identity.md contract).
+      "no-console": "error",
       "no-restricted-imports": [
         "error",
         {

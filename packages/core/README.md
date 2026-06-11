@@ -15,9 +15,11 @@ This README is the **architecture contract**. Every domain workflow added to thi
 ```text
 src/
   ports/    Service tags for side effects (the only door to the outside world)
-  domain/   Domain workflows (empty for now; each lands in its own issue)
+  domain/   Domain workflows, one directory per area (environment, identity, ...)
   index.ts  Public API — everything importable from "@linky/core"
 ```
+
+Inside a domain directory, modules that exist only to support the public workflows (e.g. `domain/identity/slip39.ts`, the raw SLIP-39 codec) are **not** re-exported from the domain's `index.ts`; tests may import them directly.
 
 ## Conventions
 
@@ -146,6 +148,20 @@ it("stores the generated key", async () => {
 ```
 
 Error paths are tested by providing a Layer that fails with the port's typed error and asserting on the flipped value. See `src/ports/ports.test.ts` for the executable version of all of these conventions.
+
+### 6. Golden fixtures (compatibility tests)
+
+Compatibility invariants (same mnemonic → same master secret / npub / Cashu seed / owner lanes as the PoC) are pinned by **golden fixtures**:
+
+- Fixtures live next to the domain they pin: `src/domain/<area>/__fixtures__/<name>.golden.json`, with a `README.md` in the same directory documenting exactly how (and from which PoC library version) they were generated.
+- Fixtures are generated **from the PoC's own dependencies before the new implementation is written** — never from code in this repo, which would make the test circular. They are committed and never regenerated casually.
+- The corresponding `<name>.golden.test.ts` loads the JSON with `fs.readFileSync(new URL(...))` (tests are excluded from the build, so fixtures never end up in `dist/`).
+
+First instance: `src/domain/identity/__fixtures__/slip39.golden.json` (SLIP-39 backup phrase ↔ master secret, generated from `slip39-ts@0.1.13`).
+
+### 7. Secrets
+
+Workflows that touch secret material (master secret, backup phrase, derived keys) must never log it, embed it in error payloads, or pass it outside typed return values. `no-console` is an ESLint error across `src/`.
 
 ## The ports
 

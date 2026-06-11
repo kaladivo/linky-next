@@ -1,3 +1,4 @@
 export * from "./environment/EnvironmentConfig.js";
 export * from "./environment/CurrentEnvironment.js";
 export * from "./environment/describeEnvironment.js";
+export * from "./identity/index.js";

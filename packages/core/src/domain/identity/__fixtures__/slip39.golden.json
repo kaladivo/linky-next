@@ -1,0 +1,90 @@
+{
+  "$note": "GOLDEN FIXTURES — generated from slip39-ts@0.1.13 (the PoC's resolved SLIP-39 library). Do not edit by hand. See README.md in this directory.",
+  "generator": {
+    "library": "slip39-ts",
+    "version": "0.1.13",
+    "passphrase": "",
+    "config": "groupThreshold 1, groups [[1,1,'Linky']] (PoC createSlip39Share)"
+  },
+  "shares": [
+    {
+      "name": "all-zero entropy",
+      "mnemonic": "academic again academic academic axis eclipse inside mild briefing artwork both literary jewelry wildlife sweater early building muscle axis moment",
+      "masterSecretHex": "00000000000000000000000000000000",
+      "identifier": 0,
+      "extendable": true,
+      "iterationExponent": 0,
+      "encryptedMasterSecretHex": "41409d8914630dc5d855e5fb3723f469"
+    },
+    {
+      "name": "all-ff entropy, max identifier",
+      "mnemonic": "zero wisdom academic academic amazing advance cage curly behavior ivory check capital race fawn glad index species symbolic hybrid walnut",
+      "masterSecretHex": "ffffffffffffffffffffffffffffffff",
+      "identifier": 32767,
+      "extendable": true,
+      "iterationExponent": 0,
+      "encryptedMasterSecretHex": "22034722d848788881e2d05458a73f4e"
+    },
+    {
+      "name": "sequential bytes",
+      "mnemonic": "drug pregnant academic academic armed dress review premium imply typical dominant daisy voting random agency bike dive decorate learn western",
+      "masterSecretHex": "000102030405060708090a0b0c0d0e0f",
+      "identifier": 7893,
+      "extendable": true,
+      "iterationExponent": 0,
+      "encryptedMasterSecretHex": "353caf6ac5c9ec4ec2e7dfb581113ce7"
+    },
+    {
+      "name": "sha256(linky-golden-1)[0..16]",
+      "mnemonic": "fiber golden academic academic depend elegant exchange robin therapy bedroom earth squeeze velvet that laden smug dining smell unusual pleasure",
+      "masterSecretHex": "a4abd4cfac6dae2a83b165583f8af315",
+      "identifier": 10828,
+      "extendable": true,
+      "iterationExponent": 0,
+      "encryptedMasterSecretHex": "cd42d35bf79011cfed6bcbe35f6d04de"
+    },
+    {
+      "name": "sha256(linky-golden-2)[0..16]",
+      "mnemonic": "prayer favorite academic academic blanket luck society beard benefit junction spill broken level rhythm forecast decent testify living paces thumb",
+      "masterSecretHex": "5ddd8bd24b94269edf30eb68b67ddfbc",
+      "identifier": 21930,
+      "extendable": true,
+      "iterationExponent": 0,
+      "encryptedMasterSecretHex": "5487b451104c7ab531920abe56930f8a"
+    },
+    {
+      "name": "non-extendable (legacy SLIP-39 salt) share",
+      "mnemonic": "branch guest academic academic deploy yelp mineral execute angry dryer crush union election realize install enlarge eraser organize timely upstairs",
+      "masterSecretHex": "5f1836f2f17702eefb52060110206eed",
+      "identifier": 3085,
+      "extendable": false,
+      "iterationExponent": 0,
+      "encryptedMasterSecretHex": "cfff2474e02b3dcb1ee90ab6dd948128"
+    },
+    {
+      "name": "iteration exponent 1",
+      "mnemonic": "inside vexed academic academic body blessing floral sled yield hush involve junior lift chubby jewelry sack champion ivory spelling silent",
+      "masterSecretHex": "462ff59deea8371e66392a23c131d1f8",
+      "identifier": 15134,
+      "extendable": true,
+      "iterationExponent": 1,
+      "encryptedMasterSecretHex": "5915564cdbfd705dd7ae0e231e5c1c85"
+    }
+  ],
+  "invalidMnemonics": [
+    {
+      "name": "checksum broken by swapping two words",
+      "mnemonic": "drug pregnant academic academic armed review dress premium imply typical dominant daisy voting random agency bike dive decorate learn western"
+    },
+    {
+      "name": "checksum broken by replacing last word",
+      "mnemonic": "drug pregnant academic academic armed dress review premium imply typical dominant daisy voting random agency bike dive decorate learn academic"
+    }
+  ],
+  "unsupportedMnemonics": [
+    {
+      "name": "2-of-3 member share (checksum-valid, needs more shares)",
+      "mnemonic": "chemical biology academic acid advance plot style lunar cage realize spit always airline iris forecast stay adjust corner extend patent"
+    }
+  ]
+}

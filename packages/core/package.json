@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@effect/platform": "^0.96.1",
+    "@noble/hashes": "^2.0.1",
     "effect": "^3.21.3"
   },
   "devDependencies": {

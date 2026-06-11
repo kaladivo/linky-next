@@ -176,6 +176,9 @@ importers:
       '@effect/platform':
         specifier: ^0.96.1
         version: 0.96.1(effect@3.21.3)
+      '@noble/hashes':
+        specifier: ^2.0.1
+        version: 2.2.0
       effect:
         specifier: ^3.21.3
         version: 3.21.3
@@ -5606,9 +5609,7 @@ snapshots:
       metro-runtime: 0.84.4
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-colors@0.85.3': {}
 
