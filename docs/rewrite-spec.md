@@ -96,6 +96,8 @@ Three runtime profiles, selected at build time (separate bundle IDs so they inst
 
 Mint/relay/sync-server endpoints are profile configuration, not literals in code. Payment code paths must make it structurally hard to hit mainnet from a non-production build.
 
+Implementation (issue #4): the profile is selected at build time via `APP_ENV` in `apps/mobile/app.config.ts` (bundle IDs `fit.linky.app.dev` / `fit.linky.app.staging` / `fit.linky.app`, names "Linky Dev" / "Linky Staging" / "Linky", schemes `linky-dev` / `linky-staging` / `linky`) and forwarded to the runtime as `extra.appEnv`. `@linky/core` owns the Effect Schema `EnvironmentConfig` plus the spec defaults (`environmentForProfile`); `apps/mobile/src/environment.ts` decodes the profile at startup. The mainnet guard is structural on two levels: `EnvironmentConfig` is a discriminated union on `network: "test" | "main"` derived from the profile (only `production` decodes to `"main"`, so mainnet-only code can require the narrowed `MainEnvironmentConfig` type), and the test branch of the schema only accepts Cashu mint URLs from a known test-mint allowlist (`TEST_MINT_HOSTS`) and refuses production-only sync hosts — a dev/staging config pointing at a mainnet mint fails to decode at app startup.
+
 ### Default Endpoints
 
 These match what the PoC already uses and the most common public infrastructure:

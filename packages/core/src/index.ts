@@ -23,3 +23,6 @@
 
 // Ports
 export * from "./ports/index.js";
+
+// Domain
+export * from "./domain/index.js";
