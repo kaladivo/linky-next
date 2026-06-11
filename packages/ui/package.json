@@ -5,16 +5,32 @@
   "description": "Shared React Native primitives, NativeWind theme, and design tokens for Linky.",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./tailwind-preset": "./tailwind/preset.cjs",
+    "./tokens": "./tailwind/tokens.cjs",
+    "./assets/*": "./assets/*"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "echo \"@linky/ui: no tests yet\""
   },
+  "dependencies": {
+    "tailwind-merge": "^2.6.1"
+  },
+  "peerDependencies": {
+    "nativewind": "^4.2.0",
+    "react": "*",
+    "react-native": "*"
+  },
   "devDependencies": {
     "@linky/config": "workspace:*",
+    "@types/react": "~19.2.2",
     "eslint": "^9.39.0",
+    "nativewind": "^4.2.5",
+    "react": "19.2.3",
+    "react-native": "0.85.3",
+    "tailwindcss": "^3.4.19",
     "typescript": "~5.9.3"
   }
 }
