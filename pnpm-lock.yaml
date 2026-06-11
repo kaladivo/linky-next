@@ -240,6 +240,9 @@ importers:
       '@linky/core':
         specifier: workspace:*
         version: link:../core
+      effect:
+        specifier: ^3.21.3
+        version: 3.21.3
     devDependencies:
       '@evolu/nodejs':
         specifier: 2.4.0
@@ -253,9 +256,6 @@ importers:
       better-sqlite3:
         specifier: ^12.1.1
         version: 12.10.0
-      effect:
-        specifier: ^3.21.3
-        version: 3.21.3
       eslint:
         specifier: ^9.39.0
         version: 9.39.4(jiti@1.21.7)
