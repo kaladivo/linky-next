@@ -10,5 +10,10 @@ export * from "./filter.js";
 export * from "./relayMessages.js";
 export * from "./RelayPool.js";
 export * from "./NostrPendingQueue.js";
+export * from "./deliver.js";
 export * from "./relayLists.js";
+export * from "./profileMetadata.js";
+export * from "./profileStatus.js";
 export * from "./fakeRelay.js";
+// Intentionally not exported (internal): `protocolCache.js` (TTL cache over
+// KeyValueStorage); tests import it directly.

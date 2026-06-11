@@ -1,0 +1,69 @@
+{
+  "generator": "nostr-tools (PoC dependency) finalizeEvent, bun script mirroring publishKind0ProfileMetadata / publishNewProfileMetadata content / publishNostrGeneralStatus — see README.md",
+  "secretKeyHex": "5c0c523f52a5b6fad39ed2403092df8cebc36318b39383bca6c00808626fab3a",
+  "publicKeyHex": "87d3561f19b74adbe8bf840682992466068830a9d8c36b4a0c99d36f826cb6cb",
+  "createdAt": 1718001000,
+  "inputs": {
+    "fullProfile": {
+      "name": "Alice Tester",
+      "lud16": "alice@linky.fit",
+      "picture": "https://api.dicebear.com/9.x/thumbs/svg?seed=alice-tester"
+    },
+    "minimalProfile": {
+      "name": "Bob"
+    },
+    "statusText": "Open for coffee",
+    "statusCurrencies": ["BTC", "CZK"],
+    "generalStatus": "Open for coffee\nBTC, CZK"
+  },
+  "events": [
+    {
+      "name": "kind 0 profile metadata (name + lud16 + picture)",
+      "event": {
+        "kind": 0,
+        "created_at": 1718001000,
+        "tags": [],
+        "content": "{\"name\":\"Alice Tester\",\"display_name\":\"Alice Tester\",\"lud16\":\"alice@linky.fit\",\"picture\":\"https://api.dicebear.com/9.x/thumbs/svg?seed=alice-tester\",\"image\":\"https://api.dicebear.com/9.x/thumbs/svg?seed=alice-tester\"}",
+        "pubkey": "87d3561f19b74adbe8bf840682992466068830a9d8c36b4a0c99d36f826cb6cb",
+        "id": "e7b6c46d1c7822d288346f58e95379caeadf748cb00c679516d5ac0e0bc053c4",
+        "sig": "2ca83a765391551bc6683846d1d61b494134df3b9a9463fd514686b5d8595b7aa9d669b1831339df7b7fdddec9e083bd750f49f19cda4c32d3229f3d848c1200"
+      }
+    },
+    {
+      "name": "kind 0 profile metadata (name only)",
+      "event": {
+        "kind": 0,
+        "created_at": 1718001000,
+        "tags": [],
+        "content": "{\"name\":\"Bob\",\"display_name\":\"Bob\"}",
+        "pubkey": "87d3561f19b74adbe8bf840682992466068830a9d8c36b4a0c99d36f826cb6cb",
+        "id": "a434eacbbf3b89a2aeb7d6fbd28ed418cd7c990268f24259d8de374d79e370a0",
+        "sig": "ce53ec5d760409ba514fd1c8b031de54d8d3db639e8d4939882bb4f1a83f3f519257777540ca3bcb9b8df222325e303c6adcc520366397cbf8261d9127185343"
+      }
+    },
+    {
+      "name": "kind 30315 general status (text + currencies)",
+      "event": {
+        "kind": 30315,
+        "created_at": 1718001000,
+        "tags": [["d", "general"]],
+        "content": "Open for coffee\nBTC, CZK",
+        "pubkey": "87d3561f19b74adbe8bf840682992466068830a9d8c36b4a0c99d36f826cb6cb",
+        "id": "e7ff44f6c6f07b21c17683b83cbd01c689db62ddea2852bf3f701bfcccaf053f",
+        "sig": "f33c06348bcb4a8657a3412bd6a33df1d93366a4abb1fec22b38d0832e952d5ad3a07992a8f723c90f90bc566f74bfb752bc481569ece4265bd82cc9272110b9"
+      }
+    },
+    {
+      "name": "kind 30315 general status (cleared)",
+      "event": {
+        "kind": 30315,
+        "created_at": 1718001000,
+        "tags": [["d", "general"]],
+        "content": "",
+        "pubkey": "87d3561f19b74adbe8bf840682992466068830a9d8c36b4a0c99d36f826cb6cb",
+        "id": "f168dfbec59fb896e79072b6f7318e5a57654e746da7706e092c71dc508dd592",
+        "sig": "4536c282e4fb958fae70cbc1478a07434d510810f82210c634013d98383e5cf33adddd4c7a5d1d376b443d73ea82043f9882752de85abd18575e89cf8f4bef54"
+      }
+    }
+  ]
+}
