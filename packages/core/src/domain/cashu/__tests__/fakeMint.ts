@@ -72,6 +72,28 @@ const protocolError = (code: number, detail: string): FakeMintResponse => ({
   body: { code, detail },
 });
 
+/** Sat amount from a bolt11 HRP (test invoices), or null when not bolt11. */
+const bolt11AmountSatOf = (request: string): number | null => {
+  const separatorIndex = request.lastIndexOf("1");
+  if (separatorIndex <= 0) return null;
+  const hrp = request.slice(0, separatorIndex).toLowerCase();
+  const match = /^(?:lnbcrt|lnbc|lntb)(\d+)([munp]?)$/.exec(hrp);
+  if (match === null) return null;
+  const value = Number(match[1]);
+  const msat =
+    match[2] === "m"
+      ? value * 100_000_000
+      : match[2] === "u"
+        ? value * 100_000
+        : match[2] === "n"
+          ? value * 100
+          : match[2] === "p"
+            ? value / 10
+            : value * 100_000_000_000;
+  if (!Number.isFinite(msat) || msat <= 0) return null;
+  return Math.ceil(msat / 1000);
+};
+
 export class FakeMint {
   readonly privKeys = new Map<number, Uint8Array>();
   readonly pubKeys: Record<string, string> = {};
@@ -91,6 +113,9 @@ export class FakeMint {
 
   /** LN fee the next melts actually charge (capped by fee_reserve). */
   feePaidPerMelt = 0;
+
+  /** fee_reserve quoted for bolt11 invoices (the lightning tests use these). */
+  bolt11FeeReserve = 0;
 
   private quoteCounter = 0;
   private readonly inputFeePpk: number;
@@ -322,15 +347,17 @@ export class FakeMint {
     }
 
     if (method === "POST" && path === "/v1/melt/quote/bolt11" && isRecord(body)) {
-      // Fake invoice format: "fakeinvoice:<amount>:<feeReserve>".
+      // Fake invoice format: "fakeinvoice:<amount>:<feeReserve>", or a real
+      // bolt11 string whose HRP amount is read (fee = `bolt11FeeReserve`).
       const request = String(body["request"] ?? "");
       const match = /^fakeinvoice:(\d+):(\d+)$/.exec(request);
-      if (match === null) return protocolError(20006, "invalid invoice");
+      const bolt11Sat = match === null ? bolt11AmountSatOf(request) : null;
+      if (match === null && bolt11Sat === null) return protocolError(20006, "invalid invoice");
       this.quoteCounter += 1;
       const quoteId = `melt-${String(this.quoteCounter)}`;
       const record: MeltQuoteRecord = {
-        amount: Number(match[1]),
-        fee_reserve: Number(match[2]),
+        amount: match !== null ? Number(match[1]) : (bolt11Sat ?? 0),
+        fee_reserve: match !== null ? Number(match[2]) : this.bolt11FeeReserve,
         unit: String(body["unit"] ?? "sat"),
         state: "UNPAID",
         expiry: this.quoteExpiry,

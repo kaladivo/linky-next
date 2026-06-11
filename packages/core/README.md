@@ -205,6 +205,12 @@ NIP-38 status (`profileStatus.ts`, issue #24; `profile.publish-status`): kind 30
 
 The `ProfilePublisher` port's real implementation (`domain/profile/profilePublisher.ts`, `layerProfilePublisher`) builds on these: it resolves the active identity via `loadSession` per publish and maps every underlying failure into `ProfilePublishError`. `apps/mobile` wires it in `appLayer` (the #17 stub is gone).
 
+### Lightning & LNURL (`src/domain/lightning/`, issue #34)
+
+Parsing is pure and PoC-pinned (`__fixtures__/lightning.golden.json`, generated from the PoC's `lightningInvoice.ts`/`lnurlPay.ts` — two documented PoC bugs fixed, see the fixture README): `parseBolt11Invoice` (HRP amount, memo, expiry, payment/description hash; amountless supported; lenient like the PoC), `parseLightningAddress` (LUD-16 → well-known LNURL-pay URL), `parseLnurl` (bech32 `lnurl1…`, `lnurlp://`/`lnurlw://`, bare http; pay/withdraw kind hint), and `parseLightningInput` — the unified discriminated union (`LightningAddressInput | Bolt11Input | LnurlPayInput | LnurlWithdrawInput | LnurlInput`) that #48's unified parser builds on. No bolt11 library: like the PoC, the codec is `@scure/base` bech32.
+
+Workflows (all LNURL HTTP through the `HttpClient` port): `fetchLnurlPayMetadata` → `fetchLnurlPayInvoice` (range validation, LUD-12 comments, LUD-06 step-7 verification — invoice amount and metadata-hash mismatches are rejected, never paid) → `payLightningAddress` (melts via #32's `payInvoice`, single mint, remainder preserved as NUT-08 change); `payBolt11Invoice` (amountless → `InvoiceAmountRequiredError`); `fetchLnurlWithdrawOffer` → `withdrawViaLnurl` (mints a #32 top-up quote and hands its invoice to the withdraw callback; claim via `checkTopupQuote`/`claimTopup`). The auto-pay limit is a contract only: `decideAutoPay(invoice, AutoPaySetting)` — the setting itself lives with #39's UI.
+
 ### Protocol libraries and the network
 
 cashu-ts would perform its own `fetch` by default — a side effect outside the ports. The Cashu engine therefore injects a custom request implementation into every `CashuMint` (`src/domain/cashu/internal/transport.ts`), built on the `HttpClient` port and reproducing cashu-ts's native error mapping. No code in core calls `fetch`; tests run the full engine against an in-process fake mint provided as an `HttpClient` Layer (`src/domain/cashu/__tests__/fakeMint.ts`) and never touch a real mint.
