@@ -14,11 +14,13 @@
 import { colors, fontFamily, Text } from "@linky/ui";
 import { Link, Redirect } from "expo-router";
 import { TopTabs } from "expo-router/js-top-tabs";
+import { useEffect } from "react";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTranslator } from "../../src/locales";
 import { useSession } from "../../src/session/useSession";
+import { ensureStoreForSession } from "../../src/store/storeManager";
 
 /** App title + menu glyph (PoC's ☰) opening Settings as a pushed screen. */
 function ShellHeader() {
@@ -51,6 +53,22 @@ export default function TabsLayout() {
   const t = useTranslator();
   const insets = useSafeAreaInsets();
   const session = useSession();
+
+  /**
+   * Session-scoped store boot (#26): as soon as an identity is loaded, the
+   * gate boots the Linky Evolu store for it (idempotent per identity; a
+   * relaunch reattaches to the same per-identity database). Teardown is
+   * logout's job (src/session/sessionActions.ts).
+   */
+  const identitySession = session.status === "success" && session.data._tag === "IdentityLoaded"
+    ? session.data.session
+    : null;
+  useEffect(() => {
+    if (identitySession === null) return;
+    // Failures are defects (storeManager docs); crash loudly in dev via the
+    // unhandled rejection instead of painting a recoverable state.
+    void ensureStoreForSession(identitySession);
+  }, [identitySession]);
 
   /**
    * Boot gate (#14): the main surfaces render only when an identity is

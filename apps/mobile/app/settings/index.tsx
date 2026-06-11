@@ -1,13 +1,17 @@
 import { describeEnvironment } from "@linky/core";
 import { Button, Surface, Text } from "@linky/ui";
 import { Link, useRouter } from "expo-router";
+import { useState } from "react";
 import { ScrollView } from "react-native";
 
+import { openFeedbackContact } from "../../src/contacts/feedbackContact";
+import { DevSeedPanel } from "../../src/dev/DevSeedPanel";
 import { PlatformSmokeTestPanel } from "../../src/dev/PlatformSmokeTestPanel";
 import { useTranslator } from "../../src/locales";
 import { paidOverlay } from "../../src/paidOverlay";
 import { DevLogoutPanel } from "../../src/session/DevLogoutPanel";
 import { useEffectQuery } from "../../src/runtime";
+import { useLinkyStore } from "../../src/store/useLinkyStore";
 import { toast } from "../../src/toast";
 
 /**
@@ -64,6 +68,39 @@ function DevToastDemo() {
   );
 }
 
+/**
+ * `contacts.feedback` (#26): opens the hard-coded feedback contact from the
+ * menu (the PoC's ☰ menu = this pushed Settings screen) and routes to its
+ * chat (placeholder until #29). Hidden while the store is still booting.
+ */
+function FeedbackEntry() {
+  const t = useTranslator();
+  const router = useRouter();
+  const storeState = useLinkyStore();
+  const [busy, setBusy] = useState(false);
+
+  if (storeState.status !== "ready") return null;
+  const store = storeState.store;
+
+  const onOpen = () => {
+    setBusy(true);
+    openFeedbackContact(store)
+      .then(({ id }) => router.push(`/chat/${id}`))
+      .catch(() => toast.error(t("errorPrefix")))
+      .finally(() => setBusy(false));
+  };
+
+  return (
+    <Button
+      label={t("feedback")}
+      variant="secondary"
+      disabled={busy}
+      onPress={onOpen}
+      testID="settings-feedback"
+    />
+  );
+}
+
 export default function SettingsScreen() {
   const t = useTranslator();
   const router = useRouter();
@@ -78,9 +115,12 @@ export default function SettingsScreen() {
           variant="secondary"
           onPress={() => router.push("/settings/advanced")}
         />
+        <FeedbackEntry />
       </Surface>
       {/* Dev-only logout (#14); production logout UI ships with settings. */}
       <DevLogoutPanel />
+      {/* TEMPORARY (#26): dev-only demo data seeding via the repositories. */}
+      <DevSeedPanel />
       <DevToastDemo />
       {/* TEMPORARY: storage-spike dev screen (issue #9), removed with #15. */}
       <Link href="/dev/evolu-spike" className="p-4">
