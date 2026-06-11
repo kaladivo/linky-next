@@ -36,8 +36,15 @@ scripts can assert against them without re-deriving.
 
 ## Usage
 
-`scripts/dev-two-sims.sh` boots two simulators with the dev app and is meant
-to restore **alice** on the first and **bob** on the second. The restore step
-is currently a placeholder: the app gains its identity-restore flow in
-issue #18 (onboarding restore), at which point the script automates it
-(deep link or agent-device driven input of these mnemonics).
+`scripts/dev-two-sims.sh` boots two simulators with the dev app and restores
+**alice** on the first and **bob** on the second by driving the onboarding
+restore flow (#18) with `agent-device` UI automation (stable testIDs:
+`language-continue` → `onboarding-restore-link` → `restore-word-input` +
+typed mnemonic → `restore-confirm`). Re-run just the restore step against
+already-running, logged-out apps with `scripts/dev-two-sims.sh restore-only`.
+
+Both identities also restore through the regular onboarding restore screen
+(type or paste the 20 words). A dev-gated `/dev/restore?phrase=` route
+exists too (`apps/mobile/app/dev/restore.tsx`), but external deep links do
+not reach it in development builds — expo-dev-launcher swallows
+`linky-dev://` URLs (see the route docstring).

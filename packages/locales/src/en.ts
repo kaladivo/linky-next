@@ -94,7 +94,11 @@ export const en = {
   onboardingLanguageContinue: "Continue",
   onboardingCreating: "Creating your account…",
   onboardingBackupLater: "I'll do it later",
-  onboardingRestoreStub: "Account restore is coming soon. Keep your 20 words ready.",
+  // Restore flow (#18)
+  onboardingRestoring: "Restoring your account…",
+  onboardingRestoreChecksum:
+    "These words don't form a valid backup. Check for mistyped or swapped words.",
+  onboardingRestoreFailed: "Could not restore the account.",
   onboardingAvatarControlTop: "Hairstyle",
   onboardingAvatarControlHairColor: "Hair color",
   onboardingAvatarControlAccessories: "Accessories",
