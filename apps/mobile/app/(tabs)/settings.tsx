@@ -1,9 +1,11 @@
 import { Button, Surface, Text } from "@linky/ui";
-import { View } from "react-native";
+import { ScrollView } from "react-native";
+
+import { PlatformSmokeTestPanel } from "../../src/dev/PlatformSmokeTestPanel";
 
 export default function SettingsScreen() {
   return (
-    <View className="flex-1 gap-4 bg-background px-6 pt-4">
+    <ScrollView className="flex-1 bg-background" contentContainerClassName="gap-4 px-6 pb-8 pt-4">
       <Text weight="bold" className="text-2xl">
         Settings
       </Text>
@@ -12,6 +14,8 @@ export default function SettingsScreen() {
         <Button label="Backup" variant="secondary" />
         <Button label="Delete account" variant="danger" />
       </Surface>
-    </View>
+      {/* TEMPORARY (#8): dev-only platform port smoke test; renders null in production. */}
+      <PlatformSmokeTestPanel />
+    </ScrollView>
   );
 }

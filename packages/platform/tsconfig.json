@@ -1,4 +1,12 @@
 {
   "extends": "@linky/config/tsconfig.base.json",
-  "include": ["src"]
+  "compilerOptions": {
+    // This package is consumed by Metro (the Expo bundler), not Node:
+    // bundler resolution matches how AsyncStorage/Expo module types are
+    // actually resolved at runtime (their CJS typings don't interop with
+    // NodeNext default imports).
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
+  },
+  "include": ["src", "vitest.config.ts"]
 }
