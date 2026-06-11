@@ -1,0 +1,65 @@
+# CI: typecheck, lint, unit/golden tests on every PR (and pushes to main).
+#
+# Required status check on main (run once after the first workflow run exists,
+# from a clone with admin rights on kaladivo/linky-next):
+#
+#   gh api -X PUT repos/kaladivo/linky-next/branches/main/protection --input - <<'EOF'
+#   {
+#     "required_status_checks": { "strict": false, "contexts": ["CI / checks"] },
+#     "enforce_admins": false,
+#     "required_pull_request_reviews": null,
+#     "restrictions": null
+#   }
+#   EOF
+#
+# The status check context is "<workflow name> / <job name>" = "CI / checks".
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    name: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Reads the pnpm version from "packageManager" in package.json.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      # No Vercel remote cache is configured; persist Turborepo's local cache
+      # (.turbo) across runs. Key includes the lockfile hash and commit SHA so
+      # every run saves a fresh cache; restore-keys fall back to the most
+      # recent cache for the same lockfile, then any cache for this OS.
+      - name: Restore Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            turbo-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck, lint, test
+        run: pnpm turbo typecheck lint test
