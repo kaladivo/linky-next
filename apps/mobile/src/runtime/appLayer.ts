@@ -19,6 +19,7 @@ import {
 import { Layer } from "effect";
 
 import { environment } from "../environment";
+import { ProfilePublisherStub } from "./profilePublisherStub";
 
 /**
  * The decoded build-profile configuration as an Effect service. The value
@@ -37,6 +38,7 @@ export const appLayer = Layer.mergeAll(
   ClipboardLive, // expo-clipboard → Clipboard
   DeepLinksLive, // expo-linking → DeepLinks
   HttpClientLive, // RN fetch → HttpClient
+  ProfilePublisherStub, // logged no-op until real Nostr kind-0 publishing (#24)
 );
 
 /** Everything the app runtime can provide; hooks accept Effects needing at most this. */

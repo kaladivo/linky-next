@@ -46,14 +46,21 @@ Expo Router, file-based, under `app/`:
 
 ```
 app/
-  _layout.tsx          root stack
+  _layout.tsx          root stack (settings/detail screens push over the tabs)
   (tabs)/
-    _layout.tsx        tab bar
+    _layout.tsx        boot gate (#14) + bottom tab bar with swipe (#16)
     index.tsx          Contacts (placeholder)
     wallet.tsx         Wallet (placeholder)
-    settings.tsx       Settings (placeholder)
+  onboarding/
+    _layout.tsx        first-run flow (#17)
+    index.tsx          language choice (cs/en)
+    create.tsx         create account (core createIdentitySession)
+    restore.tsx        "I'm returning" stub — filled by #18
+    profile.tsx        name + deterministic avatar (+ optional photo)
+    backup.tsx         20-word backup prompt (never blocks app entry)
+  settings/            settings stack (#16), via the header menu
+  contact/[id].tsx     chat/[id].tsx  wallet/token/[id].tsx   detail placeholders
 ```
 
-Placeholder screens only — features land per the feature map. Styling
-(NativeWind + theme tokens) arrives in issue #5; environment profiles
-(dev/staging/prod bundle IDs and endpoints) in issue #4.
+Feature screens land per the feature map; remaining placeholders are
+Contacts/Wallet surfaces and the detail routes.

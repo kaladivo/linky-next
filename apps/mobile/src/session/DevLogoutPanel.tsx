@@ -7,8 +7,10 @@
  * Copy contract (account-identity.md): logout must NOT imply remote
  * deletion — only local keys are removed.
  */
-// TODO(#17): copy via @linky/locales once the mobile app wires i18n.
+// Dev-only panel; copy stays hardcoded on purpose (the production logout UI
+// is a settings-feature issue and will go through @linky/locales).
 import { Button, Surface, Text } from "@linky/ui";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 
 import { appProfile } from "../environment";
@@ -17,6 +19,7 @@ import { logout } from "./sessionActions";
 export function DevLogoutPanel() {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const router = useRouter();
 
   if (appProfile === "production") {
     return null;
@@ -26,6 +29,12 @@ export function DevLogoutPanel() {
     setBusy(true);
     setFailed(false);
     logout()
+      .then(() => {
+        // The (tabs) boot gate sits frozen below this pushed Settings
+        // screen, so its Redirect cannot fire until Settings is popped —
+        // route to onboarding explicitly (#17: language step).
+        router.replace("/onboarding");
+      })
       .catch(() => {
         // Never log the error object: it can wrap native keychain errors.
         setFailed(true);

@@ -58,7 +58,7 @@ Hand-rolled on purpose: no react-query/effect-rx at this stage. If a workflow ne
     useEffectQuery(computeBalance(mintUrl), [mintUrl]);
   ```
 
-- A screen needs to **trigger a workflow on user action** (send payment, save contact) → that is a mutation, not a query; add a small `useEffectMutation`-style hook in `src/runtime/` when the first real mutation lands, following the same Exit-mapping rules below.
+- A screen needs to **trigger a workflow on user action** (send payment, save contact) → that is a mutation, not a query; use `useEffectMutation` from `src/runtime/` (landed with onboarding #17). It exposes `{ state: idle | pending | success | error, mutate, reset }` and follows the same Exit-mapping rules below; only the latest invocation may settle state.
 - Code must run a workflow **outside the render cycle** (the deferred-startup coordinator, fire-and-forget persistence like the locale preference) → `runAppEffect` from `src/runtime/` (#16), the one sanctioned imperative escape hatch. It runs the Effect on the app runtime and returns a promise that rejects on failures and defects alike; callers decide whether that is awaited or logged.
 - A component wants to **import `effect`, a Layer, or `appRuntime`** → stop; that logic belongs in core (workflow) or `src/runtime/` (bridge).
 

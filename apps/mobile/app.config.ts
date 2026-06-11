@@ -72,6 +72,17 @@ const config: ExpoConfig = {
         imageWidth: 200,
       },
     ],
+    // expo-image-picker: optional custom profile photo during onboarding
+    // (#17). The plugin declares the iOS photo-library usage description;
+    // camera/microphone are not requested (library picks only).
+    [
+      "expo-image-picker",
+      {
+        photosPermission: "Linky uses your photo library to set a custom profile picture.",
+        cameraPermission: false,
+        microphonePermission: false,
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

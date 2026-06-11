@@ -181,6 +181,7 @@ Secrets at rest go through the `SecureStorage` port only. The stored keys are ow
 | `Randomness`      | `@linky/core/Randomness`                                                                                                  | `RandomnessError`    | Cryptographically secure bytes for key/secret generation. Implementation MUST be a CSPRNG. |
 | `Clipboard`       | `@linky/core/Clipboard`                                                                                                   | `ClipboardError`     | Copy/read plain text (tokens, invoices). Empty clipboard is `Option.none()`.               |
 | `DeepLinks`       | `@linky/core/DeepLinks`                                                                                                   | `DeepLinksError`     | Launch URL (`initialUrl`) + live URL `Stream` (`urls`). Raw strings; parsing is domain.    |
+| `ProfilePublisher` | `@linky/core/ProfilePublisher`                                                                                           | `ProfilePublishError` | Publishes own profile metadata (Nostr kind 0). Stub Layer in `apps/mobile` until #24.     |
 
 ### Time and non-secret randomness: built-in services, not ports
 

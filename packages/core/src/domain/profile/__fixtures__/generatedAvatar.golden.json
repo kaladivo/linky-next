@@ -1,0 +1,621 @@
+{
+  "generatedFrom": "linky-poc apps/web-app/src/derivedProfile.ts",
+  "cases": [
+    {
+      "seed": "npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl",
+      "initialSelection": {
+        "accessoriesIndex": 91,
+        "clothingIndex": 515,
+        "faceIndex": 130,
+        "facialHairIndex": 9,
+        "hairColorIndex": 2,
+        "mouthIndex": 2,
+        "seed": "npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl",
+        "skinIndex": 3,
+        "topIndex": 8
+      },
+      "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl&top=longButNotTooLong&hairColor=b58143&hatColor=a7ffc4&accessories=round&accessoriesColor=ffffb1&accessoriesProbability=100&eyebrows=raisedExcited&eyes=wink&mouth=disbelief&facialHair=moustacheMagnum&facialHairColor=b58143&facialHairProbability=100&skinColor=edb98a&clothing=graphicShirt&clothesColor=ffafb9&clothingGraphic=hola",
+      "cycles": {
+        "top": {
+          "selection": {
+            "accessoriesIndex": 91,
+            "clothingIndex": 515,
+            "faceIndex": 130,
+            "facialHairIndex": 9,
+            "hairColorIndex": 2,
+            "mouthIndex": 2,
+            "seed": "npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl",
+            "skinIndex": 3,
+            "topIndex": 9
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl&top=miaWallace&hairColor=b58143&hatColor=ffdeb5&accessories=round&accessoriesColor=ffffb1&accessoriesProbability=100&eyebrows=raisedExcited&eyes=wink&mouth=disbelief&facialHair=moustacheMagnum&facialHairColor=b58143&facialHairProbability=100&skinColor=edb98a&clothing=graphicShirt&clothesColor=ffafb9&clothingGraphic=hola"
+        },
+        "hairColor": {
+          "selection": {
+            "accessoriesIndex": 91,
+            "clothingIndex": 515,
+            "faceIndex": 130,
+            "facialHairIndex": 9,
+            "hairColorIndex": 3,
+            "mouthIndex": 2,
+            "seed": "npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl",
+            "skinIndex": 3,
+            "topIndex": 8
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl&top=longButNotTooLong&hairColor=d6b370&hatColor=a7ffc4&accessories=round&accessoriesColor=ffffb1&accessoriesProbability=100&eyebrows=raisedExcited&eyes=wink&mouth=disbelief&facialHair=moustacheMagnum&facialHairColor=d6b370&facialHairProbability=100&skinColor=edb98a&clothing=graphicShirt&clothesColor=ffafb9&clothingGraphic=hola"
+        },
+        "accessories": {
+          "selection": {
+            "accessoriesIndex": 92,
+            "clothingIndex": 515,
+            "faceIndex": 130,
+            "facialHairIndex": 9,
+            "hairColorIndex": 2,
+            "mouthIndex": 2,
+            "seed": "npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl",
+            "skinIndex": 3,
+            "topIndex": 8
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl&top=longButNotTooLong&hairColor=b58143&hatColor=a7ffc4&accessories=sunglasses&accessoriesColor=ffffb1&accessoriesProbability=100&eyebrows=raisedExcited&eyes=wink&mouth=disbelief&facialHair=moustacheMagnum&facialHairColor=b58143&facialHairProbability=100&skinColor=edb98a&clothing=graphicShirt&clothesColor=ffafb9&clothingGraphic=hola"
+        },
+        "face": {
+          "selection": {
+            "accessoriesIndex": 91,
+            "clothingIndex": 515,
+            "faceIndex": 131,
+            "facialHairIndex": 9,
+            "hairColorIndex": 2,
+            "mouthIndex": 2,
+            "seed": "npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl",
+            "skinIndex": 3,
+            "topIndex": 8
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl&top=longButNotTooLong&hairColor=b58143&hatColor=a7ffc4&accessories=round&accessoriesColor=ffffb1&accessoriesProbability=100&eyebrows=raisedExcited&eyes=xDizzy&mouth=disbelief&facialHair=moustacheMagnum&facialHairColor=b58143&facialHairProbability=100&skinColor=edb98a&clothing=graphicShirt&clothesColor=ffafb9&clothingGraphic=hola"
+        },
+        "mouth": {
+          "selection": {
+            "accessoriesIndex": 91,
+            "clothingIndex": 515,
+            "faceIndex": 130,
+            "facialHairIndex": 9,
+            "hairColorIndex": 2,
+            "mouthIndex": 3,
+            "seed": "npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl",
+            "skinIndex": 3,
+            "topIndex": 8
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl&top=longButNotTooLong&hairColor=b58143&hatColor=a7ffc4&accessories=round&accessoriesColor=ffffb1&accessoriesProbability=100&eyebrows=raisedExcited&eyes=wink&mouth=eating&facialHair=moustacheMagnum&facialHairColor=b58143&facialHairProbability=100&skinColor=edb98a&clothing=graphicShirt&clothesColor=ffafb9&clothingGraphic=hola"
+        },
+        "facialHair": {
+          "selection": {
+            "accessoriesIndex": 91,
+            "clothingIndex": 515,
+            "faceIndex": 130,
+            "facialHairIndex": 0,
+            "hairColorIndex": 2,
+            "mouthIndex": 2,
+            "seed": "npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl",
+            "skinIndex": 3,
+            "topIndex": 8
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl&top=longButNotTooLong&hairColor=b58143&hatColor=a7ffc4&accessories=round&accessoriesColor=ffffb1&accessoriesProbability=100&eyebrows=raisedExcited&eyes=wink&mouth=disbelief&facialHair=beardLight&facialHairColor=b58143&facialHairProbability=0&skinColor=edb98a&clothing=graphicShirt&clothesColor=ffafb9&clothingGraphic=hola"
+        },
+        "skin": {
+          "selection": {
+            "accessoriesIndex": 91,
+            "clothingIndex": 515,
+            "faceIndex": 130,
+            "facialHairIndex": 9,
+            "hairColorIndex": 2,
+            "mouthIndex": 2,
+            "seed": "npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl",
+            "skinIndex": 4,
+            "topIndex": 8
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl&top=longButNotTooLong&hairColor=b58143&hatColor=a7ffc4&accessories=round&accessoriesColor=ffffb1&accessoriesProbability=100&eyebrows=raisedExcited&eyes=wink&mouth=disbelief&facialHair=moustacheMagnum&facialHairColor=b58143&facialHairProbability=100&skinColor=ffdbb4&clothing=graphicShirt&clothesColor=ffafb9&clothingGraphic=hola"
+        },
+        "clothing": {
+          "selection": {
+            "accessoriesIndex": 91,
+            "clothingIndex": 1121,
+            "faceIndex": 130,
+            "facialHairIndex": 9,
+            "hairColorIndex": 2,
+            "mouthIndex": 2,
+            "seed": "npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl",
+            "skinIndex": 3,
+            "topIndex": 8
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl&top=longButNotTooLong&hairColor=b58143&hatColor=a7ffc4&accessories=round&accessoriesColor=ffffb1&accessoriesProbability=100&eyebrows=raisedExcited&eyes=wink&mouth=disbelief&facialHair=moustacheMagnum&facialHairColor=b58143&facialHairProbability=100&skinColor=edb98a&clothing=shirtVNeck&clothesColor=262e33&clothingGraphic=bear"
+        }
+      },
+      "topTwice": {
+        "selection": {
+          "accessoriesIndex": 91,
+          "clothingIndex": 515,
+          "faceIndex": 130,
+          "facialHairIndex": 9,
+          "hairColorIndex": 2,
+          "mouthIndex": 2,
+          "seed": "npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl",
+          "skinIndex": 3,
+          "topIndex": 10
+        },
+        "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl&top=shavedSides&hairColor=b58143&hatColor=ffafb9&accessories=round&accessoriesColor=ffffb1&accessoriesProbability=100&eyebrows=raisedExcited&eyes=wink&mouth=disbelief&facialHair=moustacheMagnum&facialHairColor=b58143&facialHairProbability=100&skinColor=edb98a&clothing=graphicShirt&clothesColor=ffafb9&clothingGraphic=hola"
+      },
+      "defaultProfileEn": {
+        "name": "Theodore",
+        "lnAddress": "npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl@linky.fit",
+        "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl&top=longButNotTooLong&hairColor=b58143&hatColor=a7ffc4&accessories=round&accessoriesColor=ffffb1&accessoriesProbability=100&eyebrows=raisedExcited&eyes=wink&mouth=disbelief&facialHair=moustacheMagnum&facialHairColor=b58143&facialHairProbability=100&skinColor=edb98a&clothing=graphicShirt&clothesColor=ffafb9&clothingGraphic=hola"
+      },
+      "defaultProfileCs": {
+        "name": "Adrian",
+        "lnAddress": "npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl@linky.fit",
+        "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl&top=longButNotTooLong&hairColor=b58143&hatColor=a7ffc4&accessories=round&accessoriesColor=ffffb1&accessoriesProbability=100&eyebrows=raisedExcited&eyes=wink&mouth=disbelief&facialHair=moustacheMagnum&facialHairColor=b58143&facialHairProbability=100&skinColor=edb98a&clothing=graphicShirt&clothesColor=ffafb9&clothingGraphic=hola"
+      },
+      "lightningAddress": "npub1s0wv0d3mglcrlptzwwadvshqqy3vea3z3lqfm0grub2hivl00sps9w29fl@linky.fit"
+    },
+    {
+      "seed": "npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r",
+      "initialSelection": {
+        "accessoriesIndex": 61,
+        "clothingIndex": 129,
+        "faceIndex": 52,
+        "facialHairIndex": 7,
+        "hairColorIndex": 0,
+        "mouthIndex": 8,
+        "seed": "npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r",
+        "skinIndex": 2,
+        "topIndex": 14
+      },
+      "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r&top=dreads01&hairColor=a55728&hatColor=ffffff&accessories=wayfarers&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=raisedExcitedNatural&eyes=happy&mouth=smile&facialHair=beardMedium&facialHairColor=a55728&facialHairProbability=100&skinColor=ae5d29&clothing=blazerAndShirt&clothesColor=ff5c5c&clothingGraphic=skullOutline",
+      "cycles": {
+        "top": {
+          "selection": {
+            "accessoriesIndex": 61,
+            "clothingIndex": 129,
+            "faceIndex": 52,
+            "facialHairIndex": 7,
+            "hairColorIndex": 0,
+            "mouthIndex": 8,
+            "seed": "npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r",
+            "skinIndex": 2,
+            "topIndex": 15
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r&top=dreads02&hairColor=a55728&hatColor=262e33&accessories=wayfarers&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=raisedExcitedNatural&eyes=happy&mouth=smile&facialHair=beardMedium&facialHairColor=a55728&facialHairProbability=100&skinColor=ae5d29&clothing=blazerAndShirt&clothesColor=ff5c5c&clothingGraphic=skullOutline"
+        },
+        "hairColor": {
+          "selection": {
+            "accessoriesIndex": 61,
+            "clothingIndex": 129,
+            "faceIndex": 52,
+            "facialHairIndex": 7,
+            "hairColorIndex": 1,
+            "mouthIndex": 8,
+            "seed": "npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r",
+            "skinIndex": 2,
+            "topIndex": 14
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r&top=dreads01&hairColor=2c1b18&hatColor=ffffff&accessories=wayfarers&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=raisedExcitedNatural&eyes=happy&mouth=smile&facialHair=beardMedium&facialHairColor=2c1b18&facialHairProbability=100&skinColor=ae5d29&clothing=blazerAndShirt&clothesColor=ff5c5c&clothingGraphic=skullOutline"
+        },
+        "accessories": {
+          "selection": {
+            "accessoriesIndex": 62,
+            "clothingIndex": 129,
+            "faceIndex": 52,
+            "facialHairIndex": 7,
+            "hairColorIndex": 0,
+            "mouthIndex": 8,
+            "seed": "npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r",
+            "skinIndex": 2,
+            "topIndex": 14
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r&top=dreads01&hairColor=a55728&hatColor=ffffff&accessories=eyepatch&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=raisedExcitedNatural&eyes=happy&mouth=smile&facialHair=beardMedium&facialHairColor=a55728&facialHairProbability=100&skinColor=ae5d29&clothing=blazerAndShirt&clothesColor=ff5c5c&clothingGraphic=skullOutline"
+        },
+        "face": {
+          "selection": {
+            "accessoriesIndex": 61,
+            "clothingIndex": 129,
+            "faceIndex": 53,
+            "facialHairIndex": 7,
+            "hairColorIndex": 0,
+            "mouthIndex": 8,
+            "seed": "npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r",
+            "skinIndex": 2,
+            "topIndex": 14
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r&top=dreads01&hairColor=a55728&hatColor=ffffff&accessories=wayfarers&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=raisedExcitedNatural&eyes=hearts&mouth=smile&facialHair=beardMedium&facialHairColor=a55728&facialHairProbability=100&skinColor=ae5d29&clothing=blazerAndShirt&clothesColor=ff5c5c&clothingGraphic=skullOutline"
+        },
+        "mouth": {
+          "selection": {
+            "accessoriesIndex": 61,
+            "clothingIndex": 129,
+            "faceIndex": 52,
+            "facialHairIndex": 7,
+            "hairColorIndex": 0,
+            "mouthIndex": 9,
+            "seed": "npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r",
+            "skinIndex": 2,
+            "topIndex": 14
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r&top=dreads01&hairColor=a55728&hatColor=ffffff&accessories=wayfarers&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=raisedExcitedNatural&eyes=happy&mouth=tongue&facialHair=beardMedium&facialHairColor=a55728&facialHairProbability=100&skinColor=ae5d29&clothing=blazerAndShirt&clothesColor=ff5c5c&clothingGraphic=skullOutline"
+        },
+        "facialHair": {
+          "selection": {
+            "accessoriesIndex": 61,
+            "clothingIndex": 129,
+            "faceIndex": 52,
+            "facialHairIndex": 8,
+            "hairColorIndex": 0,
+            "mouthIndex": 8,
+            "seed": "npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r",
+            "skinIndex": 2,
+            "topIndex": 14
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r&top=dreads01&hairColor=a55728&hatColor=ffffff&accessories=wayfarers&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=raisedExcitedNatural&eyes=happy&mouth=smile&facialHair=moustacheFancy&facialHairColor=a55728&facialHairProbability=100&skinColor=ae5d29&clothing=blazerAndShirt&clothesColor=ff5c5c&clothingGraphic=skullOutline"
+        },
+        "skin": {
+          "selection": {
+            "accessoriesIndex": 61,
+            "clothingIndex": 129,
+            "faceIndex": 52,
+            "facialHairIndex": 7,
+            "hairColorIndex": 0,
+            "mouthIndex": 8,
+            "seed": "npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r",
+            "skinIndex": 3,
+            "topIndex": 14
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r&top=dreads01&hairColor=a55728&hatColor=ffffff&accessories=wayfarers&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=raisedExcitedNatural&eyes=happy&mouth=smile&facialHair=beardMedium&facialHairColor=a55728&facialHairProbability=100&skinColor=edb98a&clothing=blazerAndShirt&clothesColor=ff5c5c&clothingGraphic=skullOutline"
+        },
+        "clothing": {
+          "selection": {
+            "accessoriesIndex": 61,
+            "clothingIndex": 783,
+            "faceIndex": 52,
+            "facialHairIndex": 7,
+            "hairColorIndex": 0,
+            "mouthIndex": 8,
+            "seed": "npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r",
+            "skinIndex": 2,
+            "topIndex": 14
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r&top=dreads01&hairColor=a55728&hatColor=ffffff&accessories=wayfarers&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=raisedExcitedNatural&eyes=happy&mouth=smile&facialHair=beardMedium&facialHairColor=a55728&facialHairProbability=100&skinColor=ae5d29&clothing=overall&clothesColor=a7ffc4&clothingGraphic=deer"
+        }
+      },
+      "topTwice": {
+        "selection": {
+          "accessoriesIndex": 61,
+          "clothingIndex": 129,
+          "faceIndex": 52,
+          "facialHairIndex": 7,
+          "hairColorIndex": 0,
+          "mouthIndex": 8,
+          "seed": "npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r",
+          "skinIndex": 2,
+          "topIndex": 16
+        },
+        "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r&top=frizzle&hairColor=a55728&hatColor=65c9ff&accessories=wayfarers&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=raisedExcitedNatural&eyes=happy&mouth=smile&facialHair=beardMedium&facialHairColor=a55728&facialHairProbability=100&skinColor=ae5d29&clothing=blazerAndShirt&clothesColor=ff5c5c&clothingGraphic=skullOutline"
+      },
+      "defaultProfileEn": {
+        "name": "Callum",
+        "lnAddress": "npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r@linky.fit",
+        "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r&top=dreads01&hairColor=a55728&hatColor=ffffff&accessories=wayfarers&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=raisedExcitedNatural&eyes=happy&mouth=smile&facialHair=beardMedium&facialHairColor=a55728&facialHairProbability=100&skinColor=ae5d29&clothing=blazerAndShirt&clothesColor=ff5c5c&clothingGraphic=skullOutline"
+      },
+      "defaultProfileCs": {
+        "name": "Radek",
+        "lnAddress": "npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r@linky.fit",
+        "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r&top=dreads01&hairColor=a55728&hatColor=ffffff&accessories=wayfarers&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=raisedExcitedNatural&eyes=happy&mouth=smile&facialHair=beardMedium&facialHairColor=a55728&facialHairProbability=100&skinColor=ae5d29&clothing=blazerAndShirt&clothesColor=ff5c5c&clothingGraphic=skullOutline"
+      },
+      "lightningAddress": "npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsmmkn0r@linky.fit"
+    },
+    {
+      "seed": "linky",
+      "initialSelection": {
+        "accessoriesIndex": 56,
+        "clothingIndex": 490,
+        "faceIndex": 71,
+        "facialHairIndex": 0,
+        "hairColorIndex": 9,
+        "mouthIndex": 1,
+        "seed": "linky",
+        "skinIndex": 5,
+        "topIndex": 19
+      },
+      "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat",
+      "cycles": {
+        "top": {
+          "selection": {
+            "accessoriesIndex": 56,
+            "clothingIndex": 490,
+            "faceIndex": 71,
+            "facialHairIndex": 0,
+            "hairColorIndex": 9,
+            "mouthIndex": 1,
+            "seed": "linky",
+            "skinIndex": 5,
+            "topIndex": 20
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortFlat&hairColor=e8e1e1&hatColor=929598&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+        },
+        "hairColor": {
+          "selection": {
+            "accessoriesIndex": 56,
+            "clothingIndex": 490,
+            "faceIndex": 71,
+            "facialHairIndex": 0,
+            "hairColorIndex": 0,
+            "mouthIndex": 1,
+            "seed": "linky",
+            "skinIndex": 5,
+            "topIndex": 19
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=a55728&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=a55728&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+        },
+        "accessories": {
+          "selection": {
+            "accessoriesIndex": 57,
+            "clothingIndex": 490,
+            "faceIndex": 71,
+            "facialHairIndex": 0,
+            "hairColorIndex": 9,
+            "mouthIndex": 1,
+            "seed": "linky",
+            "skinIndex": 5,
+            "topIndex": 19
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=prescription01&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+        },
+        "face": {
+          "selection": {
+            "accessoriesIndex": 56,
+            "clothingIndex": 490,
+            "faceIndex": 72,
+            "facialHairIndex": 0,
+            "hairColorIndex": 9,
+            "mouthIndex": 1,
+            "seed": "linky",
+            "skinIndex": 5,
+            "topIndex": 19
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=unibrowNatural&eyes=closed&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+        },
+        "mouth": {
+          "selection": {
+            "accessoriesIndex": 56,
+            "clothingIndex": 490,
+            "faceIndex": 71,
+            "facialHairIndex": 0,
+            "hairColorIndex": 9,
+            "mouthIndex": 2,
+            "seed": "linky",
+            "skinIndex": 5,
+            "topIndex": 19
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=disbelief&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+        },
+        "facialHair": {
+          "selection": {
+            "accessoriesIndex": 56,
+            "clothingIndex": 490,
+            "faceIndex": 71,
+            "facialHairIndex": 1,
+            "hairColorIndex": 9,
+            "mouthIndex": 1,
+            "seed": "linky",
+            "skinIndex": 5,
+            "topIndex": 19
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardMajestic&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+        },
+        "skin": {
+          "selection": {
+            "accessoriesIndex": 56,
+            "clothingIndex": 490,
+            "faceIndex": 71,
+            "facialHairIndex": 0,
+            "hairColorIndex": 9,
+            "mouthIndex": 1,
+            "seed": "linky",
+            "skinIndex": 6,
+            "topIndex": 19
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=f8d25c&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+        },
+        "clothing": {
+          "selection": {
+            "accessoriesIndex": 56,
+            "clothingIndex": 862,
+            "faceIndex": 71,
+            "facialHairIndex": 0,
+            "hairColorIndex": 9,
+            "mouthIndex": 1,
+            "seed": "linky",
+            "skinIndex": 5,
+            "topIndex": 19
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=shirtCrewNeck&clothesColor=5199e4&clothingGraphic=cumbia"
+        }
+      },
+      "topTwice": {
+        "selection": {
+          "accessoriesIndex": 56,
+          "clothingIndex": 490,
+          "faceIndex": 71,
+          "facialHairIndex": 0,
+          "hairColorIndex": 9,
+          "mouthIndex": 1,
+          "seed": "linky",
+          "skinIndex": 5,
+          "topIndex": 21
+        },
+        "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortRound&hairColor=e8e1e1&hatColor=3c4f5c&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+      },
+      "defaultProfileEn": {
+        "name": "Isaac",
+        "lnAddress": "linky@linky.fit",
+        "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+      },
+      "defaultProfileCs": {
+        "name": "Alžběta",
+        "lnAddress": "linky@linky.fit",
+        "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+      },
+      "lightningAddress": "linky@linky.fit"
+    },
+    {
+      "seed": "",
+      "initialSelection": {
+        "accessoriesIndex": 56,
+        "clothingIndex": 490,
+        "faceIndex": 71,
+        "facialHairIndex": 0,
+        "hairColorIndex": 9,
+        "mouthIndex": 1,
+        "seed": "linky",
+        "skinIndex": 5,
+        "topIndex": 19
+      },
+      "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat",
+      "cycles": {
+        "top": {
+          "selection": {
+            "accessoriesIndex": 56,
+            "clothingIndex": 490,
+            "faceIndex": 71,
+            "facialHairIndex": 0,
+            "hairColorIndex": 9,
+            "mouthIndex": 1,
+            "seed": "linky",
+            "skinIndex": 5,
+            "topIndex": 20
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortFlat&hairColor=e8e1e1&hatColor=929598&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+        },
+        "hairColor": {
+          "selection": {
+            "accessoriesIndex": 56,
+            "clothingIndex": 490,
+            "faceIndex": 71,
+            "facialHairIndex": 0,
+            "hairColorIndex": 0,
+            "mouthIndex": 1,
+            "seed": "linky",
+            "skinIndex": 5,
+            "topIndex": 19
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=a55728&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=a55728&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+        },
+        "accessories": {
+          "selection": {
+            "accessoriesIndex": 57,
+            "clothingIndex": 490,
+            "faceIndex": 71,
+            "facialHairIndex": 0,
+            "hairColorIndex": 9,
+            "mouthIndex": 1,
+            "seed": "linky",
+            "skinIndex": 5,
+            "topIndex": 19
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=prescription01&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+        },
+        "face": {
+          "selection": {
+            "accessoriesIndex": 56,
+            "clothingIndex": 490,
+            "faceIndex": 72,
+            "facialHairIndex": 0,
+            "hairColorIndex": 9,
+            "mouthIndex": 1,
+            "seed": "linky",
+            "skinIndex": 5,
+            "topIndex": 19
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=unibrowNatural&eyes=closed&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+        },
+        "mouth": {
+          "selection": {
+            "accessoriesIndex": 56,
+            "clothingIndex": 490,
+            "faceIndex": 71,
+            "facialHairIndex": 0,
+            "hairColorIndex": 9,
+            "mouthIndex": 2,
+            "seed": "linky",
+            "skinIndex": 5,
+            "topIndex": 19
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=disbelief&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+        },
+        "facialHair": {
+          "selection": {
+            "accessoriesIndex": 56,
+            "clothingIndex": 490,
+            "faceIndex": 71,
+            "facialHairIndex": 1,
+            "hairColorIndex": 9,
+            "mouthIndex": 1,
+            "seed": "linky",
+            "skinIndex": 5,
+            "topIndex": 19
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardMajestic&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+        },
+        "skin": {
+          "selection": {
+            "accessoriesIndex": 56,
+            "clothingIndex": 490,
+            "faceIndex": 71,
+            "facialHairIndex": 0,
+            "hairColorIndex": 9,
+            "mouthIndex": 1,
+            "seed": "linky",
+            "skinIndex": 6,
+            "topIndex": 19
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=f8d25c&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+        },
+        "clothing": {
+          "selection": {
+            "accessoriesIndex": 56,
+            "clothingIndex": 862,
+            "faceIndex": 71,
+            "facialHairIndex": 0,
+            "hairColorIndex": 9,
+            "mouthIndex": 1,
+            "seed": "linky",
+            "skinIndex": 5,
+            "topIndex": 19
+          },
+          "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=shirtCrewNeck&clothesColor=5199e4&clothingGraphic=cumbia"
+        }
+      },
+      "topTwice": {
+        "selection": {
+          "accessoriesIndex": 56,
+          "clothingIndex": 490,
+          "faceIndex": 71,
+          "facialHairIndex": 0,
+          "hairColorIndex": 9,
+          "mouthIndex": 1,
+          "seed": "linky",
+          "skinIndex": 5,
+          "topIndex": 21
+        },
+        "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortRound&hairColor=e8e1e1&hatColor=3c4f5c&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+      },
+      "defaultProfileEn": {
+        "name": "Alice",
+        "lnAddress": "",
+        "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+      },
+      "defaultProfileCs": {
+        "name": "Alžběta",
+        "lnAddress": "",
+        "pictureUrl": "https://api.dicebear.com/9.x/avataaars/svg?seed=linky&top=shortCurly&hairColor=e8e1e1&hatColor=e6e6e6&accessories=kurt&accessoriesColor=b1e2ff&accessoriesProbability=100&eyebrows=sadConcernedNatural&eyes=xDizzy&mouth=default&facialHair=beardLight&facialHairColor=e8e1e1&facialHairProbability=0&skinColor=fd9841&clothing=graphicShirt&clothesColor=b1e2ff&clothingGraphic=bat"
+      },
+      "lightningAddress": ""
+    }
+  ]
+}
