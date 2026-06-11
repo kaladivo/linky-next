@@ -6,6 +6,7 @@ This folder tracks product and engineering planning for the Linky rewrite.
 
 - [Initial rewrite discussion](./initial-rewrite-discussion.md) - summary of the first planning conversation and agreed rewrite constraints.
 - [Feature map](./feature-map/index.md) - concise inventory of what Linky does before rewrite spec and roadmap planning.
+- [Rewrite tech spec](./rewrite-spec.md) - engineering spec for the rewrite: stack, monorepo layout, core architecture, environments, dev workflow.
 - [Planning handout prompt](./planning-handout-prompt.md) - reusable prompt for brainstorming `rewrite-spec.md` and `feature-map.md`.
 
 ## Planning Workflow
