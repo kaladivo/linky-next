@@ -7,5 +7,6 @@ export * from "./DerivedIdentities.js";
 export * from "./deriveNostrIdentity.js";
 export * from "./deriveCashuWallet.js";
 export * from "./deriveOwnerLane.js";
+export * from "./identitySession.js";
 // Intentionally not exported (internal): `slip39.js` (SLIP-39 codec),
 // `bip85.js`, `derivationPaths.js`, `nip19.js` (derivation internals).

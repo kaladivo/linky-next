@@ -4,6 +4,7 @@ import { Link } from "expo-router";
 import { ScrollView } from "react-native";
 
 import { PlatformSmokeTestPanel } from "../../src/dev/PlatformSmokeTestPanel";
+import { DevLogoutPanel } from "../../src/session/DevLogoutPanel";
 
 import { useEffectQuery } from "../../src/runtime";
 
@@ -44,6 +45,8 @@ export default function SettingsScreen() {
         <Button label="Backup" variant="secondary" />
         <Button label="Delete account" variant="danger" />
       </Surface>
+      {/* Dev-only logout (#14); production logout UI ships with settings. */}
+      <DevLogoutPanel />
       {/* TEMPORARY: storage-spike dev screen (issue #9), removed with #15. */}
       <Link href="/dev/evolu-spike" className="p-4">
         <Text className="text-primary">Evolu spike (dev)</Text>

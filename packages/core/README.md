@@ -163,6 +163,14 @@ Instances: `src/domain/identity/__fixtures__/slip39.golden.json` (SLIP-39 backup
 
 Workflows that touch secret material (master secret, backup phrase, derived keys) must never log it, embed it in error payloads, or pass it outside typed return values. `no-console` is an ESLint error across `src/`.
 
+This extends to **error `cause` chains**: a typed error's `cause` (and anything reachable from it — wrapped errors, native exception messages, stack data) must not carry secrets either. When translating an error whose payload could contain fragments of secret input (e.g. `InvalidBackupPhraseError.unknownWords` for a stored phrase), map it to a reason-only error instead of attaching the original as `cause` — see `IdentitySessionCorruptedError` in `src/domain/identity/identitySession.ts`. Tests assert that serialized session errors contain no phrase words or secret hex.
+
+Secrets at rest go through the `SecureStorage` port only. The stored keys are owned and documented by the module that writes them; currently:
+
+| Key                              | Value                            | Owner module                          |
+| -------------------------------- | -------------------------------- | ------------------------------------- |
+| `linky.identity.backupPhrase.v1` | canonical 20-word SLIP-39 phrase | `src/domain/identity/identitySession` |
+
 ## The ports
 
 | Port              | Tag / module                                                                                                              | Errors               | Notes                                                                                      |
