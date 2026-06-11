@@ -81,11 +81,23 @@ const writeOneRowPerDomain = (store: LinkyStore) => {
       state: "accepted",
     }),
     message: store.insert("message", {
-      contactId,
+      rumorId: "rumor-event-id-1",
+      peerNpub: "npub1exampleexampleexampleexampleexampleexampleexampleexample",
       direction: "in",
       content: "hello from the integration test",
       wrapId: "wrap-event-id-1",
       sentAtSec: 1_718_000_000,
+    }),
+    reaction: store.insert("reaction", {
+      rumorId: "reaction-event-id-1",
+      messageRumorId: "rumor-event-id-1",
+      reactorNpub: "npub1exampleexampleexampleexampleexampleexampleexampleexample",
+      emoji: "👍",
+      sentAtSec: 1_718_000_001,
+    }),
+    blockedSender: store.insert("blockedSender", {
+      npub: "npub1blockedblockedblockedblockedblockedblockedblockedblocked",
+      blockedAtSec: 1_718_000_002,
     }),
     transaction: store.insert("transaction", {
       happenedAtSec: 1_718_000_100,
@@ -181,6 +193,9 @@ describe("six-domain schema on local SQLite", () => {
       for (const table of Object.keys(tableSyncDomain)) {
         expect(tables, `table ${table}`).toContain(table);
       }
+      // Local-only table (leading underscore) is created too, but never syncs
+      // (see messengerRepositories.integration.test.ts for the sync proof).
+      expect(tables).toContain("_unknownThread");
 
       const contactColumns = db
         .prepare(`select name from pragma_table_info('contact')`)
@@ -205,9 +220,11 @@ describe("six-domain schema on local SQLite", () => {
 
     const message = await loadRows(storeA, "message");
     expect(message).toHaveLength(1);
-    expect(message[0]?.contactId).toBe(contactId);
+    expect(message[0]?.rumorId).toBe("rumor-event-id-1");
 
     expect(await loadRows(storeA, "cashuToken")).toHaveLength(1);
+    expect(await loadRows(storeA, "reaction")).toHaveLength(1);
+    expect(await loadRows(storeA, "blockedSender")).toHaveLength(1);
     expect(await loadRows(storeA, "transaction")).toHaveLength(1);
     expect(await loadRows(storeA, "nostrIdentity")).toHaveLength(1);
     expect(await loadRows(storeA, "metaEntry")).toHaveLength(1);

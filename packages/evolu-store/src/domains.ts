@@ -17,7 +17,7 @@ import { createAppOwner, err, Mnemonic, mnemonicToOwnerSecret, ok } from "@evolu
 import type { AppOwner, Result } from "@evolu/common";
 import type { SyncDomain } from "@linky/core";
 
-import type { LinkySchema, LinkyTableName } from "./schema";
+import type { LinkySchema, LocalOnlyTableName, SyncedTableName } from "./schema";
 
 export type { SyncDomain };
 
@@ -67,22 +67,28 @@ export const domainOwnersFromLaneMnemonics = (
 };
 
 /**
- * Table -> sync domain assignment. Single source of truth used by
- * `createLinkyStore` to route every mutation to its domain's owner lane.
+ * Table -> sync domain assignment for SYNCED tables. Single source of truth
+ * used by `createLinkyStore` to route every mutation to its domain's owner
+ * lane. Local-only tables (leading `_`, e.g. `_unknownThread`) are absent on
+ * purpose: Evolu applies their mutations outside the sync pipeline and stamps
+ * them with the AppOwner (= meta lane owner) id; they never sync anywhere.
  */
 export const tableSyncDomain = {
   contact: "contacts",
+  blockedSender: "contacts",
   cashuToken: "wallet",
   message: "messages",
+  reaction: "messages",
   transaction: "transactions",
   nostrIdentity: "identity",
   metaEntry: "meta",
-} as const satisfies Record<LinkyTableName, SyncDomain>;
+} as const satisfies Record<SyncedTableName, SyncDomain>;
 
 export type TableSyncDomain = typeof tableSyncDomain;
 
-// Compile-time exhaustiveness: every schema table has a domain assignment.
-type TablesMissingDomain = Exclude<keyof LinkySchema, keyof TableSyncDomain>;
+// Compile-time exhaustiveness: every schema table is either local-only
+// (leading `_`) or has a domain assignment.
+type TablesMissingDomain = Exclude<keyof LinkySchema, keyof TableSyncDomain | LocalOnlyTableName>;
 type _AssertAllTablesAssigned = TablesMissingDomain extends never ? true : never;
 const _allTablesAssigned: _AssertAllTablesAssigned = true;
 void _allTablesAssigned;

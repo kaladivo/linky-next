@@ -11,8 +11,10 @@
  * - **Typed errors, no throws.** Every expected failure is a tagged object
  *   (`_tag` discriminant, matching core's `Data.TaggedError` convention) in
  *   a {@link RepoResult}. Reads of optional data return `null`, not errors.
- * - **Mutations are synchronous** (Evolu applies them locally and returns a
- *   validation result immediately); **queries are async** (`Promise`).
+ * - **Queries are async** (`Promise`). Plain mutations are synchronous
+ *   (Evolu applies them locally and returns a validation result
+ *   immediately); mutations that must read first (dedup by rumor id,
+ *   blocked-sender checks, idempotent upserts) are async.
  * - **Lane routing is internal.** Repositories mutate through
  *   `LinkyStore.insert/update/upsert`, so every row lands on its domain's
  *   owner lane; callers never see owners.
