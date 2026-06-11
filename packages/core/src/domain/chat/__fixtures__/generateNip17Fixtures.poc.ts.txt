@@ -1,0 +1,229 @@
+/**
+ * One-off golden fixture generator for linky-next issue #22 (NIP-17/NIP-59).
+ * Run from the PoC so every byte comes from the PoC's own dependency
+ * (nostr-tools) and the PoC's own wrap code (pushWrappedEvent.ts):
+ *
+ *   cd /Users/kaladivo/workspace/linky/linky-poc/apps/web-app
+ *   bun gen-nip17-fixtures.ts > /path/to/nip17.golden.json
+ *
+ * This file is temporary and is NOT committed to the PoC repo.
+ */
+import { getEventHash, getPublicKey, verifyEvent } from "nostr-tools";
+import type { Event as NostrToolsEvent, UnsignedEvent } from "nostr-tools";
+import { unwrapEvent } from "nostr-tools/nip17";
+import { decrypt, encrypt, getConversationKey } from "nostr-tools/nip44";
+import {
+  wrapEventWithPushMarker,
+  wrapEventWithoutPushMarker,
+} from "./src/app/lib/pushWrappedEvent";
+
+const hexToBytes = (hex: string): Uint8Array =>
+  Uint8Array.from(hex.match(/.{2}/g)!.map((b) => parseInt(b, 16)));
+const bytesToHex = (bytes: Uint8Array): string =>
+  [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+
+// Throwaway fixture keys — committed to the repo, never use for a real identity.
+const senderSecretKeyHex =
+  "7f3b02c9d3a8e15b64f2a90c81d6e4775ab9c0d2e3f415263748596a7b8c9d0e";
+const recipientSecretKeyHex =
+  "1e0d9c8b7a695847362514f3e2d1c0b95a7d86e4c2b0a1928374655647382910";
+
+const senderSk = hexToBytes(senderSecretKeyHex);
+const recipientSk = hexToBytes(recipientSecretKeyHex);
+const senderPub = getPublicKey(senderSk);
+const recipientPub = getPublicKey(recipientSk);
+
+// --- NIP-44 vectors (deterministic: fixed conversation key + nonce) ---------
+
+const conversationKey = getConversationKey(senderSk, recipientPub);
+const reverseKey = getConversationKey(recipientSk, senderPub);
+if (bytesToHex(conversationKey) !== bytesToHex(reverseKey)) {
+  throw new Error("conversation key must be symmetric");
+}
+
+const nonces = [
+  "0d0a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728",
+  "f1e2d3c4b5a69788796a5b4c3d2e1f00112233445566778899aabbccddeeff00",
+  "0000000000000000000000000000000000000000000000000000000000000001",
+];
+const plaintexts = [
+  "x",
+  'hello NIP-44 👋\nnew line\ttab "quotes" \\backslash\\ 🎉',
+  "long ".repeat(120).trim(),
+];
+const nip44Vectors = plaintexts.map((plaintext, i) => {
+  const payload = encrypt(plaintext, conversationKey, hexToBytes(nonces[i]));
+  if (decrypt(payload, conversationKey) !== plaintext) {
+    throw new Error("nip44 vector failed round trip");
+  }
+  return { plaintext, nonceHex: nonces[i], payload };
+});
+
+// --- Gift-wrapped rumors (PoC wire format) ----------------------------------
+
+interface WrapCase {
+  name: string;
+  pushMarkerOnRecipientWrap: boolean;
+  rumor: UnsignedEvent & { id: string };
+  wrapForRecipient: NostrToolsEvent;
+  wrapForSender: NostrToolsEvent;
+}
+
+const makeCase = (
+  name: string,
+  template: UnsignedEvent,
+  pushMarker: boolean,
+): WrapCase => {
+  const rumor = { ...template, id: getEventHash(template) };
+  const wrapForRecipient = pushMarker
+    ? wrapEventWithPushMarker(template, senderSk, recipientPub)
+    : wrapEventWithoutPushMarker(template, senderSk, recipientPub);
+  const wrapForSender = wrapEventWithoutPushMarker(template, senderSk, senderPub);
+
+  for (const [wrap, sk] of [
+    [wrapForRecipient, recipientSk],
+    [wrapForSender, senderSk],
+  ] as const) {
+    if (!verifyEvent(wrap)) throw new Error(`${name}: wrap failed verification`);
+    if (wrap.kind !== 1059) throw new Error(`${name}: wrap kind`);
+    const inner = unwrapEvent(wrap, sk) as UnsignedEvent & { id: string };
+    const canonical = (e: UnsignedEvent & { id: string }) =>
+      JSON.stringify([e.id, e.pubkey, e.created_at, e.kind, e.tags, e.content]);
+    if (canonical(inner) !== canonical(rumor)) {
+      throw new Error(`${name}: unwrap mismatch`);
+    }
+  }
+  return { name, pushMarkerOnRecipientWrap: pushMarker, rumor, wrapForRecipient, wrapForSender };
+};
+
+const at = 1750000000;
+
+const messageRumor: UnsignedEvent = {
+  created_at: at,
+  kind: 14,
+  pubkey: senderPub,
+  tags: [
+    ["p", recipientPub],
+    ["p", senderPub],
+    ["client", "lk-client-0001"],
+  ],
+  content: "hello from the PoC fixture 👋",
+};
+const messageRumorId = getEventHash(messageRumor);
+
+const cases: WrapCase[] = [
+  makeCase("text-message", messageRumor, true),
+  makeCase(
+    "reply-message",
+    {
+      created_at: at + 60,
+      kind: 14,
+      pubkey: senderPub,
+      tags: [
+        ["p", recipientPub],
+        ["p", senderPub],
+        ["client", "lk-client-0002"],
+        ["e", messageRumorId, "", "root"],
+        ["e", messageRumorId, "", "reply"],
+      ],
+      content: "replying to the first message",
+    },
+    true,
+  ),
+  makeCase(
+    "edit-message",
+    {
+      created_at: at + 120,
+      kind: 14,
+      pubkey: senderPub,
+      tags: [
+        ["p", recipientPub],
+        ["p", senderPub],
+        ["edited_from", messageRumorId],
+        ["client", "lk-client-0003"],
+      ],
+      content: "hello from the PoC fixture (edited)",
+    },
+    false,
+  ),
+  makeCase(
+    "reaction",
+    {
+      created_at: at + 180,
+      kind: 7,
+      pubkey: senderPub,
+      tags: [
+        ["p", senderPub],
+        ["p", recipientPub],
+        ["p", senderPub],
+        ["e", messageRumorId],
+        ["k", "14"],
+        ["client", "lk-client-0004"],
+      ],
+      content: "🔥",
+    },
+    false,
+  ),
+  makeCase(
+    "delete-reaction",
+    {
+      created_at: at + 240,
+      kind: 5,
+      pubkey: senderPub,
+      tags: [
+        ["p", recipientPub],
+        ["p", senderPub],
+        ["p", senderPub],
+        ["e", "5".repeat(64)],
+        ["client", "lk-client-0005"],
+      ],
+      content: "",
+    },
+    false,
+  ),
+  makeCase(
+    "tricky-content",
+    {
+      created_at: at + 300,
+      kind: 14,
+      pubkey: senderPub,
+      tags: [
+        ["p", recipientPub],
+        ["p", senderPub],
+        ["client", "lk-client-0006"],
+      ],
+      content: 'newline\n tab\t "quotes" \\backslash\\ čeština 中文 𝄞 🎉',
+    },
+    true,
+  ),
+];
+
+// A nested-encrypted payload (what the PoC rejects as spoofed/nested):
+// a kind-14 whose content is itself a NIP-44 ciphertext between the two keys.
+const nestedTemplate: UnsignedEvent = {
+  created_at: at + 360,
+  kind: 14,
+  pubkey: senderPub,
+  tags: [
+    ["p", recipientPub],
+    ["p", senderPub],
+  ],
+  content: encrypt("inner secret that must not render", conversationKey),
+};
+const nested = makeCase("nested-encrypted-content", nestedTemplate, false);
+
+const fixture = {
+  generatedAt: new Date().toISOString().slice(0, 10),
+  nostrToolsVersion: (await import("nostr-tools/package.json")).default.version,
+  senderSecretKeyHex,
+  recipientSecretKeyHex,
+  senderPublicKeyHex: senderPub,
+  recipientPublicKeyHex: recipientPub,
+  nip44: {
+    conversationKeyHex: bytesToHex(conversationKey),
+    vectors: nip44Vectors,
+  },
+  wraps: [...cases, nested],
+};
+
+console.log(JSON.stringify(fixture, null, 2));

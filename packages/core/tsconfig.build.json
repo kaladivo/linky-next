@@ -9,5 +9,9 @@
     "sourceMap": true
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts", "src/domain/nostr/nostrTestKit.ts"]
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/domain/nostr/nostrTestKit.ts",
+    "src/domain/chat/chatTestKit.ts"
+  ]
 }

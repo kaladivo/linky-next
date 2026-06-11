@@ -194,6 +194,9 @@ importers:
       '@effect/platform':
         specifier: ^0.96.1
         version: 0.96.1(effect@3.21.3)
+      '@noble/ciphers':
+        specifier: ^2.1.1
+        version: 2.2.0
       '@noble/curves':
         specifier: ^2.0.1
         version: 2.2.0
