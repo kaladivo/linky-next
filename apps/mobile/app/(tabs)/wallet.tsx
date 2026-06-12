@@ -143,6 +143,16 @@ export default function WalletScreen() {
         />
       </View>
 
+      {/* Token list (#38). */}
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.push("/wallet/tokens")}
+        testID="wallet-tokens"
+        className="items-center py-2"
+      >
+        <Text className="text-primary">{t("tokens")}</Text>
+      </Pressable>
+
       {/* Transactions link (history lands with #43). */}
       <Pressable
         accessibilityRole="button"
