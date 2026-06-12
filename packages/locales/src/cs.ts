@@ -629,6 +629,8 @@ export const cs = {
   scanGallery: "Galerie",
   scanImageUnsupported: "Ve vybraném obrázku jsem nenašel čitelný QR kód.",
   scanPastePrompt: "Vložte LN fakturu, Cashu token, LNURL nebo npub.",
+  scanContactsUnsupportedPayment:
+    "V režimu přidání kontaktu nelze vložit platební QR. Naskenujte npub kontaktu.",
   scanReceiveUnsupportedPayment:
     "V režimu Přijmout nelze vložit platební QR. Použijte Cashu token, LNURL-withdraw nebo nastavte částku.",
   scanTypeManually: "Zapsat ručně",
@@ -646,10 +648,6 @@ export const cs = {
   scannerManualLink: "Nejde skenovat? Zadejte hodnotu ručně",
   scannerManualPlaceholder: "npub, Lightning faktura, Cashu token nebo LNURL",
   scannerManualSubmit: "Pokračovat",
-  scannerPreviewTitle: "Načtená hodnota",
-  scannerPreviewNote:
-    "S touto hodnotou se zatím nic nestalo — zpracování naskenovaných hodnot přijde s #48.",
-  scannerScanAgain: "Skenovat znovu",
 
   unit: "Jednotky",
   unitUseBitcoin: "Zobrazit ₿ místo sat",
@@ -816,7 +814,6 @@ export const cs = {
   sendPaste: "Vložit",
   sendContinue: "Pokračovat",
   sendUnrecognized: "Nepodporovaný nebo nerozpoznaný vstup.",
-  sendWithdrawUnsupported: "LNURL-withdraw tady zatím není podporovaný.",
   payFetchingInvoice: "Získávám fakturu…",
   payPaying: "Platím…",
   paySuccess: "Zaplaceno.",

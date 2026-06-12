@@ -143,6 +143,16 @@ export default function WalletScreen() {
         />
       </View>
 
+      {/* Main scan (#48): the generic entry — routes by scanned type
+          (npub → contact, token → import, invoice/address → pay,
+          LNURL-withdraw → withdraw). */}
+      <Button
+        label={t("scan")}
+        variant="secondary"
+        onPress={() => router.push({ pathname: "/scanner", params: { entry: "scan" } })}
+        testID="wallet-scan"
+      />
+
       {/* Token list (#38). */}
       <Pressable
         accessibilityRole="button"

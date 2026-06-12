@@ -625,6 +625,8 @@ export const en = {
   scanGallery: "Gallery",
   scanImageUnsupported: "No readable QR code found in the selected image.",
   scanPastePrompt: "Paste an LN invoice, Cashu token, LNURL, or npub.",
+  scanContactsUnsupportedPayment:
+    "Adding a contact does not accept payment QR codes. Scan the contact's npub instead.",
   scanReceiveUnsupportedPayment:
     "Receive mode does not accept payment QR codes. Use a Cashu token, LNURL-withdraw, or set an amount instead.",
   scanTypeManually: "Type",
@@ -642,10 +644,6 @@ export const en = {
   scannerManualLink: "Can't scan? Type the value in",
   scannerManualPlaceholder: "npub, Lightning invoice, Cashu token, or LNURL",
   scannerManualSubmit: "Continue",
-  scannerPreviewTitle: "Captured value",
-  scannerPreviewNote:
-    "Nothing was done with this value yet — handling of scanned values lands in #48.",
-  scannerScanAgain: "Scan again",
 
   unit: "Units",
   unitUseBitcoin: "Show ₿ instead of sat",
@@ -813,7 +811,6 @@ export const en = {
   sendPaste: "Paste",
   sendContinue: "Continue",
   sendUnrecognized: "Unsupported or unrecognized input.",
-  sendWithdrawUnsupported: "LNURL-withdraw isn't supported here yet.",
   payFetchingInvoice: "Fetching invoice…",
   payPaying: "Paying…",
   paySuccess: "Paid.",

@@ -85,6 +85,99 @@ const checkProofStatesOrNull = (args: {
   ).then(Option.getOrNull);
 
 // ---------------------------------------------------------------------------
+// Accept a scanned/pasted token (`cashu.accept-token`, scan path — #48)
+// ---------------------------------------------------------------------------
+
+export type AcceptScannedTokenOutcome =
+  | { readonly kind: "accepted"; readonly amount: number }
+  /** The exact token text is already stored (PoC `cashuExists`). */
+  | { readonly kind: "exists" }
+  /**
+   * The mint swap failed; the raw token was preserved as an `error` row
+   * (id when the insert succeeded) so the #38 re-accept repair can retry.
+   */
+  | { readonly kind: "failed"; readonly tokenRowId: string | null; readonly errorTag: string };
+
+/** Mint-failure detail text (PoC stores it on the error row). */
+const acceptFailureMessage = (error: ReceiveTokenError): string => {
+  switch (error._tag) {
+    case "MintProtocolError":
+      return `${error._tag}: ${error.detail}`;
+    case "WalletOperationError":
+      return `${error._tag}: ${error.reason}`;
+    default:
+      return error._tag;
+  }
+};
+
+/**
+ * Imports a token captured by the scanner/paste path (PoC
+ * `saveCashuFromText`): dedupe against stored rows, swap at the mint
+ * (#32 `receiveToken`), store the re-encoded result as an `accepted` row.
+ * On a mint failure the RAW token is stored as an `error` row — bearer
+ * value is never dropped; the #38 repair flow (re-accept) resolves it.
+ *
+ * `token` must already be a decodable token (the #48 classifier
+ * guarantees it) — an undecodable string here is a routing bug.
+ */
+export const acceptScannedToken = async (
+  store: LinkyStore,
+  seed: CashuSeed,
+  token: string,
+): Promise<AcceptScannedTokenOutcome> => {
+  const tokens = createTokensRepository(store);
+  const records = await tokens.list();
+  const stored = new Set(
+    records.filter((record) => record.state !== "deleted").map((record) => record.token),
+  );
+  if (stored.has(token)) return { kind: "exists" };
+
+  const received = await runCashuEffect(
+    store,
+    receiveToken({ seed, token }).pipe(
+      Effect.map((result) => ({ ok: true, result }) as const),
+      Effect.catchAll((error) => Effect.succeed({ ok: false, error } as const)),
+    ),
+  );
+
+  if (received.ok) {
+    // PoC double-check: the accepted re-encoding may already be stored
+    // (e.g. the same token scanned twice in flight).
+    if (stored.has(received.result.token)) return { kind: "exists" };
+    const inserted = tokens.insert({
+      mintUrl: received.result.mintUrl,
+      unit: received.result.unit,
+      amount: received.result.amount,
+      state: "accepted",
+      token: received.result.token,
+    });
+    if (!inserted.ok) throw new Error(`store accepted token failed: ${inserted.error._tag}`);
+    invalidateStoreData();
+    return { kind: "accepted", amount: received.result.amount };
+  }
+
+  const parsed = Effect.runSync(Effect.either(parseCashuToken(token)));
+  if (Either.isLeft(parsed)) {
+    // Classifier contract violated — nothing sensible to persist.
+    return { kind: "failed", tokenRowId: null, errorTag: received.error._tag };
+  }
+  const inserted = tokens.insert({
+    mintUrl: parsed.right.mintUrl,
+    unit: parsed.right.unit,
+    amount: parsed.right.amount,
+    state: "error",
+    token,
+    error: acceptFailureMessage(received.error),
+  });
+  invalidateStoreData();
+  return {
+    kind: "failed",
+    tokenRowId: inserted.ok ? inserted.value.id : null,
+    errorTag: received.error._tag,
+  };
+};
+
+// ---------------------------------------------------------------------------
 // Single-token validation (`cashu.validate-token`)
 // ---------------------------------------------------------------------------
 

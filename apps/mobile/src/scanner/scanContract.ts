@@ -1,39 +1,28 @@
 /**
- * Scanner result contract (#47 → #48).
+ * Scanner result contract (#47, parsing/routing wired by #48).
  *
  * The scanner surface (`app/scanner.tsx`) is a pure INPUT surface: camera,
  * paste, gallery, and manual entry all funnel into one `ScanCapture` — a raw
- * string plus where it came from. Parsing and routing of that string
- * (npub → contact, BOLT11 → pay, Cashu → import, …) is issue #48's job.
+ * string plus where it came from. Open it with an entry point:
  *
- * ## How #48 wires in
+ *     router.push({ pathname: "/scanner", params: { entry: "contacts" } });
  *
- * 1. Open the scanner with an entry point:
+ * `entry` ∈ `SCAN_ENTRY_POINTS` (missing/unknown → `"scan"`, the generic
+ * surface). Per docs/feature-map/scanner-input.md the entry point decides
+ * which scan types are accepted (`scanner.route-result`); the parse and
+ * routing rules live in scanRouting.ts (pure) + scanResultHandler.ts
+ * (impure). The handler returns how the capture was handled:
  *
- *        router.push({ pathname: "/scanner", params: { entry: "contacts" } });
+ * - `{ kind: "handled" }`      — the handler routed the value itself
+ *   (navigated with `context.router`; the handler dismisses the scanner,
+ *   via `router.replace`/`router.dismissAll`).
+ * - `{ kind: "unsupported", message }` — visible failure: the scanner
+ *   stays open, shows `message` inline, and keeps scanning so the user
+ *   can retry with a different code (feature-map contract: "Unsupported
+ *   scans fail visibly").
  *
- *    `entry` ∈ `SCAN_ENTRY_POINTS` (missing/unknown → `"scan"`, the generic
- *    surface). Per docs/feature-map/scanner-input.md the entry point decides
- *    which scan types are accepted (`scanner.route-result`).
- *
- * 2. Replace the placeholder in `scanResultHandler.ts` with the real
- *    parser/router. The handler receives every capture (camera, paste,
- *    gallery, manual — one parse path for every input source) and an
- *    imperative context, and returns how the capture was handled:
- *
- *    - `{ kind: "handled" }`      — the handler routed the value itself
- *      (navigate with `context.router`; it is the handler's job to dismiss
- *      the scanner, e.g. `router.back()` + push, or `router.replace`).
- *    - `{ kind: "unsupported", message }` — visible failure: the scanner
- *      stays open, shows `message` inline, and keeps scanning so the user
- *      can retry with a different code (feature-map contract: "Unsupported
- *      scans fail visibly").
- *    - `{ kind: "preview" }`      — placeholder outcome (#47 only): the
- *      scanner displays the captured string with a "handling lands in #48"
- *      note. #48 should stop returning this.
- *
- * The handler may be async (parsing may need network, e.g. LNURL probes);
- * the scanner pauses capture delivery while a capture is in flight.
+ * The handler may be async (the unknown-LNURL probe hits the network); the
+ * scanner pauses capture delivery while a capture is in flight.
  */
 import type { Translator } from "@linky/locales";
 import type { ImperativeRouter } from "expo-router";
@@ -60,8 +49,7 @@ export interface ScanHandlerContext {
 
 export type ScanHandling =
   | { readonly kind: "handled" }
-  | { readonly kind: "unsupported"; readonly message: string }
-  | { readonly kind: "preview" };
+  | { readonly kind: "unsupported"; readonly message: string };
 
 export type ScanCaptureHandler = (
   capture: ScanCapture,

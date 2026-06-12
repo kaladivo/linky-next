@@ -1,14 +1,18 @@
 /**
- * Send — manual-entry / paste pay entry (#39; `lightning.pay-address`,
- * `lightning.pay-invoice`, `lnurl.pay`). The scanner entry lands with #48;
- * this screen classifies the typed/pasted text with core's
- * `parseLightningInput` (PoC scanner order) and routes:
+ * Send — pay entry (#39/#48; `lightning.pay-address`, `lightning.pay-invoice`,
+ * `lnurl.pay`). Manual/pasted text and the scanner (entry "send") both route
+ * through #48's unified parse path (`routeScannedValue`), so this screen
+ * accepts exactly what the send scan accepts:
  *
- *   lightning address / LNURL-pay / unknown LNURL → /wallet/pay-address
  *   BOLT11 invoice                                → /wallet/pay-invoice
- *   LNURL-withdraw                                → unsupported here (#48)
+ *   lightning address / LNURL-pay / unknown LNURL → /wallet/pay-address
+ *   LNURL-withdraw                                → /wallet/lnurl-withdraw
+ *   Cashu token                                   → wallet import (#38)
+ *   npub                                          → contact flow (#27)
+ *
+ * (PoC parity: its send-scan handler banked tokens and saved npub contacts
+ * from the send entry too.) Unrecognized input fails inline.
  */
-import { parseLightningInput } from "@linky/core";
 import { Clipboard } from "@linky/core";
 import { Button, Surface, Text } from "@linky/ui";
 import { Effect, Option } from "effect";
@@ -18,6 +22,7 @@ import { ScrollView, TextInput, View } from "react-native";
 
 import { useTranslator } from "../../src/locales";
 import { runAppEffect } from "../../src/runtime";
+import { routeScannedValue } from "../../src/scanner/scanResultHandler";
 
 export default function WalletSendScreen() {
   const t = useTranslator();
@@ -28,38 +33,9 @@ export default function WalletSendScreen() {
   const submit = (raw: string) => {
     const input = raw.trim();
     if (input === "") return;
-    void runAppEffect(Effect.either(parseLightningInput(input))).then((parsed) => {
-      if (parsed._tag === "Left") {
-        setError(t("sendUnrecognized"));
-        return;
-      }
-      switch (parsed.right._tag) {
-        case "Bolt11Input":
-          router.push({
-            pathname: "/wallet/pay-invoice",
-            params: { invoice: parsed.right.invoice.invoice },
-          });
-          return;
-        case "LightningAddressInput":
-          router.push({
-            pathname: "/wallet/pay-address",
-            params: { target: parsed.right.address.address },
-          });
-          return;
-        case "LnurlPayInput":
-        case "LnurlInput":
-          // Unknown LNURLs resolve at the metadata fetch (PoC: withdraw
-          // first, pay on tag mismatch); the pay screen surfaces a
-          // tag-mismatch error visibly.
-          router.push({
-            pathname: "/wallet/pay-address",
-            params: { target: parsed.right.url },
-          });
-          return;
-        case "LnurlWithdrawInput":
-          setError(t("sendWithdrawUnsupported"));
-          return;
-      }
+    // The #48 unified path; push so cancel returns to this screen.
+    void routeScannedValue(input, "send", { router, t, navigation: "push" }).then((outcome) => {
+      if (outcome.kind === "unsupported") setError(outcome.message);
     });
   };
 
@@ -121,6 +97,14 @@ export default function WalletSendScreen() {
           />
         </View>
       </Surface>
+
+      {/* Scanner with the send entry point (#48 `scanner.route-result`). */}
+      <Button
+        label={t("scan")}
+        variant="secondary"
+        onPress={() => router.push({ pathname: "/scanner", params: { entry: "send" } })}
+        testID="send-scan"
+      />
     </ScrollView>
   );
 }

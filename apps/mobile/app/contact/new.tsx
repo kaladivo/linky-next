@@ -10,8 +10,8 @@
  * - on success: save, toast `contactSaved`, warm the profile cache in the
  *   background, back to the contacts list.
  *
- * "Load QR" opens the scanner surface (#47); routing the scanned npub back
- * into this form lands with #48.
+ * "Load QR" opens the scanner surface with the contacts entry point; the
+ * #48 handler creates/opens the contact directly from the scanned npub.
  */
 import { Button, Surface, Text } from "@linky/ui";
 import { Stack, useRouter } from "expo-router";
@@ -99,14 +99,14 @@ export default function ContactNewScreen() {
               <ContactFormFields form={form} onChange={setForm} groups={data.data.groups} />
             </Surface>
             <Button label={t("saveContact")} onPress={onSave} testID="contact-save" />
-            {/* Scanner surface (#47) with the contacts entry point.
-                TODO(#48): today the scanner only previews the captured
-                string; routing it back into this form lands with #48. */}
+            {/* Scanner with the contacts entry point (#48): a scanned npub
+                creates/opens the contact directly (own npub → profile);
+                payment targets are rejected visibly. */}
             <Button
               label={t("contactLoadQr")}
               variant="secondary"
               onPress={() => router.push({ pathname: "/scanner", params: { entry: "contacts" } })}
-              testID="contact-scan-stub"
+              testID="contact-scan"
             />
           </>
         )}

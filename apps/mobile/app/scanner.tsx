@@ -14,10 +14,10 @@
  * Camera denied/unavailable NEVER blocks the surface: paste, gallery, and
  * manual entry stay usable (feature-map contract).
  *
- * SCOPE (#47 vs #48): every input funnels into one `ScanCapture` handed to
- * `handleScanCapture` — see src/scanner/scanContract.ts for the contract
- * #48 wires the parser/router into. Today's placeholder shows the captured
- * string with a "handling lands in #48" note.
+ * Every input funnels into one `ScanCapture` handed to `handleScanCapture`
+ * (#48's unified parser/router — src/scanner/scanContract.ts documents the
+ * contract): handled captures navigate away and dismiss the scanner;
+ * unsupported ones surface their message inline and scanning continues.
  */
 import { Clipboard } from "@linky/core";
 import { Button, Surface, Text } from "@linky/ui";
@@ -51,7 +51,6 @@ export default function ScannerScreen() {
 
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraBroken, setCameraBroken] = useState(false);
-  const [preview, setPreview] = useState<ScanCapture | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualText, setManualText] = useState("");
@@ -82,18 +81,13 @@ export default function ScannerScreen() {
       .then((outcome) => {
         switch (outcome.kind) {
           case "handled":
-            // #48 handler navigated/dismissed itself (scanContract.ts).
+            // The handler navigated/dismissed itself (scanContract.ts).
             setError(null);
             return;
           case "unsupported":
             // Feature-map contract: unsupported scans fail VISIBLY and the
             // surface keeps accepting input so the user can retry.
             setError(outcome.message);
-            return;
-          case "preview":
-            setError(null);
-            setManualOpen(false);
-            setPreview(capture);
             return;
         }
       })
@@ -103,7 +97,7 @@ export default function ScannerScreen() {
   };
 
   const onCameraScanned = (data: string) => {
-    if (preview !== null || busyRef.current) return;
+    if (busyRef.current) return;
     const now = Date.now();
     const last = lastCameraRef.current;
     if (last !== null && last.value === data && now - last.at < CAMERA_REPEAT_MS) return;
@@ -171,128 +165,101 @@ export default function ScannerScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
         keyboardShouldPersistTaps="handled"
       >
-        {preview !== null ? (
-          /* Placeholder result panel (#47): raw captured string + the
-             "handling lands in #48" note. Replaced by real routing in #48. */
-          <Surface className="gap-3" testID="scanner-preview">
-            <Text weight="semibold">{t("scannerPreviewTitle")}</Text>
-            <View className="rounded-xl bg-background px-4 py-3">
-              <Text selectable className="text-sm" testID="scanner-preview-value">
-                {preview.value}
-              </Text>
+        {/* Camera window — or its denied/unavailable fallback. The
+            actions below stay rendered in every branch. */}
+        {cameraGranted ? (
+          <View className="overflow-hidden rounded-2xl" style={{ aspectRatio: 1 }}>
+            <CameraView
+              style={{ flex: 1 }}
+              facing="back"
+              barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+              onBarcodeScanned={(scanned) => onCameraScanned(scanned.data)}
+              onMountError={() => setCameraBroken(true)}
+            />
+          </View>
+        ) : cameraPending ? (
+          <Surface className="items-center py-12">
+            <Text className="text-sm opacity-70">{t("scannerRequestingCamera")}</Text>
+          </Surface>
+        ) : (
+          <Surface className="gap-3" testID="scanner-camera-fallback">
+            <Text weight="semibold">{t("scanCameraError")}</Text>
+            <Text className="text-sm opacity-70">{t("scannerPermissionHint")}</Text>
+            {permission?.granted !== true && (
+              <Button
+                label={t("scannerOpenSettings")}
+                variant="secondary"
+                onPress={() => void Linking.openSettings()}
+                testID="scanner-open-settings"
+              />
+            )}
+          </Surface>
+        )}
+
+        {error !== null && (
+          <Text className="text-sm text-danger" testID="scanner-error">
+            {error}
+          </Text>
+        )}
+
+        {/* Fallback actions (scanner.paste / scanner.gallery) — always
+            available, camera or not (PoC scan-footer-actions). */}
+        <View className="flex-row gap-3">
+          <Button
+            label={t("paste")}
+            variant="secondary"
+            className="flex-1"
+            onPress={paste}
+            testID="scanner-paste"
+          />
+          <Button
+            label={t("scanGallery")}
+            variant="secondary"
+            className="flex-1"
+            onPress={() => void pickFromGallery()}
+            testID="scanner-gallery"
+          />
+        </View>
+
+        {/* Manual entry (scanner.manual): quiet "can't scan?" escape
+            hatch per common UX practice (PoC divergence, per issue). */}
+        {manualOpen ? (
+          <Surface className="gap-3" testID="scanner-manual">
+            <Text weight="semibold">{t("scanTypeManually")}</Text>
+            <View className="rounded-xl bg-background px-4">
+              <TextInput
+                value={manualText}
+                onChangeText={(next) => {
+                  setManualText(next);
+                  setError(null);
+                }}
+                placeholder={t("scannerManualPlaceholder")}
+                placeholderTextColor="#94a3b8"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoFocus
+                multiline
+                testID="scanner-manual-input"
+                className="min-h-[72px] py-3 font-sans text-base text-foreground"
+              />
             </View>
-            <Text className="text-sm opacity-70">{t("scannerPreviewNote")}</Text>
             <Button
-              label={t("scannerScanAgain")}
-              variant="secondary"
-              onPress={() => {
-                setPreview(null);
-                setError(null);
-              }}
-              testID="scanner-scan-again"
+              label={t("scannerManualSubmit")}
+              disabled={manualText.trim() === ""}
+              onPress={() => deliver(manualText, "manual")}
+              testID="scanner-manual-submit"
             />
           </Surface>
         ) : (
-          <>
-            {/* Camera window — or its denied/unavailable fallback. The
-                actions below stay rendered in every branch. */}
-            {cameraGranted ? (
-              <View className="overflow-hidden rounded-2xl" style={{ aspectRatio: 1 }}>
-                {/* The camera unmounts entirely while a preview is shown
-                    (this branch only renders when preview === null). */}
-                <CameraView
-                  style={{ flex: 1 }}
-                  facing="back"
-                  barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-                  onBarcodeScanned={(scanned) => onCameraScanned(scanned.data)}
-                  onMountError={() => setCameraBroken(true)}
-                />
-              </View>
-            ) : cameraPending ? (
-              <Surface className="items-center py-12">
-                <Text className="text-sm opacity-70">{t("scannerRequestingCamera")}</Text>
-              </Surface>
-            ) : (
-              <Surface className="gap-3" testID="scanner-camera-fallback">
-                <Text weight="semibold">{t("scanCameraError")}</Text>
-                <Text className="text-sm opacity-70">{t("scannerPermissionHint")}</Text>
-                {permission?.granted !== true && (
-                  <Button
-                    label={t("scannerOpenSettings")}
-                    variant="secondary"
-                    onPress={() => void Linking.openSettings()}
-                    testID="scanner-open-settings"
-                  />
-                )}
-              </Surface>
-            )}
-
-            {error !== null && (
-              <Text className="text-sm text-danger" testID="scanner-error">
-                {error}
-              </Text>
-            )}
-
-            {/* Fallback actions (scanner.paste / scanner.gallery) — always
-                available, camera or not (PoC scan-footer-actions). */}
-            <View className="flex-row gap-3">
-              <Button
-                label={t("paste")}
-                variant="secondary"
-                className="flex-1"
-                onPress={paste}
-                testID="scanner-paste"
-              />
-              <Button
-                label={t("scanGallery")}
-                variant="secondary"
-                className="flex-1"
-                onPress={() => void pickFromGallery()}
-                testID="scanner-gallery"
-              />
-            </View>
-
-            {/* Manual entry (scanner.manual): quiet "can't scan?" escape
-                hatch per common UX practice (PoC divergence, per issue). */}
-            {manualOpen ? (
-              <Surface className="gap-3" testID="scanner-manual">
-                <Text weight="semibold">{t("scanTypeManually")}</Text>
-                <View className="rounded-xl bg-background px-4">
-                  <TextInput
-                    value={manualText}
-                    onChangeText={(next) => {
-                      setManualText(next);
-                      setError(null);
-                    }}
-                    placeholder={t("scannerManualPlaceholder")}
-                    placeholderTextColor="#94a3b8"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    autoFocus
-                    multiline
-                    testID="scanner-manual-input"
-                    className="min-h-[72px] py-3 font-sans text-base text-foreground"
-                  />
-                </View>
-                <Button
-                  label={t("scannerManualSubmit")}
-                  disabled={manualText.trim() === ""}
-                  onPress={() => deliver(manualText, "manual")}
-                  testID="scanner-manual-submit"
-                />
-              </Surface>
-            ) : (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setManualOpen(true)}
-                hitSlop={8}
-                className="items-center py-2"
-                testID="scanner-manual-link"
-              >
-                <Text className="text-sm underline opacity-70">{t("scannerManualLink")}</Text>
-              </Pressable>
-            )}
-          </>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setManualOpen(true)}
+            hitSlop={8}
+            className="items-center py-2"
+            testID="scanner-manual-link"
+          >
+            <Text className="text-sm underline opacity-70">{t("scannerManualLink")}</Text>
+          </Pressable>
         )}
       </ScrollView>
     </View>

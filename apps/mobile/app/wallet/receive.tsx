@@ -97,12 +97,22 @@ export default function WalletReceiveScreen() {
         testID="topup-no-amount"
       />
 
-      {/* LNURL-withdraw (#40): manual entry until the scanner lands (#48). */}
+      {/* LNURL-withdraw (#40): manual target entry. */}
       <Button
         label={t("lnurlWithdrawEntry")}
         variant="secondary"
         onPress={() => router.push("/wallet/lnurl-withdraw")}
         testID="receive-lnurl-withdraw"
+      />
+
+      {/* Scanner with the receive entry point (#48): accepts Cashu tokens
+          and LNURL-withdraw; payment targets are rejected visibly (the
+          feature-map "never pay from a receive flow" contract). */}
+      <Button
+        label={t("scan")}
+        variant="secondary"
+        onPress={() => router.push({ pathname: "/scanner", params: { entry: "receive" } })}
+        testID="receive-scan"
       />
     </ScrollView>
   );
