@@ -392,6 +392,9 @@ export const en = {
   profileUseDefault: "Use default",
   profileClearField: "Clear",
   profileNavigationHint: "Friends can add you by scanning your profile",
+  profileEditTitle: "Edit profile",
+  profileSaved: "Profile saved.",
+  profileStatusPlaceholder: "What's up? (visible to contacts)",
 
   language: "Language",
   czech: "Czech",

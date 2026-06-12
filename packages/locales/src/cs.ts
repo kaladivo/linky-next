@@ -394,6 +394,9 @@ export const cs = {
   profileUseDefault: "Použít výchozí",
   profileClearField: "Smazat",
   profileNavigationHint: "Přátelé si vás mohou přidat naskenováním vašeho profilu",
+  profileEditTitle: "Upravit profil",
+  profileSaved: "Profil uložen.",
+  profileStatusPlaceholder: "Co se děje? (uvidí kontakty)",
 
   language: "Jazyk",
   czech: "Čeština",

@@ -33,6 +33,13 @@ export interface LocalProfile {
   readonly avatarSelection: AvatarSelection | null;
   /** Default `${npub}@linky.fit` Lightning address (profile.default-linky-address). */
   readonly lightningAddress: string;
+  /**
+   * The user's encoded NIP-38 general status (`profileStatus.ts` codec:
+   * free-form text + currency-preference line) as last saved by the profile
+   * editor (#30). `null` = cleared; absent (pre-#30 stored values, fresh
+   * onboarding) = unknown — callers fall back to the relay-backed fetch.
+   */
+  readonly status?: string | null;
 }
 
 const isProfilePictureKind = (value: unknown): value is ProfilePictureKind =>
@@ -51,12 +58,15 @@ const parseLocalProfile = (raw: string): Option.Option<LocalProfile> => {
     ) {
       return Option.none();
     }
+    const status = candidate["status"];
     return Option.some({
       name: candidate["name"],
       pictureUrl: candidate["pictureUrl"],
       pictureKind: candidate["pictureKind"],
       avatarSelection: (candidate["avatarSelection"] ?? null) as AvatarSelection | null,
       lightningAddress: candidate["lightningAddress"],
+      // Absent (pre-#30) stays absent; only a string or explicit null round-trips.
+      ...(typeof status === "string" || status === null ? { status } : {}),
     });
   } catch {
     return Option.none();

@@ -11,18 +11,57 @@
  * Contacts/Wallet, with settings behind the header menu (☰). Here the
  * header menu glyph pushes the /settings stack screen.
  */
+import { loadLocalProfile } from "@linky/core";
 import { colors, fontFamily, Text } from "@linky/ui";
+import { Option } from "effect";
 import { Link, Redirect } from "expo-router";
 import { TopTabs } from "expo-router/js-top-tabs";
 import { useEffect } from "react";
-import { Pressable, View } from "react-native";
+import { Image, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTranslator } from "../../src/locales";
+import { toAvatarDisplayUrl } from "../../src/onboarding/avatarDisplay";
+import { useOwnProfileVersion } from "../../src/profile/ownProfileStore";
+import { useEffectQuery } from "../../src/runtime";
 import { useSession } from "../../src/session/useSession";
 import { ensureStoreForSession } from "../../src/store/storeManager";
 
-/** App title + menu glyph (PoC's ☰) opening Settings as a pushed screen. */
+/**
+ * Own avatar opening the profile screen (#30) — the PoC's top-left topbar
+ * profile button. Reads ONLY the local profile (no relay hit in the shell
+ * header); a generic glyph covers the restored-account-without-local-profile
+ * case until the first profile save.
+ */
+function ProfileButton() {
+  const t = useTranslator();
+  const version = useOwnProfileVersion();
+  const profileQuery = useEffectQuery(loadLocalProfile, [version]);
+  const pictureUrl =
+    profileQuery.status === "success" ? Option.getOrNull(profileQuery.data)?.pictureUrl : null;
+
+  return (
+    <Link href="/profile" asChild>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t("profile")}
+        hitSlop={8}
+        testID="open-profile"
+      >
+        {pictureUrl != null ? (
+          <Image
+            source={{ uri: toAvatarDisplayUrl(pictureUrl, 96) }}
+            style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: colors.surface }}
+          />
+        ) : (
+          <Text className="text-2xl leading-8">👤</Text>
+        )}
+      </Pressable>
+    </Link>
+  );
+}
+
+/** Profile button + app title + menu glyph (PoC's topbar: profile left, ☰ right). */
 function ShellHeader() {
   const t = useTranslator();
   const insets = useSafeAreaInsets();
@@ -32,9 +71,12 @@ function ShellHeader() {
       className="flex-row items-center justify-between px-6 pb-1"
       style={{ paddingTop: insets.top + 4 }}
     >
-      <Text weight="bold" className="text-2xl">
-        {t("appTitle")}
-      </Text>
+      <View className="flex-row items-center gap-3">
+        <ProfileButton />
+        <Text weight="bold" className="text-2xl">
+          {t("appTitle")}
+        </Text>
+      </View>
       <Link href="/settings" asChild>
         <Pressable
           accessibilityRole="button"

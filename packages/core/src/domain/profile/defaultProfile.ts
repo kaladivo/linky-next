@@ -209,6 +209,44 @@ export const deriveDefaultLightningAddress = (npub: string): string => {
   return normalized ? `${normalized}@${DEFAULT_LIGHTNING_ADDRESS_DOMAIN}` : "";
 };
 
+/**
+ * Input for the `profile.restore-default-ln` visibility rule. The default
+ * Lightning address rule itself lives in ONE place —
+ * {@link deriveDefaultLightningAddress} — and this rule is its only other
+ * consumer in core.
+ */
+export interface RestoreDefaultLightningAddressInput {
+  /** The user's npub (the seed of the derived default address). */
+  readonly npub: string;
+  /** The Lightning address currently on the profile (edit-field value). */
+  readonly currentAddress: string;
+  /**
+   * Paid hosted `@linky.fit` aliases the account owns.
+   *
+   * TODO(#61): populated by the alias-claim flow (post-v1). Until then the
+   * caller always passes `[]`, so the affordance is structurally never
+   * hidden by an owned alias — but the rule is implemented against the data
+   * model so #61 only has to wire the value through.
+   */
+  readonly ownedAliases: ReadonlyArray<string>;
+}
+
+/**
+ * `profile.restore-default-ln` (feature map): show the "restore default
+ * Lightning address" affordance iff the user has overridden the derived
+ * `${npub}@linky.fit` default AND owns no paid alias (an owned alias is the
+ * better address to go back to — hidden per the feature map). PoC parity:
+ * `ProfilePage`'s `!hasOwnedLightningAddress && edit !== derived` check.
+ */
+export const canRestoreDefaultLightningAddress = (
+  input: RestoreDefaultLightningAddressInput,
+): boolean => {
+  const defaultAddress = deriveDefaultLightningAddress(input.npub);
+  if (defaultAddress === "") return false; // no npub → nothing to restore to
+  if (input.ownedAliases.length > 0) return false;
+  return input.currentAddress.trim() !== defaultAddress;
+};
+
 export interface DefaultProfile {
   readonly lnAddress: string;
   readonly name: string;
