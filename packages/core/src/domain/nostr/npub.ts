@@ -18,9 +18,9 @@
  * NIP-01 fetch workflows (which take 64-char hex pubkeys, e.g.
  * `fetchProfileMetadata`).
  */
-import { bytesToHex } from "@noble/hashes/utils.js";
+import { bytesToHex, hexToBytes } from "@noble/hashes/utils.js";
 
-import { decodeNip19Key } from "../identity/nip19.js";
+import { decodeNip19Key, encodeNip19Key } from "../identity/nip19.js";
 
 const NOSTR_URI_PREFIX = "nostr:";
 const NPUB_CASH_DOMAIN = "npub.cash";
@@ -73,4 +73,16 @@ export const isValidNpub = (value: string): boolean => decodeNip19Key("npub", va
 export const npubToPublicKeyHex = (value: string): string | null => {
   const bytes = decodeNip19Key("npub", value.trim());
   return bytes === null ? null : bytesToHex(bytes);
+};
+
+/**
+ * Encodes a 64-char hex pubkey (NIP-01 form) as its NIP-19 npub, or `null`
+ * when the input is not 32 bytes of hex. Inverse of
+ * {@link npubToPublicKeyHex}; bridges the chat engine (#22, hex pubkeys) to
+ * storage (#25, npub-keyed conversations).
+ */
+export const publicKeyHexToNpub = (publicKeyHex: string): string | null => {
+  const trimmed = publicKeyHex.trim().toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(trimmed)) return null;
+  return encodeNip19Key("npub", hexToBytes(trimmed));
 };

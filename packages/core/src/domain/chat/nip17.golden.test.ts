@@ -20,9 +20,15 @@ import { describe, expect, it } from "vitest";
 import { hexToBytes } from "../nostr/nostrTestKit.js";
 import type { NostrEvent } from "../nostr/NostrEvent.js";
 import type { ChatEvent } from "./chatEvents.js";
-import { classifyRumor } from "./chatEvents.js";
+import {
+  classifyRumor,
+  makeChatDeletionTemplate,
+  makeChatEditTemplate,
+  makeChatMessageTemplate,
+  makeChatReactionTemplate,
+} from "./chatEvents.js";
 import type { ChatRumor, ValidatedRumor } from "./giftWrap.js";
-import { LINKY_PUSH_MARKER_TAG, unwrapGiftWrap } from "./giftWrap.js";
+import { createRumor, LINKY_PUSH_MARKER_TAG, unwrapGiftWrap } from "./giftWrap.js";
 import { decryptNip44, encryptNip44, getConversationKey } from "./nip44.js";
 
 interface GoldenFixture {
@@ -200,5 +206,97 @@ describe("classifyRumor (PoC rumor shapes)", () => {
     });
     expect(Either.isLeft(result)).toBe(true);
     expect(Either.isLeft(result) && result.left.reason).toBe("nested-encrypted-content");
+  });
+});
+
+/**
+ * Outgoing wire format (#29): our template builders must reproduce the
+ * PoC-generated rumors BYTE FOR BYTE — same kind, tag order, content and
+ * therefore the same NIP-01 rumor id. This pins every send path the chat
+ * screen uses (message, reply, edit, reaction, reaction-delete) to the
+ * PoC's wire format without new fixtures.
+ */
+describe("outgoing templates rebuild the PoC fixture rumors exactly", () => {
+  const byName = new Map(fixture.wraps.map((wrapCase) => [wrapCase.name, wrapCase]));
+  const rumorOf = (name: string): ChatRumor => byName.get(name)!.rumor;
+  const expectRebuilt = (name: string, template: Parameters<typeof createRumor>[0]): void => {
+    const rebuilt = createRumor(template, fixture.senderPublicKeyHex);
+    expect(rebuilt).toStrictEqual(rumorOf(name));
+  };
+
+  it("text message", () => {
+    const original = rumorOf("text-message");
+    expectRebuilt(
+      "text-message",
+      makeChatMessageTemplate({
+        senderPublicKeyHex: fixture.senderPublicKeyHex,
+        recipientPublicKeyHex: fixture.recipientPublicKeyHex,
+        content: original.content,
+        createdAtSec: original.created_at,
+        clientTag: "lk-client-0001",
+      }),
+    );
+  });
+
+  it("reply with root/reply markers", () => {
+    const original = rumorOf("reply-message");
+    expectRebuilt(
+      "reply-message",
+      makeChatMessageTemplate({
+        senderPublicKeyHex: fixture.senderPublicKeyHex,
+        recipientPublicKeyHex: fixture.recipientPublicKeyHex,
+        content: original.content,
+        createdAtSec: original.created_at,
+        clientTag: "lk-client-0002",
+        reply: { replyToId: rumorOf("text-message").id },
+      }),
+    );
+  });
+
+  it("edit (edited_from)", () => {
+    const original = rumorOf("edit-message");
+    expectRebuilt(
+      "edit-message",
+      makeChatEditTemplate({
+        senderPublicKeyHex: fixture.senderPublicKeyHex,
+        recipientPublicKeyHex: fixture.recipientPublicKeyHex,
+        content: original.content,
+        createdAtSec: original.created_at,
+        editedFromId: rumorOf("text-message").id,
+        clientTag: "lk-client-0003",
+      }),
+    );
+  });
+
+  it("reaction (kind 7, k=14)", () => {
+    const original = rumorOf("reaction");
+    expectRebuilt(
+      "reaction",
+      makeChatReactionTemplate({
+        senderPublicKeyHex: fixture.senderPublicKeyHex,
+        recipientPublicKeyHex: fixture.recipientPublicKeyHex,
+        // The fixture reaction targets the sender's own message.
+        messageAuthorPublicKeyHex: fixture.senderPublicKeyHex,
+        messageRumorId: rumorOf("text-message").id,
+        emoji: original.content,
+        createdAtSec: original.created_at,
+        clientTag: "lk-client-0004",
+      }),
+    );
+  });
+
+  it("reaction delete (kind 5)", () => {
+    const original = rumorOf("delete-reaction");
+    expectRebuilt(
+      "delete-reaction",
+      makeChatDeletionTemplate({
+        senderPublicKeyHex: fixture.senderPublicKeyHex,
+        recipientPublicKeyHex: fixture.recipientPublicKeyHex,
+        targetRumorIds: ["5".repeat(64)],
+        createdAtSec: original.created_at,
+        extraTaggedPubkeys: [fixture.senderPublicKeyHex],
+        clientTag: "lk-client-0005",
+      }),
+    );
   });
 });

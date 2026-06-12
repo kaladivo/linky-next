@@ -16,7 +16,14 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { OwnerId } from "@evolu/common";
 import { deriveOwnerLane, MasterSecret } from "@linky/core";
 
-import { createContactsRepository, createLinkyStore, createMessagesRepository, SYNC_DOMAINS } from "../src/index";
+import {
+  createContactsRepository,
+  createLinkyStore,
+  createMessagesRepository,
+  loadActiveReactions,
+  loadKnownRumorIds,
+  SYNC_DOMAINS,
+} from "../src/index";
 import type { ChatMessageEvent, LaneMnemonics, LinkyStore, MessagesRepository } from "../src/index";
 import { createNodeEvoluDeps } from "./nodeEvoluDeps";
 
@@ -445,6 +452,106 @@ describe("conversation pages (newest-first, cursor)", () => {
     // Pages are scoped per conversation.
     const alicePage = await repository.listPage({ peerNpub: ALICE_NPUB, limit: 100 });
     expect(alicePage.items.every((m) => m.peerNpub === ALICE_NPUB)).toBe(true);
+  });
+});
+
+describe("conversation reaction/known-id loaders (#29)", () => {
+  it("loadActiveReactions returns all active reactions for the given messages in one query", async () => {
+    const reactions = await loadActiveReactions(store, ["rumor-m1"]);
+    // From the reaction tests above: react-1 (Alice 👍), react-2 (me 🔥);
+    // react-3 was deleted and must not appear.
+    expect(reactions.map((r) => r.rumorId).sort()).toEqual(["react-1", "react-2"]);
+    expect(await loadActiveReactions(store, [])).toEqual([]);
+    expect(await loadActiveReactions(store, ["rumor-no-reactions"])).toEqual([]);
+  });
+
+  it("loadKnownRumorIds covers messages (incl. deleted), reactions, and edit ids", async () => {
+    const known = new Set(await loadKnownRumorIds(store));
+    expect(known.has("rumor-m1")).toBe(true); // plain message
+    expect(known.has("rumor-d1")).toBe(true); // soft-deleted message stays known
+    expect(known.has("react-1")).toBe(true); // reaction
+    expect(known.has("react-3")).toBe(true); // deleted reaction stays known
+    expect(known.has("edit-1")).toBe(true); // edit event id from history
+    expect(known.has("edit-2")).toBe(true);
+  });
+});
+
+describe("delete chat (#29 deleteConversation)", () => {
+  const DEL_PEER = "npub1deletemedeletemedeletemedeletemedeletemedeletemedeleteme";
+
+  it("soft-deletes every message and attached reaction of one conversation, idempotently", async () => {
+    for (let i = 1; i <= 3; i++) {
+      const applied = await repository.applyChatEvent(
+        inboundMessage({
+          rumorId: `rumor-dc${i}`,
+          peerNpub: DEL_PEER,
+          senderNpub: DEL_PEER,
+          content: `bye ${i}`,
+          sentAtSec: 1_718_005_000 + i,
+        }),
+      );
+      expect(applied.ok).toBe(true);
+    }
+    const reacted = await repository.applyChatEvent({
+      kind: "reaction",
+      rumorId: "react-dc1",
+      targetRumorId: "rumor-dc1",
+      peerNpub: DEL_PEER,
+      senderNpub: DEL_PEER,
+      direction: "in",
+      emoji: "👍",
+      sentAtSec: 1_718_005_010,
+    });
+    expect(reacted.ok).toBe(true);
+
+    const deleted = await repository.deleteConversation(DEL_PEER);
+    expect(deleted.ok).toBe(true);
+    if (!deleted.ok) return;
+    expect(deleted.value).toEqual({ deletedMessages: 3, deletedReactions: 1 });
+
+    const page = await repository.listPage({ peerNpub: DEL_PEER, limit: 10 });
+    expect(page.items).toEqual([]);
+    expect(await repository.latestReactions("rumor-dc1")).toEqual([]);
+
+    // Idempotent: a second delete touches nothing.
+    const again = await repository.deleteConversation(DEL_PEER);
+    expect(again.ok).toBe(true);
+    if (!again.ok) return;
+    expect(again.value).toEqual({ deletedMessages: 0, deletedReactions: 0 });
+
+    // Other conversations are untouched.
+    expect((await repository.listPage({ peerNpub: ALICE_NPUB, limit: 100 })).items.length)
+      .toBeGreaterThan(0);
+  });
+
+  it("keeps deleted conversations deleted when the same rumors re-arrive via sync", async () => {
+    const resurrect = await repository.applyChatEvent(
+      inboundMessage({
+        rumorId: "rumor-dc1",
+        peerNpub: DEL_PEER,
+        senderNpub: DEL_PEER,
+        content: "bye 1",
+        sentAtSec: 1_718_005_001,
+      }),
+    );
+    expect(resurrect.ok).toBe(true);
+    if (!resurrect.ok) return;
+    expect(resurrect.value.outcome).toBe("duplicate");
+    expect((await repository.listPage({ peerNpub: DEL_PEER, limit: 10 })).items).toEqual([]);
+
+    // A genuinely NEW message restarts the conversation (common messenger UX).
+    const fresh = await repository.applyChatEvent(
+      inboundMessage({
+        rumorId: "rumor-dc-new",
+        peerNpub: DEL_PEER,
+        senderNpub: DEL_PEER,
+        content: "hello again",
+        sentAtSec: 1_718_005_100,
+      }),
+    );
+    expect(fresh.ok && fresh.value.outcome === "applied").toBe(true);
+    const page = await repository.listPage({ peerNpub: DEL_PEER, limit: 10 });
+    expect(page.items.map((m) => m.rumorId)).toEqual(["rumor-dc-new"]);
   });
 });
 

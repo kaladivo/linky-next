@@ -17,10 +17,11 @@
  * end to end (runtime → Effect.log → dev-only debug toast) and is the
  * template for real tasks later.
  */
-import { RelaySettingsStore } from "@linky/core";
+import { RelaySettingsStore, runPendingFlushLoop } from "@linky/core";
 import type { Translator } from "@linky/locales";
 import { Effect } from "effect";
 
+import { initChatInboxRunner } from "../chat/chatInboxRunner";
 import type { AppServices } from "../runtime";
 import { runAppEffect } from "../runtime";
 import { toast } from "../toast";
@@ -69,10 +70,33 @@ const relaySettingsWarmupTask: DeferredStartupTask = {
     }),
 };
 
+/**
+ * `nostr.pending-flush` (#29): the persistent outbox flush loop — replays
+ * queued signed events (offline chat sends, mute lists, …) every time the
+ * relay pool regains a connection. Runs forever; the promise behind
+ * runAppEffect simply never settles, which is fine for a deferred task.
+ */
+const pendingFlushTask: DeferredStartupTask = {
+  name: "nostr-pending-flush",
+  task: () => runPendingFlushLoop,
+};
+
+/**
+ * `chat.receive-message` (#29): starts the chat inbox runner, which follows
+ * the session-scoped store lifecycle and runs the NIP-17 inbox sync loop
+ * for the active identity.
+ */
+const chatInboxTask: DeferredStartupTask = {
+  name: "chat-inbox",
+  task: () => Effect.sync(initChatInboxRunner),
+};
+
 /** Real deferred work (sync refresh, relay warm-up, …) appends here. */
 export const deferredStartupTasks: readonly DeferredStartupTask[] = [
   demoStartupTask,
   relaySettingsWarmupTask,
+  pendingFlushTask,
+  chatInboxTask,
 ];
 
 let hasRun = false;
