@@ -25,6 +25,7 @@ import { initChatInboxRunner } from "../chat/chatInboxRunner";
 import type { AppServices } from "../runtime";
 import { runAppEffect } from "../runtime";
 import { toast } from "../toast";
+import { initAutoswapRunner } from "../wallet/autoswapRunner";
 
 export interface StartupTaskContext {
   /** Translator bound to the resolved locale, for any user-visible output. */
@@ -91,12 +92,24 @@ const chatInboxTask: DeferredStartupTask = {
   task: () => Effect.sync(initChatInboxRunner),
 };
 
+/**
+ * `mints.autoswap` (#42): starts the background consolidation runner —
+ * follows the session-scoped store lifecycle, melts the largest
+ * foreign-mint balance toward the main mint when the threshold and the
+ * `settings.cashu-autoswap` toggle allow it.
+ */
+const autoswapTask: DeferredStartupTask = {
+  name: "cashu-autoswap",
+  task: ({ t }) => Effect.sync(() => initAutoswapRunner(t)),
+};
+
 /** Real deferred work (sync refresh, relay warm-up, …) appends here. */
 export const deferredStartupTasks: readonly DeferredStartupTask[] = [
   demoStartupTask,
   relaySettingsWarmupTask,
   pendingFlushTask,
   chatInboxTask,
+  autoswapTask,
 ];
 
 let hasRun = false;

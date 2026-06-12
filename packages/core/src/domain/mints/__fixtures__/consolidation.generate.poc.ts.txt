@@ -1,0 +1,194 @@
+/**
+ * Golden fixture generator for linky-next issue #42 (Consolidation:
+ * melt-to-main + auto-consolidation). Run from the PoC repo with bun:
+ *   cd /Users/kaladivo/workspace/linky/linky-poc/apps/web-app && bun /tmp/gen-consolidation-golden.ts
+ *
+ * Pins the PoC's consolidation policy, executed by the PoC's OWN functions:
+ * - paymentAmountFallback.ts: the full-balance fee-retry ladder
+ *   (buildPaymentAmountAttempts), shortage parsing (getPaymentAmountShortage),
+ *   retryability classification (isRetryablePaymentAmountFailure) and the
+ *   failure-driven retry queue (buildPaymentFailureAmountAttempts).
+ * - useNpubCashMintSelection.ts: getMintSelectionAutoswapPlan (the
+ *   select-main autoswap decision: test-mint disable + >=128 warn).
+ * - constants.ts: CASHU_AUTOSWAP_MIN_SOURCE_SUM.
+ */
+import { writeFileSync } from "node:fs";
+
+import {
+  buildPaymentAmountAttempts,
+  buildPaymentFailureAmountAttempts,
+  getPaymentAmountShortage,
+  isRetryablePaymentAmountFailure,
+} from "/Users/kaladivo/workspace/linky/linky-poc/apps/web-app/src/app/lib/paymentAmountFallback";
+import { getMintSelectionAutoswapPlan } from "/Users/kaladivo/workspace/linky/linky-poc/apps/web-app/src/app/hooks/mint/useNpubCashMintSelection";
+import { CASHU_AUTOSWAP_MIN_SOURCE_SUM } from "/Users/kaladivo/workspace/linky/linky-poc/apps/web-app/src/utils/constants";
+
+// --- buildPaymentAmountAttempts ---------------------------------------------
+// (requested === available) walks the [0,1,2,3,5,8,13,21] fee-reserve ladder;
+// (requested !== available) is a single-attempt list.
+const AMOUNT_ATTEMPT_CASES: Array<[number, number]> = [
+  [128, 128],
+  [129, 129],
+  [1000, 1000],
+  [100000, 100000],
+  [22, 22],
+  [21, 21],
+  [20, 20],
+  [8, 8],
+  [3, 3],
+  [2, 2],
+  [1, 1],
+  [0, 0],
+  [-5, -5],
+  [100, 250], // requested < available -> single attempt
+  [250, 100], // requested > available -> single attempt (caller guards funds)
+  [128.9, 128.4], // trunc to 128/128 -> ladder
+  [Number.NaN, 128],
+];
+
+// --- error-message corpus ----------------------------------------------------
+const ERROR_MESSAGES = [
+  "Insufficient funds (need 102, have 100)",
+  "Insufficient funds (need 130, have 128)",
+  "insufficient funds (NEED 5, HAVE 2)",
+  "Error: not enough funds",
+  "not enough balance to complete the swap",
+  "Amount out of LNURL range",
+  "not enough inputs provided for melt",
+  "Not enough inputs provided for melt. Provided: 100, needed: 103",
+  "provided: 100, needed: 103",
+  "provided: 103, needed: 100",
+  "need 10, have 12",
+  "fee: 3",
+  "fee : 12",
+  "transaction fee: 7 sat",
+  "Insufficient funds (need 2, have 1)",
+  "quote not found",
+  "outputs have already been signed before.",
+  "mint is unreachable",
+  "Lightning payment failed",
+  "",
+  "   ",
+  "NEED 130, HAVE 128",
+];
+
+// --- buildPaymentFailureAmountAttempts ----------------------------------------
+const FAILURE_ATTEMPT_CASES: Array<[number, string]> = [
+  [128, "Insufficient funds (need 130, have 128)"],
+  [128, "Insufficient funds (need 102, have 100)"],
+  [100, "Insufficient funds (need 102, have 100)"],
+  [2, "not enough inputs provided for melt. fee: 1"],
+  [2, "Insufficient funds (need 3, have 2)"],
+  [1, "Insufficient funds (need 2, have 1)"],
+  [3, "not enough funds"],
+  [22, "not enough balance"],
+  [21, "Amount out of LNURL range"],
+  [1000, "provided: 980, needed: 1003"],
+  [1000, "quote not found"], // non-retryable -> []
+  [0, "not enough funds"],
+  [-4, "not enough funds"],
+  [50, "fee: 3"], // "fee:" alone is not retryable -> []
+  [50, "not enough funds. fee: 3"],
+  [128, "need 130, have 128"],
+];
+
+// --- getMintSelectionAutoswapPlan ---------------------------------------------
+const PLAN_CASES: Array<{
+  name: string;
+  args: {
+    cashuAutoswapEnabled: boolean;
+    currentMainMintAcceptedBalance: number;
+    currentMintUrl: string | null;
+    nextMintUrl: string;
+  };
+}> = [];
+const MINT_A = "https://cashu.cz";
+const MINT_B = "https://mint.lnvoltz.com";
+const TESTNUT = "https://testnut.cashu.space";
+for (const enabled of [true, false]) {
+  for (const balance of [0, 127, 128, 500]) {
+    PLAN_CASES.push({
+      name: `regular->regular enabled=${enabled} balance=${balance}`,
+      args: {
+        cashuAutoswapEnabled: enabled,
+        currentMainMintAcceptedBalance: balance,
+        currentMintUrl: MINT_A,
+        nextMintUrl: MINT_B,
+      },
+    });
+  }
+  PLAN_CASES.push(
+    {
+      name: `->testnut enabled=${enabled}`,
+      args: {
+        cashuAutoswapEnabled: enabled,
+        currentMainMintAcceptedBalance: 500,
+        currentMintUrl: MINT_A,
+        nextMintUrl: TESTNUT,
+      },
+    },
+    {
+      name: `same mint enabled=${enabled}`,
+      args: {
+        cashuAutoswapEnabled: enabled,
+        currentMainMintAcceptedBalance: 500,
+        currentMintUrl: MINT_A,
+        nextMintUrl: `${MINT_A}/`,
+      },
+    },
+    {
+      name: `null current enabled=${enabled}`,
+      args: {
+        cashuAutoswapEnabled: enabled,
+        currentMainMintAcceptedBalance: 500,
+        currentMintUrl: null,
+        nextMintUrl: MINT_B,
+      },
+    },
+    {
+      name: `invalid next enabled=${enabled}`,
+      args: {
+        cashuAutoswapEnabled: enabled,
+        currentMainMintAcceptedBalance: 500,
+        currentMintUrl: MINT_A,
+        nextMintUrl: "",
+      },
+    },
+  );
+}
+
+const fixtures = {
+  generatedAt: new Date().toISOString(),
+  source: "linky-poc apps/web-app (PoC's own modules, run with bun)",
+  constants: {
+    CASHU_AUTOSWAP_MIN_SOURCE_SUM,
+  },
+  buildPaymentAmountAttempts: AMOUNT_ATTEMPT_CASES.map(([requested, available]) => ({
+    requested,
+    available,
+    output: buildPaymentAmountAttempts(requested, available),
+  })),
+  getPaymentAmountShortage: ERROR_MESSAGES.map((message) => ({
+    message,
+    output: getPaymentAmountShortage(message),
+  })),
+  isRetryablePaymentAmountFailure: ERROR_MESSAGES.map((message) => ({
+    message,
+    output: isRetryablePaymentAmountFailure(message),
+  })),
+  buildPaymentFailureAmountAttempts: FAILURE_ATTEMPT_CASES.map(([amount, message]) => ({
+    amount,
+    message,
+    output: buildPaymentFailureAmountAttempts(amount, message),
+  })),
+  getMintSelectionAutoswapPlan: PLAN_CASES.map(({ name, args }) => ({
+    name,
+    args,
+    output: getMintSelectionAutoswapPlan(args),
+  })),
+};
+
+const OUT =
+  "/Users/kaladivo/workspace/linky/linky-next/.claude/worktrees/agent-a09092b78ba988261/packages/core/src/domain/mints/__fixtures__/consolidation.golden.json";
+writeFileSync(OUT, `${JSON.stringify(fixtures, null, 2)}\n`);
+console.log(`wrote ${OUT}`);

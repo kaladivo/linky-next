@@ -1,0 +1,710 @@
+{
+  "generatedAt": "2026-06-12T12:22:11.036Z",
+  "source": "linky-poc apps/web-app (PoC's own modules, run with bun)",
+  "constants": {
+    "CASHU_AUTOSWAP_MIN_SOURCE_SUM": 128
+  },
+  "buildPaymentAmountAttempts": [
+    {
+      "requested": 128,
+      "available": 128,
+      "output": [
+        128,
+        127,
+        126,
+        125,
+        123,
+        120,
+        115,
+        107
+      ]
+    },
+    {
+      "requested": 129,
+      "available": 129,
+      "output": [
+        129,
+        128,
+        127,
+        126,
+        124,
+        121,
+        116,
+        108
+      ]
+    },
+    {
+      "requested": 1000,
+      "available": 1000,
+      "output": [
+        1000,
+        999,
+        998,
+        997,
+        995,
+        992,
+        987,
+        979
+      ]
+    },
+    {
+      "requested": 100000,
+      "available": 100000,
+      "output": [
+        100000,
+        99999,
+        99998,
+        99997,
+        99995,
+        99992,
+        99987,
+        99979
+      ]
+    },
+    {
+      "requested": 22,
+      "available": 22,
+      "output": [
+        22,
+        21,
+        20,
+        19,
+        17,
+        14,
+        9,
+        1
+      ]
+    },
+    {
+      "requested": 21,
+      "available": 21,
+      "output": [
+        21,
+        20,
+        19,
+        18,
+        16,
+        13,
+        8
+      ]
+    },
+    {
+      "requested": 20,
+      "available": 20,
+      "output": [
+        20,
+        19,
+        18,
+        17,
+        15,
+        12,
+        7
+      ]
+    },
+    {
+      "requested": 8,
+      "available": 8,
+      "output": [
+        8,
+        7,
+        6,
+        5,
+        3
+      ]
+    },
+    {
+      "requested": 3,
+      "available": 3,
+      "output": [
+        3,
+        2,
+        1
+      ]
+    },
+    {
+      "requested": 2,
+      "available": 2,
+      "output": [
+        2,
+        1
+      ]
+    },
+    {
+      "requested": 1,
+      "available": 1,
+      "output": [
+        1
+      ]
+    },
+    {
+      "requested": 0,
+      "available": 0,
+      "output": []
+    },
+    {
+      "requested": -5,
+      "available": -5,
+      "output": []
+    },
+    {
+      "requested": 100,
+      "available": 250,
+      "output": [
+        100
+      ]
+    },
+    {
+      "requested": 250,
+      "available": 100,
+      "output": [
+        250
+      ]
+    },
+    {
+      "requested": 128.9,
+      "available": 128.4,
+      "output": [
+        128,
+        127,
+        126,
+        125,
+        123,
+        120,
+        115,
+        107
+      ]
+    },
+    {
+      "requested": null,
+      "available": 128,
+      "output": []
+    }
+  ],
+  "getPaymentAmountShortage": [
+    {
+      "message": "Insufficient funds (need 102, have 100)",
+      "output": 2
+    },
+    {
+      "message": "Insufficient funds (need 130, have 128)",
+      "output": 2
+    },
+    {
+      "message": "insufficient funds (NEED 5, HAVE 2)",
+      "output": 3
+    },
+    {
+      "message": "Error: not enough funds",
+      "output": null
+    },
+    {
+      "message": "not enough balance to complete the swap",
+      "output": null
+    },
+    {
+      "message": "Amount out of LNURL range",
+      "output": null
+    },
+    {
+      "message": "not enough inputs provided for melt",
+      "output": null
+    },
+    {
+      "message": "Not enough inputs provided for melt. Provided: 100, needed: 103",
+      "output": 3
+    },
+    {
+      "message": "provided: 100, needed: 103",
+      "output": 3
+    },
+    {
+      "message": "provided: 103, needed: 100",
+      "output": null
+    },
+    {
+      "message": "need 10, have 12",
+      "output": null
+    },
+    {
+      "message": "fee: 3",
+      "output": 3
+    },
+    {
+      "message": "fee : 12",
+      "output": 12
+    },
+    {
+      "message": "transaction fee: 7 sat",
+      "output": 7
+    },
+    {
+      "message": "Insufficient funds (need 2, have 1)",
+      "output": 1
+    },
+    {
+      "message": "quote not found",
+      "output": null
+    },
+    {
+      "message": "outputs have already been signed before.",
+      "output": null
+    },
+    {
+      "message": "mint is unreachable",
+      "output": null
+    },
+    {
+      "message": "Lightning payment failed",
+      "output": null
+    },
+    {
+      "message": "",
+      "output": null
+    },
+    {
+      "message": "   ",
+      "output": null
+    },
+    {
+      "message": "NEED 130, HAVE 128",
+      "output": 2
+    }
+  ],
+  "isRetryablePaymentAmountFailure": [
+    {
+      "message": "Insufficient funds (need 102, have 100)",
+      "output": true
+    },
+    {
+      "message": "Insufficient funds (need 130, have 128)",
+      "output": true
+    },
+    {
+      "message": "insufficient funds (NEED 5, HAVE 2)",
+      "output": true
+    },
+    {
+      "message": "Error: not enough funds",
+      "output": true
+    },
+    {
+      "message": "not enough balance to complete the swap",
+      "output": true
+    },
+    {
+      "message": "Amount out of LNURL range",
+      "output": true
+    },
+    {
+      "message": "not enough inputs provided for melt",
+      "output": true
+    },
+    {
+      "message": "Not enough inputs provided for melt. Provided: 100, needed: 103",
+      "output": true
+    },
+    {
+      "message": "provided: 100, needed: 103",
+      "output": false
+    },
+    {
+      "message": "provided: 103, needed: 100",
+      "output": false
+    },
+    {
+      "message": "need 10, have 12",
+      "output": false
+    },
+    {
+      "message": "fee: 3",
+      "output": false
+    },
+    {
+      "message": "fee : 12",
+      "output": false
+    },
+    {
+      "message": "transaction fee: 7 sat",
+      "output": false
+    },
+    {
+      "message": "Insufficient funds (need 2, have 1)",
+      "output": true
+    },
+    {
+      "message": "quote not found",
+      "output": false
+    },
+    {
+      "message": "outputs have already been signed before.",
+      "output": false
+    },
+    {
+      "message": "mint is unreachable",
+      "output": false
+    },
+    {
+      "message": "Lightning payment failed",
+      "output": false
+    },
+    {
+      "message": "",
+      "output": false
+    },
+    {
+      "message": "   ",
+      "output": false
+    },
+    {
+      "message": "NEED 130, HAVE 128",
+      "output": false
+    }
+  ],
+  "buildPaymentFailureAmountAttempts": [
+    {
+      "amount": 128,
+      "message": "Insufficient funds (need 130, have 128)",
+      "output": [
+        126,
+        125,
+        127,
+        123,
+        120,
+        115,
+        107
+      ]
+    },
+    {
+      "amount": 128,
+      "message": "Insufficient funds (need 102, have 100)",
+      "output": [
+        126,
+        125,
+        127,
+        123,
+        120,
+        115,
+        107
+      ]
+    },
+    {
+      "amount": 100,
+      "message": "Insufficient funds (need 102, have 100)",
+      "output": [
+        98,
+        97,
+        99,
+        95,
+        92,
+        87,
+        79
+      ]
+    },
+    {
+      "amount": 2,
+      "message": "not enough inputs provided for melt. fee: 1",
+      "output": [
+        1
+      ]
+    },
+    {
+      "amount": 2,
+      "message": "Insufficient funds (need 3, have 2)",
+      "output": [
+        1
+      ]
+    },
+    {
+      "amount": 1,
+      "message": "Insufficient funds (need 2, have 1)",
+      "output": []
+    },
+    {
+      "amount": 3,
+      "message": "not enough funds",
+      "output": [
+        2,
+        1
+      ]
+    },
+    {
+      "amount": 22,
+      "message": "not enough balance",
+      "output": [
+        21,
+        20,
+        19,
+        17,
+        14,
+        9,
+        1
+      ]
+    },
+    {
+      "amount": 21,
+      "message": "Amount out of LNURL range",
+      "output": [
+        20,
+        19,
+        18,
+        16,
+        13,
+        8
+      ]
+    },
+    {
+      "amount": 1000,
+      "message": "provided: 980, needed: 1003",
+      "output": []
+    },
+    {
+      "amount": 1000,
+      "message": "quote not found",
+      "output": []
+    },
+    {
+      "amount": 0,
+      "message": "not enough funds",
+      "output": []
+    },
+    {
+      "amount": -4,
+      "message": "not enough funds",
+      "output": []
+    },
+    {
+      "amount": 50,
+      "message": "fee: 3",
+      "output": []
+    },
+    {
+      "amount": 50,
+      "message": "not enough funds. fee: 3",
+      "output": [
+        47,
+        46,
+        49,
+        48,
+        45,
+        42,
+        37,
+        29
+      ]
+    },
+    {
+      "amount": 128,
+      "message": "need 130, have 128",
+      "output": []
+    }
+  ],
+  "getMintSelectionAutoswapPlan": [
+    {
+      "name": "regular->regular enabled=true balance=0",
+      "args": {
+        "cashuAutoswapEnabled": true,
+        "currentMainMintAcceptedBalance": 0,
+        "currentMintUrl": "https://cashu.cz",
+        "nextMintUrl": "https://mint.lnvoltz.com"
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": false,
+        "shouldWarnAboutMintChange": false
+      }
+    },
+    {
+      "name": "regular->regular enabled=true balance=127",
+      "args": {
+        "cashuAutoswapEnabled": true,
+        "currentMainMintAcceptedBalance": 127,
+        "currentMintUrl": "https://cashu.cz",
+        "nextMintUrl": "https://mint.lnvoltz.com"
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": false,
+        "shouldWarnAboutMintChange": false
+      }
+    },
+    {
+      "name": "regular->regular enabled=true balance=128",
+      "args": {
+        "cashuAutoswapEnabled": true,
+        "currentMainMintAcceptedBalance": 128,
+        "currentMintUrl": "https://cashu.cz",
+        "nextMintUrl": "https://mint.lnvoltz.com"
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": false,
+        "shouldWarnAboutMintChange": true
+      }
+    },
+    {
+      "name": "regular->regular enabled=true balance=500",
+      "args": {
+        "cashuAutoswapEnabled": true,
+        "currentMainMintAcceptedBalance": 500,
+        "currentMintUrl": "https://cashu.cz",
+        "nextMintUrl": "https://mint.lnvoltz.com"
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": false,
+        "shouldWarnAboutMintChange": true
+      }
+    },
+    {
+      "name": "->testnut enabled=true",
+      "args": {
+        "cashuAutoswapEnabled": true,
+        "currentMainMintAcceptedBalance": 500,
+        "currentMintUrl": "https://cashu.cz",
+        "nextMintUrl": "https://testnut.cashu.space"
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": true,
+        "shouldWarnAboutMintChange": false
+      }
+    },
+    {
+      "name": "same mint enabled=true",
+      "args": {
+        "cashuAutoswapEnabled": true,
+        "currentMainMintAcceptedBalance": 500,
+        "currentMintUrl": "https://cashu.cz",
+        "nextMintUrl": "https://cashu.cz/"
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": false,
+        "shouldWarnAboutMintChange": false
+      }
+    },
+    {
+      "name": "null current enabled=true",
+      "args": {
+        "cashuAutoswapEnabled": true,
+        "currentMainMintAcceptedBalance": 500,
+        "currentMintUrl": null,
+        "nextMintUrl": "https://mint.lnvoltz.com"
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": false,
+        "shouldWarnAboutMintChange": true
+      }
+    },
+    {
+      "name": "invalid next enabled=true",
+      "args": {
+        "cashuAutoswapEnabled": true,
+        "currentMainMintAcceptedBalance": 500,
+        "currentMintUrl": "https://cashu.cz",
+        "nextMintUrl": ""
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": false,
+        "shouldWarnAboutMintChange": false
+      }
+    },
+    {
+      "name": "regular->regular enabled=false balance=0",
+      "args": {
+        "cashuAutoswapEnabled": false,
+        "currentMainMintAcceptedBalance": 0,
+        "currentMintUrl": "https://cashu.cz",
+        "nextMintUrl": "https://mint.lnvoltz.com"
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": false,
+        "shouldWarnAboutMintChange": false
+      }
+    },
+    {
+      "name": "regular->regular enabled=false balance=127",
+      "args": {
+        "cashuAutoswapEnabled": false,
+        "currentMainMintAcceptedBalance": 127,
+        "currentMintUrl": "https://cashu.cz",
+        "nextMintUrl": "https://mint.lnvoltz.com"
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": false,
+        "shouldWarnAboutMintChange": false
+      }
+    },
+    {
+      "name": "regular->regular enabled=false balance=128",
+      "args": {
+        "cashuAutoswapEnabled": false,
+        "currentMainMintAcceptedBalance": 128,
+        "currentMintUrl": "https://cashu.cz",
+        "nextMintUrl": "https://mint.lnvoltz.com"
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": false,
+        "shouldWarnAboutMintChange": false
+      }
+    },
+    {
+      "name": "regular->regular enabled=false balance=500",
+      "args": {
+        "cashuAutoswapEnabled": false,
+        "currentMainMintAcceptedBalance": 500,
+        "currentMintUrl": "https://cashu.cz",
+        "nextMintUrl": "https://mint.lnvoltz.com"
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": false,
+        "shouldWarnAboutMintChange": false
+      }
+    },
+    {
+      "name": "->testnut enabled=false",
+      "args": {
+        "cashuAutoswapEnabled": false,
+        "currentMainMintAcceptedBalance": 500,
+        "currentMintUrl": "https://cashu.cz",
+        "nextMintUrl": "https://testnut.cashu.space"
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": false,
+        "shouldWarnAboutMintChange": false
+      }
+    },
+    {
+      "name": "same mint enabled=false",
+      "args": {
+        "cashuAutoswapEnabled": false,
+        "currentMainMintAcceptedBalance": 500,
+        "currentMintUrl": "https://cashu.cz",
+        "nextMintUrl": "https://cashu.cz/"
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": false,
+        "shouldWarnAboutMintChange": false
+      }
+    },
+    {
+      "name": "null current enabled=false",
+      "args": {
+        "cashuAutoswapEnabled": false,
+        "currentMainMintAcceptedBalance": 500,
+        "currentMintUrl": null,
+        "nextMintUrl": "https://mint.lnvoltz.com"
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": false,
+        "shouldWarnAboutMintChange": false
+      }
+    },
+    {
+      "name": "invalid next enabled=false",
+      "args": {
+        "cashuAutoswapEnabled": false,
+        "currentMainMintAcceptedBalance": 500,
+        "currentMintUrl": "https://cashu.cz",
+        "nextMintUrl": ""
+      },
+      "output": {
+        "shouldDisableAutoswapForTestMint": false,
+        "shouldWarnAboutMintChange": false
+      }
+    }
+  ]
+}

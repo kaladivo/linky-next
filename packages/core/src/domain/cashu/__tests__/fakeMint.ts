@@ -57,6 +57,12 @@ interface FakeMintOptions {
   readonly breakKeysetId?: boolean;
   /** Quote expiry timestamp (unix seconds) for new quotes. */
   readonly quoteExpiry?: number;
+  /**
+   * Emit mint-quote invoices with a parseable bolt11 HRP (`lnbc<a*10>n…`)
+   * instead of the opaque `lnfake…` strings, so ANOTHER FakeMint can quote
+   * a melt for them (cross-mint melt-to-main tests, issue #42).
+   */
+  readonly bolt11MintQuotes?: boolean;
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -117,13 +123,18 @@ export class FakeMint {
   /** fee_reserve quoted for bolt11 invoices (the lightning tests use these). */
   bolt11FeeReserve = 0;
 
+  /** When > 0, the next N mint-quote creations fail (rate-limit simulation). */
+  failNextMintQuotes = 0;
+
   private quoteCounter = 0;
   private readonly inputFeePpk: number;
   private readonly quoteExpiry: number;
+  private readonly bolt11MintQuotes: boolean;
 
   constructor(options?: FakeMintOptions) {
     this.inputFeePpk = options?.inputFeePpk ?? 0;
     this.quoteExpiry = options?.quoteExpiry ?? 4_000_000_000; // far future
+    this.bolt11MintQuotes = options?.bolt11MintQuotes === true;
     for (const amount of AMOUNTS) {
       const priv = sha256(utf8ToBytes(`linky/fake-mint/sat/${amount}`));
       this.privKeys.set(amount, priv);
@@ -289,6 +300,10 @@ export class FakeMint {
     }
 
     if (method === "POST" && path === "/v1/mint/quote/bolt11" && isRecord(body)) {
+      if (this.failNextMintQuotes > 0) {
+        this.failNextMintQuotes -= 1;
+        return protocolError(20000, "rate limited");
+      }
       this.quoteCounter += 1;
       const quoteId = `quote-${String(this.quoteCounter)}`;
       const amount = Number(body["amount"]) || 0;
@@ -297,7 +312,11 @@ export class FakeMint {
         unit: String(body["unit"] ?? "sat"),
         state: "UNPAID",
         expiry: this.quoteExpiry,
-        request: `lnfake${String(amount)}q${String(this.quoteCounter)}`,
+        // bolt11 mode: `lnbc<amount*10>n` HRP = exactly <amount> sat; the
+        // data-part suffix avoids "1" (bech32-style) so HRP parsing holds.
+        request: this.bolt11MintQuotes
+          ? `lnbc${String(amount * 10)}n1q${String(this.quoteCounter).replace(/1/g, "l")}`
+          : `lnfake${String(amount)}q${String(this.quoteCounter)}`,
       };
       this.mintQuotes.set(quoteId, record);
       return {
