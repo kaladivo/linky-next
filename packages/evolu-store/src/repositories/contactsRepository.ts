@@ -110,6 +110,8 @@ export interface ContactsRepository {
   readonly listGroups: () => Promise<ReadonlyArray<string>>;
   /** The active contact with this npub, or null (duplicate detection). */
   readonly findByNpub: (npub: string) => Promise<ContactRecord | null>;
+  /** The non-deleted contact (active OR archived) with this id, or null. */
+  readonly findById: (id: string) => Promise<ContactRecord | null>;
 }
 
 const formatTypeError = createFormatTypeError();
@@ -252,6 +254,22 @@ export const createContactsRepository = (store: LinkyStore): ContactsRepository 
       );
       const rows = await store.evolu.loadQuery(query);
       return rows.flatMap((row) => (row.groupName === null ? [] : [String(row.groupName)]));
+    },
+
+    findById: async (id) => {
+      const parsedId = parseId(id);
+      if (!parsedId.ok) return null;
+      const query = store.evolu.createQuery((db) =>
+        db
+          .selectFrom("contact")
+          .selectAll()
+          .where("isDeleted", "is not", 1)
+          .where("id", "=", parsedId.value)
+          .limit(1),
+      );
+      const rows = await store.evolu.loadQuery(query);
+      const row = rows[0];
+      return row === undefined ? null : toContactRecord(row);
     },
 
     findByNpub: async (npub) => {

@@ -512,6 +512,11 @@ export const cs = {
   contactsLimitReached: "Byl dosažen limit kontaktů ({max}).",
   contactSaved: "Kontakt byl uložen.",
   contactUpdated: "Kontakt byl upraven.",
+  // Contact form + refresh-from-Nostr (#27).
+  invalidNpub: "Tohle není platný npub.",
+  refreshFromNostr: "Načíst z Nostru",
+  contactRefreshed: "Kontakt byl aktualizován z Nostru.",
+  contactRefreshNoProfile: "Profil na Nostru nebyl nalezen.",
   contactDeleted: "Kontakt byl smazán.",
   contactArchived: "Kontakt byl archivován.",
   contactRestored: "Kontakt byl vrácen mezi kontakty.",

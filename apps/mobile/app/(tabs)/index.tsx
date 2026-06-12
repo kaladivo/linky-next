@@ -8,8 +8,9 @@
  * chat activity, latest first — unknown threads merge in here exactly like
  * the PoC's unknown contacts, marked with the "?" badge and the localized
  * unknown-name prefix) and "Other contacts" (no conversation yet). Tapping
- * a row pushes chat/[id] (placeholder until #29). The add-contact button
- * routes to the contact/[id] placeholder until #27 lands the real form.
+ * a saved-contact row opens the contact detail (PoC `openContactDetail`;
+ * real screen since #27), an unknown-thread row opens its chat
+ * (placeholder until #29). The add-contact button routes to contact/new.
  *
  * Data flows: session gate boots the store (storeManager) ->
  * useLinkyStore() -> useContactsScreenData (repositories) ->
@@ -89,7 +90,8 @@ export default function ContactsScreen() {
   );
 
   const openRow = (row: ContactRowModel) => {
-    router.push(`/chat/${row.id}`);
+    if (row.kind === "contact") router.push(`/contact/${row.id}`);
+    else router.push(`/chat/${row.id}`);
   };
 
   const chips: ReadonlyArray<{ readonly label: string; readonly value: GroupFilterSelection }> = [
@@ -119,8 +121,6 @@ export default function ContactsScreen() {
           accessibilityLabel={t("addContact")}
           testID="contacts-add"
           hitSlop={8}
-          // #27 lands the real add-contact form; until then the stub routes
-          // to the contact detail placeholder.
           onPress={() => router.push("/contact/new")}
           className="h-9 w-9 items-center justify-center rounded-full bg-primary"
         >

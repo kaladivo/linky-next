@@ -197,6 +197,24 @@ describe("contact list queries (search, groups, previews)", () => {
     expect(await repository.findByNpub("npub1nobodynobodynobodynobody")).toBeNull();
   });
 
+  it("finds a contact by id, including archived ones; invalid ids resolve null (#27)", async () => {
+    const inserted = repository.insert({ name: "Grace" });
+    expect(inserted.ok).toBe(true);
+    if (!inserted.ok) return;
+
+    expect((await repository.findById(inserted.value.id))?.name).toBe("Grace");
+
+    // Archived contacts stay findable (the contact detail screen shows them).
+    expect(repository.update(inserted.value.id, { archivedAtSec: 1_718_000_000 }).ok).toBe(true);
+    expect((await repository.findById(inserted.value.id))?.archivedAtSec).toBe(1_718_000_000);
+
+    // Soft-deleted contacts do not.
+    expect(repository.remove(inserted.value.id).ok).toBe(true);
+    expect(await repository.findById(inserted.value.id)).toBeNull();
+
+    expect(await repository.findById("definitely-not-an-id")).toBeNull();
+  });
+
   it("pairs contacts with last-message previews, latest conversation first (contacts.list)", async () => {
     const messages = createMessagesRepository(store);
     const send = (rumorId: string, peerNpub: string, content: string, sentAtSec: number) =>
