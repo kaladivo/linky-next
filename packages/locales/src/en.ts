@@ -367,7 +367,7 @@ export const en = {
   mintTestFundsNote: "Test mint — tokens here are not real money.",
   mintChangeKeepsFundsTitle: "Funds stay on the current mint",
   mintChangeKeepsFundsBody:
-    "Your {amount} sat on {fromMint} stay there. Linky does not move funds automatically yet.",
+    "Your {amount} sat on {fromMint} stay there. Auto-swap is off, so Linky will not move them automatically.",
   mintDeleteHasFunds:
     "This mint still holds {amount} sat of spendable tokens. Removing it does not delete tokens or move funds.",
   mintDeleted: "Mint removed.",

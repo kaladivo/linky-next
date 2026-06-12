@@ -369,7 +369,7 @@ export const cs = {
   mintTestFundsNote: "Testovací mint — zdejší tokeny nejsou skutečné peníze.",
   mintChangeKeepsFundsTitle: "Prostředky zůstanou na současném mintu",
   mintChangeKeepsFundsBody:
-    "Vašich {amount} sat na {fromMint} tam zůstane. Linky zatím prostředky automaticky nepřesouvá.",
+    "Vašich {amount} sat na {fromMint} tam zůstane. Automatický swap je vypnutý, Linky je nepřesune automaticky.",
   mintDeleteHasFunds:
     "Tento mint stále drží {amount} sat utratitelných tokenů. Odstranění tokeny nemaže ani nepřesouvá prostředky.",
   mintDeleted: "Mint odstraněn.",
