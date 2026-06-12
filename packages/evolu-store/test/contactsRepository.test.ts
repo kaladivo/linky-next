@@ -156,6 +156,24 @@ describe("ContactsRepository", () => {
     if (removed.ok) return;
     expect(removed.error._tag).toBe("InvalidContactIdError");
   });
+
+  it("getById resolves archived contacts but not deleted ones (#28 detail screens)", async () => {
+    const inserted = repository.insert({ name: "Dave" });
+    expect(inserted.ok).toBe(true);
+    if (!inserted.ok) return;
+    const id = inserted.value.id;
+
+    expect((await repository.getById(id))?.name).toBe("Dave");
+
+    // Archived contacts still resolve (the archived edit screen needs them).
+    repository.update(id, { archivedAtSec: 1_718_000_000 });
+    expect((await repository.getById(id))?.archivedAtSec).toBe(1_718_000_000);
+
+    // Soft-deleted and garbage ids resolve to null instead of erroring.
+    repository.remove(id);
+    expect(await repository.getById(id)).toBeNull();
+    expect(await repository.getById("definitely-not-an-id")).toBeNull();
+  });
 });
 
 describe("contact list queries (search, groups, previews)", () => {

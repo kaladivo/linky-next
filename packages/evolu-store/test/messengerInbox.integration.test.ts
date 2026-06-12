@@ -158,6 +158,13 @@ describe("unknown threads (contacts.unknown)", () => {
     });
   });
 
+  it("getById resolves a thread by row id (#28 unknown chat screen)", async () => {
+    const thread = await threads.getByNpub(STRANGER_NPUB);
+    expect(thread).not.toBeNull();
+    expect((await threads.getById(thread!.id))?.npub).toBe(STRANGER_NPUB);
+    expect(await threads.getById("definitely-not-an-id")).toBeNull();
+  });
+
   it("does not create a thread for messages from a saved contact", async () => {
     const inserted = contacts.insert({ name: "Friend", npub: FRIEND_NPUB });
     expect(inserted.ok).toBe(true);

@@ -60,6 +60,11 @@ export interface UnknownThreadsRepository {
   ) => Promise<RepoResult<{ readonly id: string }, UnknownThreadValidationError>>;
   /** The thread for `npub`, or null. */
   readonly getByNpub: (npub: string) => Promise<UnknownThreadRecord | null>;
+  /**
+   * The thread with this id, or null — the unknown chat screen resolves
+   * its route param with this (#28).
+   */
+  readonly getById: (id: string) => Promise<UnknownThreadRecord | null>;
   /** All unknown threads, latest activity first, with last-message previews. */
   readonly list: () => Promise<ReadonlyArray<UnknownThreadListItem>>;
   /**
@@ -114,6 +119,15 @@ export const createUnknownThreadsRepository = (store: LinkyStore): UnknownThread
     getByNpub: async (npub) => {
       const row = await rowByNpub(npub);
       return row === null ? null : toRecord(row);
+    },
+
+    getById: async (id) => {
+      const query = store.evolu.createQuery((db) =>
+        db.selectFrom("_unknownThread").selectAll().where("id", "=", asParam(id)).limit(1),
+      );
+      const rows = await store.evolu.loadQuery(query);
+      const row = rows[0];
+      return row === undefined ? null : toRecord(row);
     },
 
     list: async () => {

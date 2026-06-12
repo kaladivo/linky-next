@@ -475,6 +475,10 @@ export const en = {
   archiveContact: "Archive contact",
   archiveArmedHint: "Click once more to archive.",
   restoreArchivedContact: "Restore contact",
+  // contacts.delete-to-unknown (#28).
+  deleteContact: "Delete contact",
+  deleteContactConfirm:
+    "Delete this contact? The conversation will be kept under an unknown sender.",
 
   contact: "Contact",
   editContact: "Edit contact",

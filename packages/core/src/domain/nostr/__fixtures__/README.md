@@ -111,3 +111,40 @@ The `inputs` field records the source values so the golden test can replay
 them through our `publishProfileMetadata` / `publishProfileGeneralStatus`
 and assert byte-identical events (same ids) under a fixed TestClock;
 signatures verify on both sides (not byte-equal — random aux, see above).
+
+## `muteList.golden.json`
+
+Pins the mute-list (kind **10000**) event structure (issue #28,
+`contacts.block` / `nostr.block-pubkey`) against what the PoC publishes:
+`blockPubkeyAndPublishMuteList` in
+`apps/web-app/src/app/useAppShellComposition.tsx` builds one
+`["p", pubkeyHex]` tag per blocked pubkey (merged local blocklist order),
+`content: ""`, signed with `finalizeEvent`.
+
+Generated from the **PoC's own dependency** (`nostr-tools@2.23.3`, resolved
+in `/Users/kaladivo/workspace/linky/linky-poc`) on 2026-06-12, with this bun
+script run from the PoC root (same throwaway fixture key as
+`signedEvents.golden.json`, fixed `created_at = 1718001000`; the muted
+pubkeys are the committed alice/bob dev-identity pubkeys):
+
+```ts
+const { finalizeEvent, verifyEvent, getEventHash, getPublicKey } = await import("nostr-tools");
+const hexToBytes = (hex) => Uint8Array.from(hex.match(/.{2}/g).map((b) => parseInt(b, 16)));
+const sk = hexToBytes(secretKeyHex);
+const pubkey = getPublicKey(sk);
+
+// exactly like blockPubkeyAndPublishMuteList (PoC uses Math.ceil(Date.now()/1e3);
+// fixed created_at makes floor/ceil moot):
+const ev = finalizeEvent(
+  { kind: 10000, created_at, tags: mutedPubkeys.map((p) => ["p", p]), content: "", pubkey },
+  sk,
+);
+if (!verifyEvent(ev)) throw new Error("fixture event failed self-verification");
+if (getEventHash(ev) !== ev.id) throw new Error("id mismatch");
+```
+
+The golden test replays the inputs through our `publishMuteList` (against an
+empty fake relay, so the merge contributes nothing extra) and asserts a
+byte-identical event (same id) under a fixed TestClock; the PoC-signed
+fixture must verify under our verifier (sig not byte-equal — random aux,
+see above).

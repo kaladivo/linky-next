@@ -1,0 +1,28 @@
+{
+  "generator": "nostr-tools@2.23.3 finalizeEvent (PoC dependency), bun script mirroring useAppShellComposition.blockPubkeyAndPublishMuteList — see README.md",
+  "secretKeyHex": "5c0c523f52a5b6fad39ed2403092df8cebc36318b39383bca6c00808626fab3a",
+  "publicKeyHex": "87d3561f19b74adbe8bf840682992466068830a9d8c36b4a0c99d36f826cb6cb",
+  "createdAt": 1718001000,
+  "mutedPubkeys": [
+    "1af20e896eca5cefb89c0d866d3a1bbd8ddd4413b615689c9c61513043966b7c",
+    "83beffec065f05ea4b58bb4050c7f358283e27c5556874ddab279dfdd6cef670"
+  ],
+  "event": {
+    "kind": 10000,
+    "created_at": 1718001000,
+    "tags": [
+      [
+        "p",
+        "1af20e896eca5cefb89c0d866d3a1bbd8ddd4413b615689c9c61513043966b7c"
+      ],
+      [
+        "p",
+        "83beffec065f05ea4b58bb4050c7f358283e27c5556874ddab279dfdd6cef670"
+      ]
+    ],
+    "content": "",
+    "pubkey": "87d3561f19b74adbe8bf840682992466068830a9d8c36b4a0c99d36f826cb6cb",
+    "id": "4ddbcfdedef56aefd6404929d67d4766e228d0e3042265f3d9c47ac8d7865737",
+    "sig": "53e44f9f59e12a0c866cf2651aee134505d686ebf24771c22edcb7132ba1ea8ef08145fb2c80c8868603fb93f41d03a4d0865ebae8b2839364e82809c5309fba"
+  }
+}

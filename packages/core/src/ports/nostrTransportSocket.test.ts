@@ -4,11 +4,13 @@
  * timeout), mirroring how `packages/platform` adapters are tested with fakes.
  */
 import { Socket } from "@effect/platform";
-import { Chunk, Effect, Fiber, Layer, Ref, Stream, TestClock, TestContext } from "effect";
+import { Chunk, Effect, Fiber, Layer, Option, Ref, Stream, TestClock, TestContext } from "effect";
 import { describe, expect, it } from "vitest";
 
 import type { NostrRelaySocket, NostrTransportService } from "./NostrTransport.js";
 import { NostrTransport, layerNostrTransportSocket } from "./NostrTransport.js";
+import { RelayPool, layerRelayPool } from "../domain/nostr/RelayPool.js";
+import { testEnvironmentLayer } from "../domain/nostr/nostrTestKit.js";
 
 // ---------------------------------------------------------------------------
 // Scripted WebSocket fake (the surface @effect/platform's Socket touches)
@@ -200,6 +202,98 @@ describe("layerNostrTransportSocket", () => {
           expect(error.reason).toBe("closed");
         }),
       ),
+    );
+  });
+
+  it("send completes inside an uninterruptible region (#28 regression)", async () => {
+    // Scope finalizers run with interruption masked. `send` races the write
+    // against connection death, and a race can only settle by interrupting
+    // its parked loser — under the mask that interruption was impossible, so
+    // every RelayPool unsubscribe (CLOSE in a finalizer) hung on a healthy
+    // connection. Pinned here at the primitive level.
+    await withTransport((transport, created) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const connecting = yield* Effect.fork(transport.connect(RELAY_URL));
+          yield* awaitSockets(created, 1);
+          const ws = created[0]!;
+          ws.open();
+          const socket = yield* Fiber.join(connecting);
+
+          const sender = yield* Effect.fork(
+            Effect.uninterruptible(socket.send('["CLOSE","sub-1"]')),
+          );
+          // Cooperative wait (no clock): the send must settle on its own.
+          let settled = false;
+          for (let i = 0; i < 5_000 && !settled; i += 1) {
+            settled = Option.isSome(yield* Fiber.poll(sender));
+            if (!settled) yield* Effect.yieldNow();
+          }
+          if (!settled) return yield* Effect.die(new Error("uninterruptible send hung"));
+          expect(ws.sent).toStrictEqual(['["CLOSE","sub-1"]']);
+        }),
+      ),
+    );
+  });
+
+  it("RelayPool unsubscribe over the socket transport finishes promptly (#28 regression)", async () => {
+    // The device-observed hang: interrupting a `RelayPool.subscribe`
+    // consumer (the `Stream.interruptAfter` window every fetch uses) never
+    // completed, because the unsubscribe finalizer's CLOSE send blocked on
+    // the transport's uninterruptible race. fakeRelay never reproduced it —
+    // its `send` is synchronous — so this pins pool + REAL socket transport.
+    await run(
+      Effect.gen(function* () {
+        const { created, constructorLayer } = yield* makeHarness;
+        const poolLayer = layerRelayPool().pipe(
+          Layer.provide(
+            layerNostrTransportSocket({ openTimeout: "10 seconds" }).pipe(
+              Layer.provide(constructorLayer),
+            ),
+          ),
+          Layer.provide(testEnvironmentLayer([RELAY_URL])),
+        );
+
+        yield* Effect.gen(function* () {
+          const pool = yield* RelayPool;
+          yield* awaitSockets(created, 1);
+          const ws = created[0]!;
+          ws.open();
+
+          // Wait for the pool to register the connection.
+          for (let i = 0; i < 5_000; i += 1) {
+            const status = yield* pool.status;
+            if (status.get(RELAY_URL) === "connected") break;
+            yield* Effect.yieldNow();
+          }
+
+          const consumer = yield* Effect.fork(
+            pool
+              .subscribe([{ kinds: [0], limit: 1 }])
+              .pipe(Stream.interruptAfter("2 seconds"), Stream.runCount),
+          );
+
+          // The REQ goes out on the wire first.
+          for (let i = 0; i < 5_000; i += 1) {
+            if (ws.sent.some((frame) => String(frame).startsWith('["REQ"'))) break;
+            yield* Effect.yieldNow();
+          }
+          expect(ws.sent.some((frame) => String(frame).startsWith('["REQ"'))).toBe(true);
+
+          // Window elapses -> the consumer MUST complete (this hung before).
+          yield* TestClock.adjust("2 seconds");
+          const count = yield* Fiber.join(consumer);
+          expect(count).toBe(0);
+
+          // The advisory CLOSE still reaches the relay (pool-scoped fiber).
+          let closed = false;
+          for (let i = 0; i < 5_000 && !closed; i += 1) {
+            closed = ws.sent.some((frame) => String(frame).startsWith('["CLOSE"'));
+            if (!closed) yield* Effect.yieldNow();
+          }
+          expect(closed).toBe(true);
+        }).pipe(Effect.provide(poolLayer));
+      }),
     );
   });
 

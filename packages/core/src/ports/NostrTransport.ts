@@ -134,12 +134,24 @@ export const layerNostrTransportSocket = (options?: {
               onFailure: (error) => Effect.fail(error),
             }),
           );
+          // `Effect.interruptible`: a race can only settle by interrupting
+          // the losing branch, and on a HEALTHY connection the loser here
+          // (`closedSignal`) is parked until the connection dies. Under an
+          // uninterruptible mask — e.g. a scope finalizer sending a Nostr
+          // CLOSE (#28 found this hanging every RelayPool unsubscribe on
+          // device) — the loser inherits the mask and can never be
+          // interrupted, so `send` would block until the socket dropped.
+          // The explicit interruptible region restores the race's normal
+          // semantics regardless of the caller's mask. (Trade-off: a caller
+          // whose fiber already has a pending interrupt may see the send
+          // cut short — fine for a best-effort frame write.)
           const send = (frame: string) =>
             write(frame).pipe(
               Effect.mapError(
                 (error) => new NostrTransportError({ relayUrl, reason: "send", cause: error }),
               ),
               Effect.raceFirst(closedSignal),
+              Effect.interruptible,
             );
 
           return { send, frames: Mailbox.toStream(incoming) };
