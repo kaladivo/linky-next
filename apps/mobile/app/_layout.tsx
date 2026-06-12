@@ -113,9 +113,14 @@ function RootNavigator() {
         name="wallet/pay-address"
         options={{ headerShown: true, title: t("payTo") }}
       />
+      {/* Transaction history + detail (#43). */}
       <Stack.Screen
         name="wallet/transactions"
         options={{ headerShown: true, title: t("transactionsTitle") }}
+      />
+      <Stack.Screen
+        name="wallet/transaction/[id]"
+        options={{ headerShown: true, title: t("transactionDetailTitle") }}
       />
     </Stack>
   );

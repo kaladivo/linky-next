@@ -28,6 +28,7 @@ import { useState } from "react";
 import { appProfile } from "../environment";
 import { invalidateStoreData } from "../store/storeManager";
 import { useLinkyStore } from "../store/useLinkyStore";
+import { seedDevTransactions } from "./devTransactionsSeed";
 import { seedDevForeignMint, seedDevWallet } from "./devWalletSeed";
 import type { LinkyStore } from "@linky/evolu-store";
 
@@ -192,6 +193,13 @@ export function DevSeedPanel() {
         disabled={busy || !ready}
         onPress={() => runSeed(seedDevForeignMint)}
         testID="dev-seed-foreign-mint"
+      />
+      <Button
+        label={busy ? "Seeding…" : "Seed transaction history (#43)"}
+        variant="secondary"
+        disabled={busy || !ready}
+        onPress={() => runSeed(seedDevTransactions)}
+        testID="dev-seed-transactions"
       />
       <Button
         label="Inbound from stranger"

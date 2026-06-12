@@ -326,6 +326,23 @@ export const en = {
   transactionDetailLightningPreimage: "Lightning preimage",
   transactionDetailLnurlSuccessMessage: "Message from recipient",
   transactionDetailLnurlSuccessUrl: "Link from recipient",
+  // Transaction history + detail (#43).
+  transactionDetailTitle: "Transaction",
+  transactionDetailContact: "Contact",
+  transactionDetailRequestText: "Request message",
+  transactionDetailLightningAddress: "Lightning address",
+  transactionDetailId: "Transaction id",
+  transactionDetailMethod: "Type",
+  transactionDetailPhase: "Phase",
+  transactionDetailSourceMint: "Source mint",
+  transactionDetailQuoteId: "Quote id",
+  transactionDetailRequestId: "Request id",
+  transactionDetailIssuedTokenRef: "Issued token ref",
+  transactionDetailUsedTokenRefs: "Used token refs",
+  transactionSupportSection: "Support details",
+  transactionSupportHint:
+    "Technical details for support. Never includes tokens, proofs, or keys.",
+  transactionCopySupportDetails: "Copy support details",
 
   mints: "Mints",
 

@@ -328,6 +328,23 @@ export const cs = {
   transactionDetailLightningPreimage: "Lightning preimage",
   transactionDetailLnurlSuccessMessage: "Zpráva od příjemce",
   transactionDetailLnurlSuccessUrl: "Odkaz od příjemce",
+  // Transaction history + detail (#43).
+  transactionDetailTitle: "Transakce",
+  transactionDetailContact: "Kontakt",
+  transactionDetailRequestText: "Zpráva žádosti",
+  transactionDetailLightningAddress: "Lightning adresa",
+  transactionDetailId: "Id transakce",
+  transactionDetailMethod: "Typ",
+  transactionDetailPhase: "Fáze",
+  transactionDetailSourceMint: "Zdrojový mint",
+  transactionDetailQuoteId: "Id quote",
+  transactionDetailRequestId: "Id žádosti",
+  transactionDetailIssuedTokenRef: "Reference vydaného tokenu",
+  transactionDetailUsedTokenRefs: "Reference použitých tokenů",
+  transactionSupportSection: "Detaily pro podporu",
+  transactionSupportHint:
+    "Technické detaily pro podporu. Nikdy neobsahují tokeny, proofy ani klíče.",
+  transactionCopySupportDetails: "Zkopírovat detaily pro podporu",
 
   mints: "Minty",
 
