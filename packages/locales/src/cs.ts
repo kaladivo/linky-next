@@ -649,6 +649,11 @@ export const cs = {
   scannerManualPlaceholder: "npub, Lightning faktura, Cashu token nebo LNURL",
   scannerManualSubmit: "Pokračovat",
 
+  // Deep-link arrivals (#49).
+  linkOpening: "Otevírám odkaz…",
+  linkUnsupported: "Nepodporovaný nebo zastaralý odkaz.",
+  linkNeedsAccount: "Nejdříve si nastavte Linky a poté odkaz otevřete znovu.",
+
   unit: "Jednotky",
   unitUseBitcoin: "Zobrazit ₿ místo sat",
   unitCurrent: "Aktivní",

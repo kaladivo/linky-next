@@ -645,6 +645,11 @@ export const en = {
   scannerManualPlaceholder: "npub, Lightning invoice, Cashu token, or LNURL",
   scannerManualSubmit: "Continue",
 
+  // Deep-link arrivals (#49).
+  linkOpening: "Opening link…",
+  linkUnsupported: "Unsupported or outdated link.",
+  linkNeedsAccount: "Set up Linky first, then open the link again.",
+
   unit: "Units",
   unitUseBitcoin: "Show ₿ instead of sat",
   unitCurrent: "Active",

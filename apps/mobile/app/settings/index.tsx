@@ -126,6 +126,13 @@ export default function SettingsScreen() {
       <Link href="/dev/evolu-spike" className="p-4">
         <Text className="text-primary">Evolu spike (dev)</Text>
       </Link>
+      {/* Deep-link lab (#49): dev-client verification of link arrivals
+          (expo-dev-launcher swallows external custom-scheme URLs, so the
+          lab feeds them through the +native-intent transform directly).
+          The screen itself is dev-profile gated. */}
+      <Link href="/dev/link-lab" className="p-4">
+        <Text className="text-primary">Deep-link lab (dev)</Text>
+      </Link>
       {/* TEMPORARY (#8): dev-only platform port smoke test; renders null in production. */}
       <PlatformSmokeTestPanel />
     </ScrollView>

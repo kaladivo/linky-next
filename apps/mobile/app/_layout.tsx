@@ -24,6 +24,16 @@ import { ToastHost } from "../src/toast";
 import { AmountDisplayProvider } from "../src/wallet/AmountDisplayProvider";
 
 /**
+ * Deep-link anchor (#49): when a link cold-starts the app straight into a
+ * detail screen (e.g. /link → /wallet/pay-invoice), the router builds the
+ * stack with (tabs) underneath, so "back" always has somewhere sensible to
+ * go — link arrivals never strand the user on a stackless screen.
+ */
+export const unstable_settings = {
+  anchor: "(tabs)",
+};
+
+/**
  * Route map (shell.navigate):
  *   (tabs)            Contacts + Wallet pager (bottom tabs + swipe), no header.
  *   settings/*        Pushed over the tabs (PoC: settings opens from the
@@ -75,6 +85,10 @@ function RootNavigator() {
           in-screen header (PoC scan sheet); result routing lands with #48
           (contract: src/scanner/scanContract.ts). */}
       <Stack.Screen name="scanner" options={{ presentation: "fullScreenModal" }} />
+      {/* Deep-link landing (#49): +native-intent rewrites external links
+          here; the screen routes the value through the #48 parser or falls
+          back to the tabs (never blank — src/scanner/deepLinkRouting.ts). */}
+      <Stack.Screen name="link" options={{ animation: "none" }} />
       <Stack.Screen name="contact/[id]" options={{ headerShown: true }} />
       <Stack.Screen name="chat/[id]" options={{ headerShown: true }} />
       <Stack.Screen

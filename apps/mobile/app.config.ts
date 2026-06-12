@@ -38,7 +38,15 @@ const { name, bundleId, scheme } = identity[appEnv];
 const config: ExpoConfig = {
   name,
   slug: "linky",
-  scheme,
+  /**
+   * URL schemes (#49, scanner.links): the per-profile app scheme first
+   * (expo-dev-client and internal links use it), then the payment/contact
+   * schemes the app accepts as link arrivals. Every profile registers them
+   * (side-by-side installs all claim them; the OS picks one — acceptable,
+   * and required for dev/staging link testing). `web+cashu:` text is parsed
+   * but not registered as a native scheme (not OS-registrable; PoC parity).
+   */
+  scheme: [scheme, "cashu", "lightning", "lnurl", "lnurlp", "lnurlw", "nostr"],
   version: "0.0.1",
   orientation: "portrait",
   icon: "./assets/icon.png",
@@ -47,9 +55,32 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: bundleId,
     supportsTablet: false,
+    /**
+     * Universal links (#49): linky.fit share links open the app directly.
+     * SERVER-SIDE REQUIREMENT: linky.fit must serve
+     * /.well-known/apple-app-site-association listing this bundle ID (incl.
+     * the /cashu/* paths) before iOS will route the links; until then they
+     * open Safari (where the linky.fit/cashu page remains the web fallback —
+     * the token rides in the URL fragment either way, so no server sees it).
+     */
+    associatedDomains: ["applinks:linky.fit"],
   },
   android: {
     package: bundleId,
+    /**
+     * Android App Links for the linky.fit share links (only the /cashu
+     * path — claiming the whole site would hijack the website). SERVER-SIDE
+     * REQUIREMENT: linky.fit must serve /.well-known/assetlinks.json for
+     * autoVerify to hold.
+     */
+    intentFilters: [
+      {
+        action: "VIEW",
+        autoVerify: true,
+        data: [{ scheme: "https", host: "linky.fit", pathPrefix: "/cashu" }],
+        category: ["BROWSABLE", "DEFAULT"],
+      },
+    ],
   },
   extra: {
     appEnv,
