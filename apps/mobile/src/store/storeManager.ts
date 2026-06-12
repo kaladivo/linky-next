@@ -32,14 +32,16 @@ import "../../lib/cryptoPolyfill";
 
 import type { OwnerTransport } from "@evolu/common";
 import { evoluReactNativeDeps } from "@evolu/react-native/expo-sqlite";
-import type { IdentitySession } from "@linky/core";
+import type { IdentitySession, RotatingSyncDomain } from "@linky/core";
 import {
   SyncServerSettingsStore,
   activeSyncServerUrls,
+  deriveOwnerLane,
   deriveOwnerLaneMnemonics,
+  OwnerLaneIndex,
 } from "@linky/core";
-import { createLinkyStore } from "@linky/evolu-store";
-import type { LinkyStore } from "@linky/evolu-store";
+import { createLinkyStore, createStorageRotation } from "@linky/evolu-store";
+import type { LinkyStore, StorageRotation } from "@linky/evolu-store";
 import { Effect } from "effect";
 
 import { runAppEffect } from "../runtime";
@@ -49,7 +51,12 @@ export type LinkyStoreState =
   | { readonly status: "none" }
   /** Lane mnemonics are being derived / the instance is being created. */
   | { readonly status: "creating" }
-  | { readonly status: "ready"; readonly store: LinkyStore };
+  | {
+      readonly status: "ready";
+      readonly store: LinkyStore;
+      /** Storage rotation controller (#54) bound to this store. */
+      readonly rotation: StorageRotation;
+    };
 
 type Listener = () => void;
 
@@ -57,6 +64,8 @@ let state: LinkyStoreState = { status: "none" };
 /** Identity key of the current/creating store; null when none. */
 let currentKey: string | null = null;
 let creating: Promise<LinkyStore> | null = null;
+/** Unsubscribes the rotation-entry watcher of the current store (#54). */
+let unsubscribeRotation: (() => void) | null = null;
 const listeners = new Set<Listener>();
 
 const notify = (): void => {
@@ -140,13 +149,15 @@ export const ensureStoreForSession = (session: IdentitySession): Promise<LinkySt
 
   // Identity switched without teardown (defense in depth — logout already
   // tears down): stop the previous store's sync before replacing it.
+  unsubscribeRotation?.();
+  unsubscribeRotation = null;
   if (state.status === "ready") state.store.stopLaneSync();
 
   currentKey = key;
   setState({ status: "creating" });
 
   const masterSecret = session.masterIdentity.masterSecret;
-  creating = (async () => {
+  const creatingPair = (async () => {
     const laneMnemonics = await runAppEffect(deriveOwnerLaneMnemonics(masterSecret));
     // The user-edited sync-server list (#53; env defaults when never
     // edited). Evolu 7.4.1 fixes transports at creation and caches the
@@ -170,15 +181,43 @@ export const ensureStoreForSession = (session: IdentitySession): Promise<LinkySt
       // Derived mnemonics + a hex-hash name can only be rejected by a bug.
       throw new Error(`createLinkyStore failed: ${result.error._tag}`);
     }
-    return result.value;
-  })();
+    const store = result.value;
 
-  void creating.then(
-    (store) => {
+    // Storage rotation (#54): the controller derives rotated lanes from the
+    // session's master secret (deterministic, same lanes on every device).
+    const rotation = createStorageRotation(store, {
+      deriveLaneMnemonic: async (domain: RotatingSyncDomain, index: number) => {
+        const lane = await runAppEffect(
+          deriveOwnerLane(masterSecret, domain, OwnerLaneIndex.make(index)),
+        );
+        return lane.mnemonic;
+      },
+    });
+    // Adopt rotations already recorded locally (local-first: the meta lane's
+    // rotation entries are in SQLite) BEFORE any screen writes, so the write
+    // lanes match what this account's devices agreed on.
+    await rotation.adoptFromMeta();
+    return { store, rotation };
+  })();
+  creating = creatingPair.then((pair) => pair.store);
+
+  void creatingPair.then(
+    ({ store, rotation }) => {
       // A teardown/switch may have raced the creation; don't resurrect —
       // and stop the freshly registered lane sync of the orphaned store.
-      if (currentKey === key) setState({ status: "ready", store });
-      else store.stopLaneSync();
+      if (currentKey !== key) {
+        store.stopLaneSync();
+        return;
+      }
+      setState({ status: "ready", store, rotation });
+      // Re-adopt whenever the rotation entries change (a rotation synced
+      // from another device) so this device converges on the same lanes.
+      unsubscribeRotation = rotation.subscribeRotationEntries(() => {
+        if (currentKey === key) void rotation.adoptFromMeta().catch(() => undefined);
+      });
+      // Automatic size-based trigger pass on boot; later passes run
+      // throttled from invalidateStoreData (after every app-side write).
+      void maybeAutoRotate(rotation);
     },
     () => {
       if (currentKey === key) {
@@ -192,6 +231,31 @@ export const ensureStoreForSession = (session: IdentitySession): Promise<LinkySt
   return creating;
 };
 
+// ─── Automatic rotation trigger (#54) ────────────────────────────────────
+//
+// `sync.storage-rotation` is invisible maintenance: after local writes (and
+// once per boot) the size-based trigger runs, rotating any domain whose
+// write lane crossed its threshold. Throttled — the real cadence control is
+// the threshold + cooldown inside the controller.
+
+const AUTO_ROTATE_THROTTLE_MS = 30_000;
+let lastAutoRotateAtMs = 0;
+let autoRotateRunning = false;
+
+const maybeAutoRotate = (rotation: StorageRotation): void => {
+  if (autoRotateRunning) return;
+  const nowMs = Date.now();
+  if (nowMs - lastAutoRotateAtMs < AUTO_ROTATE_THROTTLE_MS) return;
+  lastAutoRotateAtMs = nowMs;
+  autoRotateRunning = true;
+  void rotation
+    .maybeAutoRotate()
+    .catch(() => undefined)
+    .finally(() => {
+      autoRotateRunning = false;
+    });
+};
+
 /**
  * `identity.logout`: stops lane sync and unhooks the store. The SQLite file
  * and the cached Evolu instance survive in memory/disk (Evolu cannot
@@ -199,6 +263,8 @@ export const ensureStoreForSession = (session: IdentitySession): Promise<LinkySt
  * different database.
  */
 export const teardownStore = (): void => {
+  unsubscribeRotation?.();
+  unsubscribeRotation = null;
   if (state.status === "ready") state.store.stopLaneSync();
   currentKey = null;
   creating = null;
@@ -228,4 +294,7 @@ export const subscribeToStoreData = (listener: Listener): (() => void) => {
 export const invalidateStoreData = (): void => {
   dataVersion += 1;
   for (const listener of [...dataListeners]) listener();
+  // Invisible maintenance (#54): writes are the only thing that can push a
+  // write lane over its rotation threshold, so check here (throttled).
+  if (state.status === "ready") maybeAutoRotate(state.rotation);
 };

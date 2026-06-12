@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ScrollView } from "react-native";
 
 import { openFeedbackContact } from "../../src/contacts/feedbackContact";
+import { DevRotationPanel } from "../../src/dev/DevRotationPanel";
 import { DevSeedPanel } from "../../src/dev/DevSeedPanel";
 import { PlatformSmokeTestPanel } from "../../src/dev/PlatformSmokeTestPanel";
 import { useTranslator } from "../../src/locales";
@@ -128,6 +129,8 @@ export default function SettingsScreen() {
       <DevLogoutPanel />
       {/* TEMPORARY (#26): dev-only demo data seeding via the repositories. */}
       <DevSeedPanel />
+      {/* sync.storage-rotation (#54): dev-only inspector + manual rotation. */}
+      <DevRotationPanel />
       <DevToastDemo />
       {/* TEMPORARY: storage-spike dev screen (issue #9), removed with #15. */}
       <Link href="/dev/evolu-spike" className="p-4">
