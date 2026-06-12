@@ -81,6 +81,16 @@ export const TX_STATUS_PENDING = "pending";
 export const TX_STATUS_COMPLETED = "completed";
 export const TX_STATUS_FAILED = "failed";
 
+/** `transaction.phase` of a spend row whose intent sits in the #46 queue. */
+export const QUEUED_TRANSACTION_PHASE = "queued";
+/**
+ * `transaction.error` of a queued contact payment that expired before the
+ * device came back online (#46, `chat-pay.queue`): the row reads as failed
+ * but the list shows the dedicated "expired" pill — funds were never
+ * minted, so nothing was lost.
+ */
+export const TX_ERROR_QUEUE_EXPIRED = "queued payment expired";
+
 // ---------------------------------------------------------------------------
 // detailsJson parsing (whitelist-based)
 // ---------------------------------------------------------------------------
@@ -345,6 +355,7 @@ export interface TransactionStatusPill {
     TranslationKey,
     | "transactionPending"
     | "transactionFailed"
+    | "transactionExpired"
     | "paymentRequestStatusPaid"
     | "paymentRequestStatusDeclined"
   >;
@@ -371,6 +382,11 @@ export const transactionStatusPill = (item: HistoryItem): TransactionStatusPill 
     return { tone: "muted", labelKey: "transactionPending" };
   }
   if (item.record.status === TX_STATUS_FAILED) {
+    // Expired queue intents (#46): visibly distinct from real failures —
+    // nothing was minted, the funds never left the wallet.
+    if (item.record.error === TX_ERROR_QUEUE_EXPIRED) {
+      return { tone: "muted", labelKey: "transactionExpired" };
+    }
     return { tone: "danger", labelKey: "transactionFailed" };
   }
   return null;

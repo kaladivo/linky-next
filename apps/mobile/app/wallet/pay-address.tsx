@@ -37,7 +37,10 @@ export default function WalletPayAddressScreen() {
   const { t, locale } = useLocale();
   const router = useRouter();
   const { unit, hidden } = useAmountDisplay();
-  const { target: targetParam } = useLocalSearchParams<{ target?: string }>();
+  const { target: targetParam, amount: amountParam } = useLocalSearchParams<{
+    target?: string;
+    amount?: string;
+  }>();
   const target = String(targetParam ?? "").trim();
   const lnAddress = lnAddressOf(target);
 
@@ -56,7 +59,11 @@ export default function WalletPayAddressScreen() {
   const spendable =
     walletData.status === "success" ? headlineSatBalance(walletData.data).spendable : 0;
 
-  const [amountText, setAmountText] = useState("");
+  // Optional `amount` param (#46 contact pay hand-off): prefill only — the
+  // user still confirms, and fixed-amount targets overwrite it below.
+  const [amountText, setAmountText] = useState(() =>
+    String(amountParam ?? "").replace(/[^0-9]/g, ""),
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [knownContact, setKnownContact] = useState<ContactRecord | null>(null);

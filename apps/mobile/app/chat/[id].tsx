@@ -51,6 +51,7 @@ import {
 } from "../../src/chat/chatPayActions";
 import { setActiveChatThread } from "../../src/notifications/activeThread";
 import {
+  contactPayMethodOptions,
   declineMessageInfo,
   latestRequestResponses,
   mintHostOf,
@@ -59,18 +60,22 @@ import {
   tokenMessageInfo,
 } from "../../src/chat/chatPaymentsModel";
 import type {
+  ContactPayMethod,
   PaymentRequestInfo,
   RequestCardStatus,
   TokenMessageInfo,
 } from "../../src/chat/chatPaymentsModel";
+import { sendCashuToContactOrQueue } from "../../src/chat/pendingPaymentQueue";
 import {
   myReactionsOnMessage,
   reactionChipsByMessage,
   replyPreviewText,
 } from "../../src/chat/conversationModel";
 import { paidOverlay } from "../../src/paidOverlay";
+import { useEffectQuery } from "../../src/runtime";
 import { useAmountDisplay } from "../../src/wallet/AmountDisplayProvider";
 import { payFailureMessage } from "../../src/wallet/payModel";
+import { loadPayWithCashuEnabled } from "../../src/wallet/payWithCashuSetting";
 import { paidOverlayTitle } from "../../src/wallet/payOverlayCopy";
 import { maybeCheckIssuedTokens } from "../../src/wallet/tokenActions";
 import type { ReactionChip } from "../../src/chat/conversationModel";
@@ -424,6 +429,8 @@ export default function ChatScreen() {
   const [payOpen, setPayOpen] = useState(false);
   const [payAmount, setPayAmount] = useState("");
   const [payBusy, setPayBusy] = useState(false);
+  // Explicit method pick (`chat-pay.contact-method`); null = the default.
+  const [payMethod, setPayMethod] = useState<ContactPayMethod | null>(null);
 
   // Claim detection (#44): notice issued chat tokens the peer accepted.
   useEffect(() => {
@@ -554,6 +561,8 @@ export default function ChatScreen() {
           );
           return;
         }
+        // Request pays never arm the queue seam, so "queued" cannot occur.
+        if (outcome.kind !== "failed") return;
         const failure = payFailureMessage(outcome);
         toast.error(`${t(failure.key)}${failure.detail === null ? "" : `: ${failure.detail}`}`);
       })
@@ -602,18 +611,58 @@ export default function ChatScreen() {
   const declineTextFor = (message: MessageRecord): string | null =>
     declineMessageInfo(message.content) !== null ? t("paymentRequestDeclinedMessage") : null;
 
+  // ── chat-pay.contact-method (#46) ─────────────────────────────────────
+
+  // `settings.pay-with-cashu` gates the Cashu option; re-read per sheet
+  // open so a toggle flip (settings UI in #56, dev hook today) holds.
+  const payWithCashuQuery = useEffectQuery(loadPayWithCashuEnabled, [payOpen]);
+  const payWithCashuEnabled =
+    payWithCashuQuery.status === "success" ? payWithCashuQuery.data : true;
+  const payMethods = contactPayMethodOptions({
+    peerNpub,
+    lnAddress: contact?.lnAddress ?? null,
+    payWithCashuEnabled,
+  });
+  // The method ACTUALLY paid: the explicit pick, else the default — and a
+  // failing method never falls back to the other one (feature-map
+  // contract: contact pay never silently switches).
+  const effectivePayMethod = payMethod ?? payMethods.defaultMethod;
+
+  const openPaySheet = () => {
+    setPayMethod(null); // fresh default each open (PoC resets per route visit)
+    setPayOpen(true);
+  };
+
   // ── chat-pay.send-cashu ───────────────────────────────────────────────
 
   const onChatPay = () => {
     if (store === null || peerNpub === null || payBusy) return;
     const amountSat = parseChatPayAmount(payAmount);
-    if (amountSat === null) return;
+    if (amountSat === null || effectivePayMethod === null) return;
+
+    // Lightning (#39 pay-address flow): hand off to the LNURL-pay screen
+    // with the contact's address + the amount prefilled (PoC
+    // `lnAddressPay` navigation).
+    if (effectivePayMethod === "lightning") {
+      const lnAddress = contact?.lnAddress?.trim() ?? "";
+      if (lnAddress === "") return;
+      setPayOpen(false);
+      setPayAmount("");
+      router.push(
+        `/wallet/pay-address?target=${encodeURIComponent(lnAddress)}&amount=${amountSat}`,
+      );
+      return;
+    }
+
     setPayBusy(true);
-    void sendCashuInChat(store, {
-      peerNpub,
-      amountSat,
-      contactId: contact?.id,
-    })
+    // Saved contacts go through the #46 queue seam (offline → intent
+    // queued); unknown threads keep the plain #44 send (PoC parity: the
+    // queue keys on contact rows).
+    const send =
+      contact !== null
+        ? sendCashuToContactOrQueue(store, { peerNpub, contactId: contact.id, amountSat })
+        : sendCashuInChat(store, { peerNpub, amountSat });
+    void send
       .then((outcome) => {
         if (outcome.kind === "sent") {
           setPayOpen(false);
@@ -625,6 +674,19 @@ export default function ChatScreen() {
               { unit: amountUnit, hidden: amountHidden, locale },
               title,
             ),
+          );
+          return;
+        }
+        if (outcome.kind === "queued") {
+          setPayOpen(false);
+          setPayAmount("");
+          const parts = formatAmountParts(outcome.amountSat, {
+            unit: amountUnit,
+            hidden: amountHidden,
+            locale,
+          });
+          paidOverlay.show(
+            t("paidQueuedTo", { amount: parts.text, unit: parts.unitLabel, name: title }),
           );
           return;
         }
@@ -978,7 +1040,7 @@ export default function ChatScreen() {
                     accessibilityRole="button"
                     accessibilityLabel={t("chatPayAction")}
                     testID="chat-pay-open"
-                    onPress={() => setPayOpen(true)}
+                    onPress={openPaySheet}
                     className="h-11 w-11 items-center justify-center rounded-full bg-surface active:opacity-60"
                   >
                     <Text className="text-xl leading-7">⚡</Text>
@@ -1034,6 +1096,57 @@ export default function ChatScreen() {
             <Text weight="bold" className="text-lg">
               {t("chatPayAction")}
             </Text>
+            {/* chat-pay.contact-method (#46): explicit Cashu/Lightning
+                chooser when the contact supports both — the selected method
+                is the one paid, never a silent switch. */}
+            {payMethods.showChooser && (
+              <View className="flex-row gap-2" testID="chat-pay-method">
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t("chatPayMethodCashu")}
+                  testID="chat-pay-method-cashu"
+                  disabled={payBusy}
+                  onPress={() => setPayMethod("cashu")}
+                  className={`flex-1 flex-row items-center justify-center gap-2 rounded-2xl px-4 py-3 ${
+                    effectivePayMethod === "cashu" ? "bg-primary" : "bg-background"
+                  }`}
+                >
+                  <Text className="text-base leading-5">🥜</Text>
+                  <Text
+                    weight="semibold"
+                    className={effectivePayMethod === "cashu" ? "text-primary-foreground" : ""}
+                  >
+                    {t("chatPayMethodCashu")}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t("chatPayMethodLightning")}
+                  testID="chat-pay-method-lightning"
+                  disabled={payBusy}
+                  onPress={() => setPayMethod("lightning")}
+                  className={`flex-1 flex-row items-center justify-center gap-2 rounded-2xl px-4 py-3 ${
+                    effectivePayMethod === "lightning" ? "bg-primary" : "bg-background"
+                  }`}
+                >
+                  <Text className="text-base leading-5">⚡</Text>
+                  <Text
+                    weight="semibold"
+                    className={
+                      effectivePayMethod === "lightning" ? "text-primary-foreground" : ""
+                    }
+                  >
+                    {t("chatPayMethodLightning")}
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+            {/* settings.pay-with-cashu gate notice (PoC payWithCashuDisabled). */}
+            {!payWithCashuEnabled && peerNpub !== null && (
+              <Text className="text-sm opacity-70" testID="chat-pay-cashu-disabled">
+                {t("payWithCashuDisabled")}
+              </Text>
+            )}
             <TextInput
               value={payAmount}
               onChangeText={setPayAmount}
@@ -1048,7 +1161,9 @@ export default function ChatScreen() {
             <Button
               label={payBusy ? "…" : t("send")}
               variant="primary"
-              disabled={payBusy || parseChatPayAmount(payAmount) === null}
+              disabled={
+                payBusy || parseChatPayAmount(payAmount) === null || effectivePayMethod === null
+              }
               testID="chat-pay-send"
               onPress={onChatPay}
             />

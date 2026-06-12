@@ -323,6 +323,7 @@ export const en = {
   allRecordsLoaded: "All records loaded",
   transactionPending: "pending",
   transactionFailed: "failed",
+  transactionExpired: "expired",
   transactionReceivedFromContact: "Received from contact",
   transactionSentToContact: "Sent to contact",
   transactionTopupInvoice: "Topup via invoice",
@@ -443,6 +444,8 @@ export const en = {
   chatEdited: "edited",
   chatPayAction: "Send sats",
   chatPayAmountPlaceholder: "Amount (sat)",
+  chatPayMethodCashu: "Cashu",
+  chatPayMethodLightning: "Lightning",
   chatPaymentOutgoing: "Sent {amount} {unit}",
   chatPaymentIncoming: "Received {amount} {unit}",
   send: "Send",
@@ -851,6 +854,8 @@ export const en = {
   paySuccess: "Paid.",
   payQueued: "Payment queued for delivery.",
   payQueuedMessage: "Queued payment {amount} {unit} → {name}.",
+  payQueuedExpired:
+    "Queued payment expired — nothing was sent, your funds stayed in your wallet.",
   payFailed: "Payment failed",
   payPromiseLimit: "Promise limit reached.",
 
