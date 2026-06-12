@@ -92,6 +92,11 @@ function RootNavigator() {
         name="wallet/receive-address"
         options={{ headerShown: true, title: t("topupNoAmountTitle") }}
       />
+      {/* LNURL-withdraw (#40). */}
+      <Stack.Screen
+        name="wallet/lnurl-withdraw"
+        options={{ headerShown: true, title: t("lnurlWithdrawTitle") }}
+      />
       <Stack.Screen name="wallet/send" options={{ headerShown: true, title: t("walletSend") }} />
       <Stack.Screen
         name="wallet/transactions"
