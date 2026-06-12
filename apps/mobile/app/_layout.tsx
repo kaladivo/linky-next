@@ -28,6 +28,8 @@ import { AmountDisplayProvider } from "../src/wallet/AmountDisplayProvider";
  *   (tabs)            Contacts + Wallet pager (bottom tabs + swipe), no header.
  *   settings/*        Pushed over the tabs (PoC: settings opens from the
  *                     header menu, it is NOT a bottom tab).
+ *   profile/*         Own profile view + editor (#30), pushed from the
+ *                     shell-header avatar (PoC: topbar profile button).
  *   contact/[id], chat/[id], wallet/token/[id]
  *                     Detail placeholders, native-stack push with header.
  */
@@ -48,6 +50,13 @@ function RootNavigator() {
     >
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="settings/index" options={{ headerShown: true, title: t("settings") }} />
+      {/* Profile (#30): view + edit, pushed from the shell-header avatar
+          (the PoC's topbar profile button). */}
+      <Stack.Screen name="profile/index" options={{ headerShown: true, title: t("profile") }} />
+      <Stack.Screen
+        name="profile/edit"
+        options={{ headerShown: true, title: t("profileEditTitle") }}
+      />
       <Stack.Screen
         name="settings/advanced"
         options={{ headerShown: true, title: t("advanced") }}

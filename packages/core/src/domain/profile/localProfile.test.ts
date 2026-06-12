@@ -38,6 +38,21 @@ describe("local profile persistence", () => {
     expect(Option.getOrNull(loaded)).toEqual(profile);
   });
 
+  it("round-trips the optional NIP-38 status string (#30)", async () => {
+    const withStatus: LocalProfile = { ...profile, status: "Hiking\nBTC, CZK" };
+    const program = Effect.gen(function* () {
+      yield* saveLocalProfile(withStatus);
+      return yield* loadLocalProfile;
+    });
+    const loaded = await Effect.runPromise(
+      program.pipe(Effect.provide(KeyValueStorage.layerMemory)),
+    );
+    expect(Option.getOrNull(loaded)).toEqual(withStatus);
+    // Pre-#30 stored values (no status key) keep the key absent on load.
+    expect(Option.getOrNull(loaded)).toHaveProperty("status");
+    expect(profile).not.toHaveProperty("status");
+  });
+
   it("is none when nothing was saved", async () => {
     const loaded = await Effect.runPromise(
       loadLocalProfile.pipe(Effect.provide(KeyValueStorage.layerMemory)),

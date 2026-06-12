@@ -5,48 +5,34 @@
  * PoC parity: the name is pre-filled deterministically from the npub per
  * selected language, the avatar is the deterministic DiceBear avataaars
  * derived from the npub, and each of the 8 editor controls cycles ONE
- * dimension (core `cycleGeneratedAvatar`). A custom photo (expo-image-picker,
- * square-cropped to 160px JPEG data URL like the PoC) is optional.
+ * dimension. The avatar surface itself (controls, custom photo, toggle) is
+ * the shared `AvatarEditor` (src/profile), also used by the profile editor
+ * (#30).
  *
  * Confirm persists the profile locally and publishes the initial metadata
- * through the ProfilePublisher port — a logged no-op Layer until #24.
+ * through the ProfilePublisher port (#24).
  */
-import type { AvatarEditorControlId, LocalProfile } from "@linky/core";
+import type { LocalProfile } from "@linky/core";
 import {
   completeProfileSetup,
-  cycleGeneratedAvatar,
   deriveDefaultLightningAddress,
-  deriveGeneratedAvatar,
   pickDeterministicName,
 } from "@linky/core";
-import type { TranslationKey } from "@linky/locales";
 import { Button, Surface, Text, colors } from "@linky/ui";
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, Pressable, ScrollView, TextInput, View } from "react-native";
+import { ScrollView, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useLocale } from "../../src/locales";
-import { toAvatarDisplayUrl } from "../../src/onboarding/avatarDisplay";
-import { pickProfilePhoto } from "../../src/onboarding/pickProfilePhoto";
+import {
+  AvatarEditor,
+  activeAvatarPictureUrl,
+  initialAvatarEditorState,
+} from "../../src/profile/AvatarEditor";
+import { invalidateOwnProfile } from "../../src/profile/ownProfileStore";
 import { useEffectMutation } from "../../src/runtime";
 import { useSession } from "../../src/session/useSession";
-
-/** The PoC's 8 avatar editor controls: same icons, localized a11y labels. */
-const AVATAR_CONTROLS = [
-  { id: "top", icon: "💇", labelKey: "onboardingAvatarControlTop" },
-  { id: "hairColor", icon: "🎨", labelKey: "onboardingAvatarControlHairColor" },
-  { id: "accessories", icon: "🕶️", labelKey: "onboardingAvatarControlAccessories" },
-  { id: "face", icon: "👀", labelKey: "onboardingAvatarControlFace" },
-  { id: "mouth", icon: "👄", labelKey: "onboardingAvatarControlMouth" },
-  { id: "facialHair", icon: "🧔", labelKey: "onboardingAvatarControlFacialHair" },
-  { id: "skin", icon: "🟤", labelKey: "onboardingAvatarControlSkin" },
-  { id: "clothing", icon: "👕", labelKey: "onboardingAvatarControlClothing" },
-] as const satisfies ReadonlyArray<{
-  readonly id: AvatarEditorControlId;
-  readonly icon: string;
-  readonly labelKey: TranslationKey;
-}>;
 
 function ProfileSetupForm({ npub }: { readonly npub: string }) {
   const { locale, t } = useLocale();
@@ -54,9 +40,7 @@ function ProfileSetupForm({ npub }: { readonly npub: string }) {
 
   // Deterministic defaults, PoC-identical: name per language, avatar per npub.
   const [name, setName] = useState(() => pickDeterministicName(npub, locale));
-  const [generated, setGenerated] = useState(() => deriveGeneratedAvatar(npub));
-  const [customPhotoUrl, setCustomPhotoUrl] = useState<string | null>(null);
-  const [pictureKind, setPictureKind] = useState<"generated" | "custom">("generated");
+  const [avatar, setAvatar] = useState(() => initialAvatarEditorState(npub));
   const [nameMissing, setNameMissing] = useState(false);
 
   const confirm = useEffectMutation((profile: LocalProfile) => completeProfileSetup(profile));
@@ -64,32 +48,10 @@ function ProfileSetupForm({ npub }: { readonly npub: string }) {
 
   useEffect(() => {
     if (status === "success") {
+      invalidateOwnProfile();
       router.replace("/onboarding/backup");
     }
   }, [status, router]);
-
-  // Non-null exactly when the custom photo is the active picture.
-  const activeCustomUrl = pictureKind === "custom" ? customPhotoUrl : null;
-  const showCustom = activeCustomUrl !== null;
-  const displayUrl = activeCustomUrl ?? toAvatarDisplayUrl(generated.pictureUrl);
-
-  const onCycle = (controlId: AvatarEditorControlId) => {
-    setPictureKind("generated");
-    setGenerated((current) => cycleGeneratedAvatar(current.selection, controlId));
-  };
-
-  const onUploadPhoto = () => {
-    pickProfilePhoto()
-      .then((dataUrl) => {
-        if (dataUrl !== null) {
-          setCustomPhotoUrl(dataUrl);
-          setPictureKind("custom");
-        }
-      })
-      .catch(() => {
-        // Picker/codec failure — the generated avatar simply stays selected.
-      });
-  };
 
   const onConfirm = () => {
     const trimmed = name.trim();
@@ -100,9 +62,11 @@ function ProfileSetupForm({ npub }: { readonly npub: string }) {
     setNameMissing(false);
     confirm.mutate({
       name: trimmed,
-      pictureUrl: activeCustomUrl ?? generated.pictureUrl,
-      pictureKind: activeCustomUrl !== null ? "custom" : "generated",
-      avatarSelection: generated.selection,
+      pictureUrl: activeAvatarPictureUrl(avatar),
+      pictureKind: avatar.pictureKind === "custom" && avatar.customPhotoUrl !== null
+        ? "custom"
+        : "generated",
+      avatarSelection: avatar.generated.selection,
       lightningAddress: deriveDefaultLightningAddress(npub),
     });
   };
@@ -120,48 +84,7 @@ function ProfileSetupForm({ npub }: { readonly npub: string }) {
         <Text className="opacity-70">{t("onboardingAvatarIntro")}</Text>
       </View>
 
-      <View className="items-center gap-4">
-        <Image
-          source={{ uri: displayUrl }}
-          style={{ width: 160, height: 160, borderRadius: 80, backgroundColor: colors.surface }}
-          accessibilityLabel={t("onboardingAvatarTitle")}
-          testID="profile-avatar"
-        />
-        <View
-          className="flex-row flex-wrap justify-center gap-3"
-          accessibilityLabel={t("onboardingAvatarGridLabel")}
-          testID="profile-avatar-controls"
-        >
-          {AVATAR_CONTROLS.map((control) => (
-            <Pressable
-              key={control.id}
-              accessibilityRole="button"
-              accessibilityLabel={t(control.labelKey)}
-              onPress={() => onCycle(control.id)}
-              className="h-12 w-12 items-center justify-center rounded-xl bg-surface active:opacity-70"
-              testID={`avatar-control-${control.id}`}
-            >
-              <Text className="text-xl">{control.icon}</Text>
-            </Pressable>
-          ))}
-        </View>
-        <Button
-          label={t("profileUploadPhoto")}
-          variant="secondary"
-          onPress={onUploadPhoto}
-          testID="profile-upload-photo"
-        />
-        {showCustom && (
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => setPictureKind("generated")}
-            hitSlop={8}
-            testID="profile-use-generated"
-          >
-            <Text className="text-primary">{t("profileUseGeneratedAvatar")}</Text>
-          </Pressable>
-        )}
-      </View>
+      <AvatarEditor state={avatar} onChange={setAvatar} />
 
       <Surface className="gap-2">
         <Text weight="semibold">{t("name")}</Text>
