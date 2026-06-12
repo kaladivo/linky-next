@@ -773,6 +773,13 @@ export const cs = {
   payInvalidAmount: "Neplatná částka",
   payInsufficient: "Nemáte dostatek Cashu tokenů.",
   lightningInvoiceConfirmUnknownAmount: "Neznámá částka",
+  // Send / pay flows (#39): manual entry + confirmation screens.
+  payAmountRequired: "Tato faktura nemá částku, a proto ji nelze zaplatit.",
+  sendInputPlaceholder: "Lightning adresa, faktura nebo LNURL",
+  sendPaste: "Vložit",
+  sendContinue: "Pokračovat",
+  sendUnrecognized: "Nepodporovaný nebo nerozpoznaný vstup.",
+  sendWithdrawUnsupported: "LNURL-withdraw tady zatím není podporovaný.",
   payFetchingInvoice: "Získávám fakturu…",
   payPaying: "Platím…",
   paySuccess: "Zaplaceno.",

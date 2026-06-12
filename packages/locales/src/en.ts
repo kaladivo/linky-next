@@ -770,6 +770,13 @@ export const en = {
   payInvalidAmount: "Invalid amount",
   payInsufficient: "Not enough Cashu tokens.",
   lightningInvoiceConfirmUnknownAmount: "Unknown amount",
+  // Send / pay flows (#39): manual entry + confirmation screens.
+  payAmountRequired: "This invoice has no amount and can't be paid.",
+  sendInputPlaceholder: "Lightning address, invoice, or LNURL",
+  sendPaste: "Paste",
+  sendContinue: "Continue",
+  sendUnrecognized: "Unsupported or unrecognized input.",
+  sendWithdrawUnsupported: "LNURL-withdraw isn't supported here yet.",
   payFetchingInvoice: "Fetching invoice…",
   payPaying: "Paying…",
   paySuccess: "Paid.",

@@ -1,0 +1,87 @@
+{
+  "generatedFrom": "linky-poc apps/web-app/src/lnurlPay.ts (fetchLnurlPayPreview / fetchLnurlInvoiceForTarget), bun, fetch stubbed; generator: __gen_lnurlpay_callback_fixture.ts",
+  "payRequest": {
+    "tag": "payRequest",
+    "callback": "https://fixture.test/lnurlp/callback?session=abc",
+    "minSendable": 1500,
+    "maxSendable": 250500,
+    "metadata": "[[\"text/plain\",\"Fixture pay\"],[\"image/png;base64\",\"aWNvbg==\"]]"
+  },
+  "scenarios": {
+    "preview": {
+      "requests": [
+        {
+          "url": "https://fixture.test/.well-known/lnurlp/alice",
+          "status": 200
+        }
+      ],
+      "result": {
+        "callback": "https://fixture.test/lnurlp/callback?session=abc",
+        "commentAllowed": 0,
+        "description": "Fixture pay",
+        "maxSendableMsat": 250500,
+        "maxSendableSat": 250,
+        "metadataRaw": "[[\"text/plain\",\"Fixture pay\"],[\"image/png;base64\",\"aWNvbg==\"]]",
+        "minSendableMsat": 1500,
+        "minSendableSat": 2,
+        "target": "fixture.test/.well-known/lnurlp/alice"
+      },
+      "error": null
+    },
+    "invoiceNoComment": {
+      "requests": [
+        {
+          "url": "https://fixture.test/.well-known/lnurlp/alice",
+          "status": 200
+        },
+        {
+          "url": "https://fixture.test/lnurlp/callback?session=abc&amount=21000",
+          "status": 200
+        }
+      ],
+      "result": {
+        "pr": "fixtureinvoice",
+        "successAction": null
+      },
+      "error": null
+    },
+    "invoiceAdvertisedComment": {
+      "requests": [
+        {
+          "url": "https://fixture.test/.well-known/lnurlp/alice",
+          "status": 200
+        },
+        {
+          "url": "https://fixture.test/lnurlp/callback?session=abc&amount=21000",
+          "status": 200
+        }
+      ],
+      "result": {
+        "pr": "fixtureinvoice",
+        "successAction": null
+      },
+      "error": null
+    },
+    "invoiceFallbackComment": {
+      "requests": [
+        {
+          "url": "https://fixture.test/.well-known/lnurlp/alice",
+          "status": 200
+        },
+        {
+          "url": "https://fixture.test/lnurlp/callback?session=abc&amount=21000&comment=Hello+from+Linky",
+          "status": 500
+        },
+        {
+          "url": "https://fixture.test/lnurlp/callback?session=abc&amount=21000",
+          "status": 200
+        }
+      ],
+      "result": {
+        "pr": "fixtureinvoice",
+        "successAction": null
+      },
+      "error": null
+    }
+  }
+}

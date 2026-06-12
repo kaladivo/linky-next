@@ -93,11 +93,20 @@ function RootNavigator() {
         options={{ headerShown: true, title: t("topupNoAmountTitle") }}
       />
       <Stack.Screen name="wallet/send" options={{ headerShown: true, title: t("walletSend") }} />
-      {/* Mint management (#41): presets/custom/main-mint + detail. */}
+{/* Mint management (#41): presets/custom/main-mint + detail. */}
       <Stack.Screen name="wallet/mints" options={{ headerShown: true, title: t("mints") }} />
       <Stack.Screen
         name="wallet/mint/[url]"
         options={{ headerShown: true, title: t("mints") }}
+      />
+      {/* Pay flows (#39): BOLT11 confirmation + Lightning-address/LNURL pay. */}
+      <Stack.Screen
+        name="wallet/pay-invoice"
+        options={{ headerShown: true, title: t("pay") }}
+      />
+      <Stack.Screen
+        name="wallet/pay-address"
+        options={{ headerShown: true, title: t("payTo") }}
       />
       <Stack.Screen
         name="wallet/transactions"
