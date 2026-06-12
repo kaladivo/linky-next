@@ -1,0 +1,230 @@
+/**
+ * One-off golden fixture generator for linky-next issue #45 (chat payment
+ * requests, NUT-18). Run from the PoC so every byte comes from the PoC's own
+ * dependencies (nostr-tools, cbor-x, @cashu/cashu-ts) and the PoC's own wire
+ * code (paymentRequestMessage.ts buildCashuPaymentRequestMessage /
+ * parseCashuPaymentRequestMessage / buildLinkyPaymentRequestDeclineMessage —
+ * the exact functions requestSelectedContact / onDeclineChatPaymentRequest
+ * send with, plus useSendChatMessage's kind-14 tag layout for replies):
+ *
+ *   cd /Users/kaladivo/workspace/linky/linky-poc/apps/web-app
+ *   bun gen-payment-request-fixtures.ts > /path/to/paymentRequests.golden.json
+ *
+ * This file is temporary and is NOT committed to the PoC repo.
+ */
+import { getEncodedToken, PaymentRequest } from "@cashu/cashu-ts";
+import { getEventHash, getPublicKey, nip19 } from "nostr-tools";
+import type { UnsignedEvent } from "nostr-tools";
+import {
+  buildCashuPaymentRequestMessage,
+  buildLinkyPaymentRequestDeclineMessage,
+  parseCashuPaymentRequestMessage,
+  parseLinkyPaymentRequestDeclineMessage,
+} from "./src/app/lib/paymentRequestMessage";
+import { NOSTR_RELAYS } from "./src/utils/nostrRelays";
+
+const hexToBytes = (hex: string): Uint8Array =>
+  Uint8Array.from(hex.match(/.{2}/g)!.map((b) => parseInt(b, 16)));
+
+// Throwaway fixture keys — the SAME pair as nip17.golden.json /
+// chatPayments.golden.json (committed to linky-next, never a real identity).
+// "requester" (alice) asks "payer" (bob) for sats.
+const requesterSecretKeyHex =
+  "7f3b02c9d3a8e15b64f2a90c81d6e4775ab9c0d2e3f415263748596a7b8c9d0e";
+const payerSecretKeyHex =
+  "1e0d9c8b7a695847362514f3e2d1c0b95a7d86e4c2b0a1928374655647382910";
+
+const requesterSk = hexToBytes(requesterSecretKeyHex);
+const payerSk = hexToBytes(payerSecretKeyHex);
+const requesterPub = getPublicKey(requesterSk);
+const payerPub = getPublicKey(payerSk);
+
+const at = 1750000000;
+const AMOUNT_SAT = 100;
+const MINT_URL = "https://nofees.testnut.cashu.space";
+const REQUEST_ID = "req-fixture-0001";
+
+// --- The NUT-18 payment request (PoC requestSelectedContact wire path) ------
+// The nprofile encodes the REQUESTER's pubkey + the PoC's relay set: it is
+// where the payment should be sent (NUT-18 nostr transport, NIP-17, n=17).
+const requesterNprofile = nip19.nprofileEncode({
+  pubkey: requesterPub,
+  relays: NOSTR_RELAYS,
+});
+
+const requestContent = buildCashuPaymentRequestMessage({
+  amount: AMOUNT_SAT,
+  mintUrls: [MINT_URL],
+  recipientNprofile: requesterNprofile,
+  requestId: REQUEST_ID,
+});
+
+const pocParsed = parseCashuPaymentRequestMessage(requestContent);
+if (!pocParsed) throw new Error("PoC failed to parse its own request");
+if (
+  pocParsed.amount !== AMOUNT_SAT ||
+  pocParsed.requestId !== REQUEST_ID ||
+  pocParsed.unit !== "sat" ||
+  pocParsed.transportNprofile !== requesterNprofile ||
+  pocParsed.mintUrls.join(",") !== MINT_URL
+) {
+  throw new Error("PoC round trip mismatch");
+}
+
+// --- The same request encoded by cashu-ts 2.9.0's PaymentRequest ------------
+// linky-next encodes with cashu-ts (core's pinned dep). Pinning this string
+// AND asserting the PoC's own parser reads it identically proves both
+// directions of interop before any linky-next code exists.
+const cashuTsEncoded = new PaymentRequest(
+  [{ type: "nostr", target: requesterNprofile, tags: [["n", "17"]] }],
+  REQUEST_ID,
+  AMOUNT_SAT,
+  "sat",
+  [MINT_URL],
+  undefined, // no description
+  true, // single use — PoC sends s: true
+).toEncodedRequest();
+
+const pocParsedCashuTs = parseCashuPaymentRequestMessage(cashuTsEncoded);
+if (!pocParsedCashuTs) throw new Error("PoC cannot parse the cashu-ts encoding");
+if (
+  pocParsedCashuTs.amount !== AMOUNT_SAT ||
+  pocParsedCashuTs.requestId !== REQUEST_ID ||
+  pocParsedCashuTs.transportNprofile !== requesterNprofile ||
+  pocParsedCashuTs.mintUrls.join(",") !== MINT_URL
+) {
+  throw new Error("cashu-ts encoding parse mismatch in the PoC");
+}
+
+// And the PoC's own bytes decode in cashu-ts (the direction linky-next reads).
+const cashuTsDecodedPoc = PaymentRequest.fromEncodedRequest(requestContent);
+if (
+  cashuTsDecodedPoc.amount !== AMOUNT_SAT ||
+  cashuTsDecodedPoc.id !== REQUEST_ID ||
+  cashuTsDecodedPoc.unit !== "sat" ||
+  (cashuTsDecodedPoc.mints ?? []).join(",") !== MINT_URL ||
+  cashuTsDecodedPoc.singleUse !== true ||
+  cashuTsDecodedPoc.getTransport("nostr")?.target !== requesterNprofile
+) {
+  throw new Error("cashu-ts failed to decode the PoC request");
+}
+
+// --- The request chat message rumor (plain kind 14, useSendChatMessage) -----
+const requestRumorTemplate: UnsignedEvent = {
+  created_at: at,
+  kind: 14,
+  pubkey: requesterPub,
+  tags: [
+    ["p", payerPub],
+    ["p", requesterPub],
+    ["client", "lk-client-req-0001"],
+  ],
+  content: requestContent,
+};
+const requestRumor = {
+  ...requestRumorTemplate,
+  id: getEventHash(requestRumorTemplate),
+};
+
+// --- A deterministic cashu token (the pay reply's content) ------------------
+const tokenText = getEncodedToken({
+  mint: MINT_URL,
+  unit: "sat",
+  proofs: [
+    {
+      id: "009a1f293253e41e",
+      amount: 4,
+      secret: "f3b6e1c92d0a875640cf12ab98de34567190aabbccdde0f1a2b3c4d5e6f70812",
+      C: "02bc9097997d81afb2cc7346b5e4345a9346bd2a506eb7958598a72f0cf85163ea",
+    },
+    {
+      id: "009a1f293253e41e",
+      amount: 96,
+      secret: "0a1b2c3d4e5f60718293a4b5c6d7e8f9000102030405060708090a0b0c0d0e0f",
+      C: "029e8e5050b890a7d6c0968db16bc1d5d5fa040ea1de284f6ec69d61299f671059",
+    },
+  ],
+});
+
+// --- The PAY reply: a token message replying to the request rumor -----------
+// onPayChatPaymentRequest → payContactWithCashuMessage with replyContext
+// {replyToId: requestRumorId, rootMessageId: requestRumorId} — tag layout
+// from useSendChatMessage / usePayContactWithCashuMessage (identical).
+const payReplyTemplate: UnsignedEvent = {
+  created_at: at + 120,
+  kind: 14,
+  pubkey: payerPub,
+  tags: [
+    ["p", requesterPub],
+    ["p", payerPub],
+    ["client", "lk-client-req-0002"],
+    ["e", requestRumor.id, "", "root"],
+    ["e", requestRumor.id, "", "reply"],
+  ],
+  content: tokenText,
+};
+const payReplyRumor = { ...payReplyTemplate, id: getEventHash(payReplyTemplate) };
+
+// --- The DECLINE reply (onDeclineChatPaymentRequest wire path) ---------------
+const declineContent = buildLinkyPaymentRequestDeclineMessage(requestRumor.id);
+const declineParsed = parseLinkyPaymentRequestDeclineMessage(declineContent);
+if (declineParsed?.requestRumorId !== requestRumor.id) {
+  throw new Error("PoC decline round trip mismatch");
+}
+
+const declineReplyTemplate: UnsignedEvent = {
+  created_at: at + 60,
+  kind: 14,
+  pubkey: payerPub,
+  tags: [
+    ["p", requesterPub],
+    ["p", payerPub],
+    ["client", "lk-client-req-0003"],
+    ["e", requestRumor.id, "", "root"],
+    ["e", requestRumor.id, "", "reply"],
+  ],
+  content: declineContent,
+};
+const declineReplyRumor = {
+  ...declineReplyTemplate,
+  id: getEventHash(declineReplyTemplate),
+};
+
+const fixture = {
+  generatedAt: new Date().toISOString().slice(0, 10),
+  nostrToolsVersion: (await import("nostr-tools/package.json")).default.version,
+  cashuTsVersion: (await import("@cashu/cashu-ts/package.json")).default.version,
+  cborXVersion: (await import("cbor-x/package.json")).default.version,
+  requesterSecretKeyHex,
+  payerSecretKeyHex,
+  requesterPublicKeyHex: requesterPub,
+  payerPublicKeyHex: payerPub,
+  relays: NOSTR_RELAYS,
+  requesterNprofile,
+  request: {
+    amountSat: AMOUNT_SAT,
+    unit: "sat",
+    mintUrls: [MINT_URL],
+    requestId: REQUEST_ID,
+    singleUse: true,
+    transportTags: [["n", "17"]],
+    /** PoC encoding (cbor-x map, base64url no padding). */
+    encodedPoc: requestContent,
+    /** Same payload through cashu-ts 2.9.0 PaymentRequest (linky-next's encoder). */
+    encodedCashuTs: cashuTsEncoded,
+    /** What the PoC's own parser reads back from `encodedPoc`. */
+    parsedByPoc: pocParsed,
+    rumor: requestRumor,
+  },
+  payReply: {
+    tokenText,
+    rumor: payReplyRumor,
+  },
+  declineReply: {
+    prefix: "linky:req-decline:v1",
+    content: declineContent,
+    rumor: declineReplyRumor,
+  },
+};
+
+console.log(JSON.stringify(fixture, null, 2));

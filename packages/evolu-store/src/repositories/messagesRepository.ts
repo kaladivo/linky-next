@@ -397,6 +397,31 @@ export const loadKnownRumorIds = async (store: LinkyStore): Promise<ReadonlyArra
   return [...ids];
 };
 
+/**
+ * All ACTIVE messages whose content starts with one of `prefixes`, across
+ * every conversation — the #45 history seam: the transactions screen scans
+ * payment-request (`creqA…`) and decline-marker messages to mirror
+ * declined request status (`tx.request-status`) without loading whole
+ * conversations. Wire-format prefixes are the caller's concern.
+ */
+export const loadMessagesByContentPrefix = async (
+  store: LinkyStore,
+  prefixes: ReadonlyArray<string>,
+): Promise<ReadonlyArray<MessageRecord>> => {
+  if (prefixes.length === 0) return [];
+  const query = store.evolu.createQuery((db) =>
+    db
+      .selectFrom("message")
+      .selectAll()
+      .where("isDeleted", "is not", 1)
+      .where((eb) =>
+        eb.or(prefixes.map((prefix) => eb("content", "like", asParam(`${prefix}%`)))),
+      ),
+  );
+  const rows = await store.evolu.loadQuery(query);
+  return rows.map(toMessageRecord);
+};
+
 /** True when an active (non-deleted) blocked-sender row exists for `npub`. */
 export const isNpubBlocked = async (store: LinkyStore, npub: string): Promise<boolean> => {
   const query = store.evolu.createQuery((db) =>

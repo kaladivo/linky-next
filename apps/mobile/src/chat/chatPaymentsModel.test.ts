@@ -1,16 +1,22 @@
 /**
- * chatPaymentsModel (#44): token-message detection + pay-input parsing.
- * The token string is the PoC-generated golden token from
- * packages/core/src/domain/chat/__fixtures__/chatPayments.golden.json
- * (encoded by the PoC's own @cashu/cashu-ts 2.9.0).
+ * chatPaymentsModel (#44 + #45): token/request/decline message detection,
+ * pay-input parsing, latest-response-wins and the declined-id derivation.
+ * The token and creq strings are PoC-generated golden values from
+ * packages/core/src/domain/chat/__fixtures__/chatPayments.golden.json and
+ * paymentRequests.golden.json (encoded by the PoC's own deps).
  */
+import type { MessageRecord } from "@linky/evolu-store";
 import { describe, expect, it } from "vitest";
 
 import {
   CHAT_PAY_TRANSACTION_CATEGORY,
   CHAT_PAY_TRANSACTION_METHOD,
+  declinedRequestIds,
+  declineMessageInfo,
+  latestRequestResponses,
   mintHostOf,
   parseChatPayAmount,
+  requestMessageInfo,
   tokenMessageInfo,
 } from "./chatPaymentsModel";
 
@@ -65,5 +71,142 @@ describe("constants (#43 merge / title contracts)", () => {
   it("mintHostOf strips scheme and path", () => {
     expect(mintHostOf("https://nofees.testnut.cashu.space")).toBe("nofees.testnut.cashu.space");
     expect(mintHostOf("http://localhost:3338/api")).toBe("localhost:3338");
+  });
+});
+
+// ─── Payment requests (#45) ──────────────────────────────────────────────
+
+/** PoC-generated creq (paymentRequests.golden.json, requestId req-fixture-0001). */
+const GOLDEN_CREQ =
+  "creqAuQAGYWEYZGF1Y3NhdGFz9WFtgXgiaHR0cHM6Ly9ub2ZlZXMudGVzdG51dC5jYXNodS5zcGFjZWF0gbkAA2F0ZW5vc3RyYWF4p25wcm9maWxlMXF5Mjh3dW1uOGdoajd1bjlkM3NoanRueXY5a2gydWV3ZDloc3pydGh3ZGVuNXRlMGRlaGh4dG52ZGFrcXo5bmh3ZGVuNXRlMHdmamtjY3RlOWNjOHNjbWd2OTZ6dWNtMGQ1cXpwZWZmenF3OWdxZWNyZmU1dWc4M3hlOWNydnE3cTZ6NTJsdXh6ZjZzbjRtbWthNmh2NmcwbGRkMmpzYWeBgmFuYjE3YWlwcmVxLWZpeHR1cmUtMDAwMQ";
+
+const REQUEST_RUMOR_ID = "b8c3dae38b5a4adc076386a9634be53a1b6ebdf4dbf0170f24f9884c775d681e";
+const DECLINE_CONTENT = `linky:req-decline:v1:${REQUEST_RUMOR_ID}`;
+
+const message = (overrides: Partial<MessageRecord>): MessageRecord => ({
+  id: "m1",
+  rumorId: "r1",
+  peerNpub: "npub1peer",
+  direction: "in",
+  content: "hello",
+  senderNpub: null,
+  wrapId: null,
+  sentAtSec: 100,
+  status: null,
+  replyToRumorId: null,
+  editedAtSec: null,
+  editHistory: [],
+  ...overrides,
+});
+
+describe("requestMessageInfo / declineMessageInfo", () => {
+  it("decodes the PoC golden request", () => {
+    expect(requestMessageInfo(GOLDEN_CREQ)).toMatchObject({
+      amountSat: 100,
+      unit: "sat",
+      requestId: "req-fixture-0001",
+      mintUrls: ["https://nofees.testnut.cashu.space"],
+    });
+  });
+
+  it("returns null for non-requests; decline marker parses separately", () => {
+    expect(requestMessageInfo("hello")).toBeNull();
+    expect(requestMessageInfo(GOLDEN_TOKEN)).toBeNull();
+    expect(declineMessageInfo(DECLINE_CONTENT)).toStrictEqual({
+      requestRumorId: REQUEST_RUMOR_ID,
+    });
+    expect(declineMessageInfo("hello")).toBeNull();
+  });
+});
+
+describe("latestRequestResponses (latest response wins, PoC ChatPage)", () => {
+  const request = message({ id: "req", rumorId: REQUEST_RUMOR_ID, content: GOLDEN_CREQ });
+
+  it("no replies → request absent from the map (card stays 'requested')", () => {
+    expect(latestRequestResponses([request]).size).toBe(0);
+  });
+
+  it("a decline reply marks it declined; a LATER token reply flips to paid", () => {
+    const decline = message({
+      id: "d",
+      rumorId: "d1",
+      content: DECLINE_CONTENT,
+      replyToRumorId: REQUEST_RUMOR_ID,
+      sentAtSec: 200,
+    });
+    const pay = message({
+      id: "p",
+      rumorId: "p1",
+      content: GOLDEN_TOKEN,
+      replyToRumorId: REQUEST_RUMOR_ID,
+      sentAtSec: 300,
+    });
+    expect(latestRequestResponses([request, decline]).get(REQUEST_RUMOR_ID)).toMatchObject({
+      status: "declined",
+    });
+    expect(latestRequestResponses([request, decline, pay]).get(REQUEST_RUMOR_ID)).toMatchObject(
+      { status: "paid", respondedAtSec: 300 },
+    );
+    // ...and decline-after-pay wins the other way (latest response wins).
+    const lateDecline = message({
+      id: "d2",
+      rumorId: "d2",
+      content: DECLINE_CONTENT,
+      replyToRumorId: REQUEST_RUMOR_ID,
+      sentAtSec: 400,
+    });
+    expect(
+      latestRequestResponses([request, decline, pay, lateDecline]).get(REQUEST_RUMOR_ID),
+    ).toMatchObject({ status: "declined" });
+  });
+
+  it("plain-text replies never change the status", () => {
+    const text = message({
+      id: "t",
+      rumorId: "t1",
+      content: "soon!",
+      replyToRumorId: REQUEST_RUMOR_ID,
+      sentAtSec: 500,
+    });
+    expect(latestRequestResponses([request, text]).size).toBe(0);
+  });
+
+  it("an equal-timestamp tie goes to the later-seen message (PoC order)", () => {
+    const decline = message({
+      id: "d",
+      rumorId: "d1",
+      content: DECLINE_CONTENT,
+      replyToRumorId: REQUEST_RUMOR_ID,
+      sentAtSec: 200,
+    });
+    const pay = message({
+      id: "p",
+      rumorId: "p1",
+      content: GOLDEN_TOKEN,
+      replyToRumorId: REQUEST_RUMOR_ID,
+      sentAtSec: 200,
+    });
+    expect(latestRequestResponses([decline, pay]).get(REQUEST_RUMOR_ID)).toMatchObject({
+      status: "paid",
+    });
+  });
+});
+
+describe("declinedRequestIds (tx.request-status mirror, PoC TransactionsPage)", () => {
+  it("maps decline content → request rumor → NUT-18 requestId", () => {
+    const declined = declinedRequestIds(
+      [{ rumorId: REQUEST_RUMOR_ID, content: GOLDEN_CREQ }],
+      [{ content: DECLINE_CONTENT }],
+    );
+    expect([...declined]).toStrictEqual(["req-fixture-0001"]);
+  });
+
+  it("ignores declines for unknown rumors and bare markers", () => {
+    expect(
+      declinedRequestIds(
+        [{ rumorId: REQUEST_RUMOR_ID, content: GOLDEN_CREQ }],
+        [{ content: "linky:req-decline:v1:deadbeef" }, { content: "linky:req-decline:v1:" }],
+      ).size,
+    ).toBe(0);
   });
 });

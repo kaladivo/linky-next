@@ -44,13 +44,24 @@ import {
   sendChatMessage,
   toggleReaction,
 } from "../../src/chat/chatActions";
-import { sendCashuInChat } from "../../src/chat/chatPayActions";
 import {
+  declinePaymentRequestInChat,
+  sendCashuInChat,
+  sendPaymentRequestInChat,
+} from "../../src/chat/chatPayActions";
+import {
+  declineMessageInfo,
+  latestRequestResponses,
   mintHostOf,
   parseChatPayAmount,
+  requestMessageInfo,
   tokenMessageInfo,
 } from "../../src/chat/chatPaymentsModel";
-import type { TokenMessageInfo } from "../../src/chat/chatPaymentsModel";
+import type {
+  PaymentRequestInfo,
+  RequestCardStatus,
+  TokenMessageInfo,
+} from "../../src/chat/chatPaymentsModel";
 import {
   myReactionsOnMessage,
   reactionChipsByMessage,
@@ -95,11 +106,33 @@ interface PaymentBubble {
   readonly mintHost: string;
 }
 
+/** Render model of a payment-request card (chat-pay.request, #45). */
+interface RequestBubble {
+  /** "Payment request" (localized). */
+  readonly title: string;
+  /** Amount-display formatted, e.g. "100 sat". */
+  readonly amountLabel: string;
+  readonly status: RequestCardStatus;
+  /** Requested / Paid / Declined (localized). */
+  readonly statusLabel: string;
+  readonly description: string | null;
+  /** Pay/Decline shown only for incoming cards still "requested". */
+  readonly canAct: boolean;
+  readonly busy: boolean;
+  readonly payLabel: string;
+  readonly declineLabel: string;
+  readonly onPay: () => void;
+  readonly onDecline: () => void;
+}
+
 interface BubbleProps {
   readonly message: MessageRecord;
   readonly chips: ReadonlyArray<ReactionChip>;
   readonly replyQuote: string | null;
   readonly payment: PaymentBubble | null;
+  readonly request: RequestBubble | null;
+  /** Localized decline notice when this message is a decline marker. */
+  readonly declineText: string | null;
   readonly locale: string;
   readonly pendingLabel: string;
   readonly editedLabel: string;
@@ -107,11 +140,19 @@ interface BubbleProps {
   readonly onToggleChip: (message: MessageRecord, emoji: string) => void;
 }
 
+const STATUS_PILL_CLASS: Record<RequestCardStatus, string> = {
+  requested: "bg-black/20",
+  paid: "bg-primary/30",
+  declined: "bg-black/30",
+};
+
 function MessageBubble({
   message,
   chips,
   replyQuote,
   payment,
+  request,
+  declineText,
   locale,
   pendingLabel,
   editedLabel,
@@ -168,6 +209,80 @@ function MessageBubble({
                 </Text>
               </View>
             </View>
+          ) : request !== null ? (
+            <View
+              className="min-w-[180px] gap-2 py-0.5"
+              testID={`chat-request-${message.rumorId.slice(0, 12)}`}
+            >
+              <View className="flex-row items-center justify-between gap-3">
+                <Text
+                  className={`text-xs ${isOut ? "text-primary-foreground opacity-80" : "opacity-60"}`}
+                >
+                  {request.title}
+                </Text>
+                <View
+                  className={`rounded-full px-2 py-0.5 ${STATUS_PILL_CLASS[request.status]}`}
+                  testID={`chat-request-status-${message.rumorId.slice(0, 12)}-${request.status}`}
+                >
+                  <Text
+                    weight="semibold"
+                    className={`text-xs ${isOut ? "text-primary-foreground" : "text-foreground"}`}
+                  >
+                    {request.statusLabel}
+                  </Text>
+                </View>
+              </View>
+              <Text
+                weight="bold"
+                className={`text-xl ${isOut ? "text-primary-foreground" : "text-foreground"}`}
+              >
+                {request.amountLabel}
+              </Text>
+              {request.description !== null && (
+                <Text
+                  className={`text-xs ${isOut ? "text-primary-foreground opacity-80" : "opacity-70"}`}
+                >
+                  {request.description}
+                </Text>
+              )}
+              {request.canAct && (
+                <View className="flex-row gap-2 pt-1">
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={request.payLabel}
+                    testID={`chat-request-pay-${message.rumorId.slice(0, 12)}`}
+                    disabled={request.busy}
+                    onPress={request.onPay}
+                    className={`flex-1 items-center rounded-xl bg-primary px-3 py-2 ${
+                      request.busy ? "opacity-50" : "active:opacity-70"
+                    }`}
+                  >
+                    <Text weight="semibold" className="text-primary-foreground">
+                      {request.busy ? "…" : request.payLabel}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={request.declineLabel}
+                    testID={`chat-request-decline-${message.rumorId.slice(0, 12)}`}
+                    disabled={request.busy}
+                    onPress={request.onDecline}
+                    className={`flex-1 items-center rounded-xl bg-background px-3 py-2 ${
+                      request.busy ? "opacity-50" : "active:opacity-70"
+                    }`}
+                  >
+                    <Text weight="semibold">{request.declineLabel}</Text>
+                  </Pressable>
+                </View>
+              )}
+            </View>
+          ) : declineText !== null ? (
+            <Text
+              className={`italic ${isOut ? "text-primary-foreground opacity-90" : "opacity-80"}`}
+              testID={`chat-decline-${message.rumorId.slice(0, 12)}`}
+            >
+              {declineText}
+            </Text>
           ) : (
             <Text className={isOut ? "text-primary-foreground" : "text-foreground"}>
               {message.content}
@@ -354,6 +469,34 @@ export default function ChatScreen() {
     return map;
   }, [ready?.messages]);
 
+  // Payment requests (#45): NUT-18 cards + the latest response per request
+  // (a token reply = paid, a decline marker = declined; latest wins).
+  const requestInfoByRumorId = useMemo(() => {
+    const map = new Map<string, PaymentRequestInfo>();
+    for (const message of ready?.messages ?? []) {
+      if (paymentInfoByRumorId.has(message.rumorId)) continue;
+      const info = requestMessageInfo(message.content);
+      if (info !== null) map.set(message.rumorId, info);
+    }
+    return map;
+  }, [ready?.messages, paymentInfoByRumorId]);
+
+  const requestResponses = useMemo(
+    () => latestRequestResponses(ready?.messages ?? []),
+    [ready?.messages],
+  );
+
+  const [requestActBusy, setRequestActBusy] = useState<string | null>(null);
+
+  const formatSat = (amountSat: number): string => {
+    const parts = formatAmountParts(amountSat, {
+      unit: amountUnit,
+      hidden: amountHidden,
+      locale,
+    });
+    return `${parts.text} ${parts.unitLabel}`;
+  };
+
   const paymentBubbleFor = (message: MessageRecord): PaymentBubble | null => {
     const info = paymentInfoByRumorId.get(message.rumorId);
     if (info === undefined) return null;
@@ -371,6 +514,81 @@ export default function ChatScreen() {
       mintHost: mintHostOf(info.mintUrl),
     };
   };
+
+  // ── chat-pay.pay-request / chat-pay.decline-request ──────────────────
+
+  const onPayRequest = (message: MessageRecord, info: PaymentRequestInfo) => {
+    if (store === null || peerNpub === null || requestActBusy !== null) return;
+    setRequestActBusy(message.rumorId);
+    void sendCashuInChat(store, {
+      peerNpub,
+      amountSat: info.amountSat,
+      contactId: contact?.id,
+      paysRequest: {
+        requestRumorId: message.rumorId,
+        requestId: info.requestId,
+        mintUrls: info.mintUrls,
+      },
+    })
+      .then((outcome) => {
+        if (outcome.kind === "sent") {
+          paidOverlay.show(
+            paidOverlayTitle(
+              t,
+              outcome.amountSat,
+              { unit: amountUnit, hidden: amountHidden, locale },
+              title,
+            ),
+          );
+          return;
+        }
+        const failure = payFailureMessage(outcome);
+        toast.error(`${t(failure.key)}${failure.detail === null ? "" : `: ${failure.detail}`}`);
+      })
+      .finally(() => setRequestActBusy(null));
+  };
+
+  const onDeclineRequest = (message: MessageRecord) => {
+    if (store === null || peerNpub === null || requestActBusy !== null) return;
+    setRequestActBusy(message.rumorId);
+    void declinePaymentRequestInChat(store, {
+      peerNpub,
+      requestRumorId: message.rumorId,
+    })
+      .then((outcome) => {
+        if (outcome.kind !== "declined") toast.error(t("errorPrefix"));
+      })
+      .finally(() => setRequestActBusy(null));
+  };
+
+  const requestBubbleFor = (message: MessageRecord): RequestBubble | null => {
+    const info = requestInfoByRumorId.get(message.rumorId);
+    if (info === undefined) return null;
+    const status: RequestCardStatus =
+      requestResponses.get(message.rumorId)?.status ?? "requested";
+    const statusLabel =
+      status === "paid"
+        ? t("paymentRequestStatusPaid")
+        : status === "declined"
+          ? t("paymentRequestStatusDeclined")
+          : t("paymentRequestStatusRequested");
+    return {
+      title: t("requestPaymentLabel"),
+      amountLabel: formatSat(info.amountSat),
+      status,
+      statusLabel,
+      description: info.description,
+      canAct: message.direction === "in" && status === "requested",
+      busy: requestActBusy === message.rumorId,
+      payLabel: t("pay"),
+      declineLabel: t("decline"),
+      onPay: () => onPayRequest(message, info),
+      onDecline: () => onDeclineRequest(message),
+    };
+  };
+
+  const declineTextFor = (message: MessageRecord): string | null =>
+    declineMessageInfo(message.content) !== null ? t("paymentRequestDeclinedMessage") : null;
 
   // ── chat-pay.send-cashu ───────────────────────────────────────────────
 
@@ -404,13 +622,67 @@ export default function ChatScreen() {
       .finally(() => setPayBusy(false));
   };
 
+  // ── chat-pay.request ──────────────────────────────────────────────────
+
+  const onChatRequest = () => {
+    if (store === null || peerNpub === null || payBusy) return;
+    const amountSat = parseChatPayAmount(payAmount);
+    if (amountSat === null) return;
+    setPayBusy(true);
+    void sendPaymentRequestInChat(store, {
+      peerNpub,
+      amountSat,
+      contactId: contact?.id,
+    })
+      .then((outcome) => {
+        if (outcome.kind === "requested") {
+          setPayOpen(false);
+          setPayAmount("");
+          return;
+        }
+        const failure = payFailureMessage(outcome);
+        toast.error(`${t(failure.key)}${failure.detail === null ? "" : `: ${failure.detail}`}`);
+      })
+      .finally(() => setPayBusy(false));
+  };
+
+  // Wire-format contents quote as localized labels (PoC
+  // formatChatMessagePreviewText), never as raw token/creq text.
+  const quotedContentPreview = (original: MessageRecord): string => {
+    const token = tokenMessageInfo(original.content);
+    if (token !== null) {
+      const parts = formatAmountParts(token.amountSat, {
+        unit: amountUnit,
+        hidden: amountHidden,
+        locale,
+      });
+      const values = { amount: parts.text, unit: parts.unitLabel };
+      return original.direction === "out"
+        ? t("chatPaymentOutgoing", values)
+        : t("chatPaymentIncoming", values);
+    }
+    const request = requestMessageInfo(original.content);
+    if (request !== null) {
+      const values = { amount: formatSat(request.amountSat) };
+      return original.direction === "out"
+        ? t("paymentRequestPreviewOutgoing", values)
+        : t("paymentRequestPreviewIncoming", values);
+    }
+    if (declineMessageInfo(original.content) !== null) {
+      return original.direction === "out"
+        ? t("paymentRequestDeclinedPreviewOutgoing")
+        : t("paymentRequestDeclinedPreviewIncoming");
+    }
+    return replyPreviewText(original.content);
+  };
+
   const replyQuoteFor = (message: MessageRecord): string | null => {
     if (message.replyToRumorId === null) return null;
     const original =
       byRumorId.get(message.replyToRumorId) ??
       ready?.replyPreviews.get(message.replyToRumorId) ??
       null;
-    return original === null ? t("chatReplyUnavailable") : replyPreviewText(original.content);
+    return original === null ? t("chatReplyUnavailable") : quotedContentPreview(original);
   };
 
   // ── Composer actions ──────────────────────────────────────────────────
@@ -646,6 +918,8 @@ export default function ChatScreen() {
                     chips={chipsByMessage.get(item.rumorId) ?? []}
                     replyQuote={replyQuoteFor(item)}
                     payment={paymentBubbleFor(item)}
+                    request={requestBubbleFor(item)}
+                    declineText={declineTextFor(item)}
                     locale={locale}
                     pendingLabel={t("chatPendingShort")}
                     editedLabel={t("chatEdited")}
@@ -669,7 +943,11 @@ export default function ChatScreen() {
                         {editing !== null ? t("chatEditing") : t("chatReplyingTo")}
                       </Text>
                       <Text numberOfLines={1} className="text-xs opacity-70">
-                        {replyPreviewText((editing ?? replyTo)?.content ?? "")}
+                        {editing !== null
+                          ? replyPreviewText(editing.content)
+                          : replyTo !== null
+                            ? quotedContentPreview(replyTo)
+                            : ""}
                       </Text>
                     </View>
                     <Pressable
@@ -761,6 +1039,13 @@ export default function ChatScreen() {
               disabled={payBusy || parseChatPayAmount(payAmount) === null}
               testID="chat-pay-send"
               onPress={onChatPay}
+            />
+            <Button
+              label={payBusy ? "…" : t("requestPaymentSend")}
+              variant="secondary"
+              disabled={payBusy || parseChatPayAmount(payAmount) === null}
+              testID="chat-pay-request"
+              onPress={onChatRequest}
             />
             <Button
               label={t("cancel")}

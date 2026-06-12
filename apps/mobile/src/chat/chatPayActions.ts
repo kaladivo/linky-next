@@ -1,7 +1,9 @@
 /**
- * Chat-payment actions (#44; `chat-pay.send-cashu` / `chat-pay.receive-cashu`
- * / `chat-pay.notice`) — the impure half over ./chatPaymentsModel.ts, where
- * the pillars meet: money moves as messages.
+ * Chat-payment actions (#44 + #45; `chat-pay.send-cashu` /
+ * `chat-pay.receive-cashu` / `chat-pay.notice` / `chat-pay.request` /
+ * `chat-pay.pay-request` / `chat-pay.decline-request`) — the impure half
+ * over ./chatPaymentsModel.ts, where the pillars meet: money moves as
+ * messages.
  *
  * ## Send (`sendCashuInChat`)
  *
@@ -31,12 +33,39 @@
  * failed accept (e.g. already spent — the mint is the duplicate authority
  * across DIFFERENT messages carrying the same token) logs a failed row,
  * because error records are valuable for support.
+ *
+ * ## Payment requests (#45, NUT-18 — wire shapes golden-pinned in
+ * packages/core `paymentRequests.golden.json`)
+ *
+ * - `sendPaymentRequestInChat`: a NORMAL chat message whose content is the
+ *   NUT-18 `creqA` encoding (amount, unit `sat`, single-use, the preferred
+ *   mint, a fresh local `requestId`, and a nostr/NIP-17 transport carrying
+ *   OUR nprofile). A REQUEST transaction row (`contacts`/`chat-request`,
+ *   direction "in", status "pending", `detailsJson.requestId` +
+ *   `requestText`) mirrors it into history (`tx.request-status`, #43).
+ * - `payPaymentRequestInChat`: the #44 send flow REPLYING to the request
+ *   rumor (`e` root/reply tags — the tie-back IS the reply reference).
+ *   Mint candidates honor the request's NUT-18 `m` constraint when present
+ *   (PoC divergence: the PoC ignored `m`; honoring it is spec-correct and
+ *   protects the payer from paying from a mint the requester didn't ask
+ *   for). The spend row carries `detailsJson.requestId` for support.
+ * - `declinePaymentRequestInChat`: a reply whose content is
+ *   `linky:req-decline:v1:<requestRumorId>` (id embedded redundantly —
+ *   that's what history mirroring parses).
+ * - Receive: a token reply to one of OUR requests logs its receive row
+ *   with `detailsJson.requestId` — the #43 fulfillment merge then shows
+ *   the request as PAID. Status precedence on conflicting responses is
+ *   derived per-card by chatPaymentsModel (latest response wins); history
+ *   shows paid whenever a completed fulfillment exists (PoC parity).
  */
 import type { CashuSeed, NostrIdentity } from "@linky/core";
 import {
+  buildPaymentRequestContent,
+  buildPaymentRequestDeclineContent,
   createGiftWrap,
   createRumor,
   deliverNostrEvent,
+  encodeNprofile,
   LINKY_PUSH_MARKER_TAG,
   loadSession,
   makeChatMessageTemplate,
@@ -64,14 +93,18 @@ import type { PayFailure } from "../wallet/payModel";
 import { buildPayMintCandidates, selectPayMintCandidate } from "../wallet/payModel";
 import {
   ISSUED_TOKEN_ID_DETAIL,
+  REQUEST_ID_DETAIL,
+  REQUEST_TEXT_DETAIL,
+  REQUEST_TRANSACTION_METHOD,
   USED_TOKEN_IDS_DETAIL,
 } from "../wallet/transactionsModel";
-import { makeClientTag, nowSec, publishChatTemplate } from "./chatActions";
+import { makeClientTag, nowSec, publishChatTemplate, sendChatMessage } from "./chatActions";
 import {
   CHAT_PAY_TRANSACTION_CATEGORY,
   CHAT_PAY_TRANSACTION_METHOD,
   EMIT_TRANSACTION_CATEGORY,
   EMIT_TRANSACTION_METHOD,
+  requestMessageInfo,
   tokenMessageInfo,
 } from "./chatPaymentsModel";
 
@@ -79,7 +112,7 @@ export type ChatPayOutcome =
   | { readonly kind: "sent"; readonly amountSat: number }
   | PayFailure;
 
-const failed = (errorTag: string, detail: string | null = null): ChatPayOutcome => ({
+const failed = (errorTag: string, detail: string | null = null): PayFailure => ({
   kind: "failed",
   errorTag,
   detail,
@@ -152,6 +185,17 @@ export interface SendCashuArgs {
   readonly amountSat: number;
   /** Counterparty contact id, when the peer is a saved contact. */
   readonly contactId?: string | undefined;
+  /**
+   * Set when this send PAYS a NUT-18 request (#45): the token message
+   * replies to the request rumor, the spend row records the request id,
+   * and the request's mint list (when non-empty) constrains the funding
+   * mint per the NUT-18 `m` field.
+   */
+  readonly paysRequest?: {
+    readonly requestRumorId: string;
+    readonly requestId: string | null;
+    readonly mintUrls: ReadonlyArray<string>;
+  };
 }
 
 /**
@@ -176,13 +220,21 @@ export const sendCashuInChat = async (
   const transactions = createTransactionsRepository(store);
 
   // Mint selection: single-mint payment, PoC comparator (main mint last).
+  // Paying a request honors its NUT-18 `m` constraint when present.
   const mints = createMintsRepository(store);
   const preferred = normalizeMintUrl(
     (await mints.getMainMintUrl()) ?? environment.cashuMintUrl,
   );
   const accepted = await tokens.list({ states: ["accepted"] });
+  const requestedMints = (args.paysRequest?.mintUrls ?? [])
+    .map((url) => normalizeMintUrl(url))
+    .filter((url) => url !== "");
+  const fundable =
+    requestedMints.length === 0
+      ? accepted
+      : accepted.filter((record) => requestedMints.includes(normalizeMintUrl(record.mintUrl)));
   const candidate = selectPayMintCandidate(
-    buildPayMintCandidates(accepted, preferred),
+    buildPayMintCandidates(fundable, preferred),
     amountSat,
   );
   if (candidate === null) return failed("InsufficientFundsError");
@@ -285,13 +337,16 @@ export const sendCashuInChat = async (
   });
   if (!emitRow.ok) throw new Error(`record emit transaction failed: ${emitRow.error._tag}`);
 
-  // Token chat message: optimistic pending row, QUIET delivery.
+  // Token chat message: optimistic pending row, QUIET delivery. Paying a
+  // request replies to the request rumor — the tie-back IS the reply.
+  const requestRumorId = args.paysRequest?.requestRumorId;
   const template = makeChatMessageTemplate({
     senderPublicKeyHex: sender.publicKeyHex,
     recipientPublicKeyHex: peerHex,
     content: result.sendToken,
     createdAtSec: nowSec(),
     clientTag: makeClientTag(),
+    ...(requestRumorId === undefined ? {} : { reply: { replyToId: requestRumorId } }),
   });
   const rumor = createRumor(template, sender.publicKeyHex);
   const messages = createMessagesRepository(store);
@@ -304,7 +359,11 @@ export const sendCashuInChat = async (
     content: result.sendToken,
     sentAtSec: rumor.created_at,
     status: "pending",
+    ...(requestRumorId === undefined ? {} : { replyToRumorId: requestRumorId }),
   });
+  const requestIdDetail =
+    args.paysRequest?.requestId == null ? {} : { [REQUEST_ID_DETAIL]: args.paysRequest.requestId };
+
   if (!applied.ok) {
     // The value is safe (issued row + emit row exist); surface the storage
     // failure but leave the wallet consistent.
@@ -312,7 +371,10 @@ export const sendCashuInChat = async (
       status: "failed",
       phase: "publish",
       error: `message store failed: ${applied.error.reason}`,
-      detailsJson: JSON.stringify({ [USED_TOKEN_IDS_DETAIL]: [issued.value.id] }),
+      detailsJson: JSON.stringify({
+        [USED_TOKEN_IDS_DETAIL]: [issued.value.id],
+        ...requestIdDetail,
+      }),
     });
     invalidateStoreData();
     return failed("MessageStoreError");
@@ -335,11 +397,115 @@ export const sendCashuInChat = async (
     status: "completed",
     phase: "complete",
     amount: result.sendAmount,
-    detailsJson: JSON.stringify({ [USED_TOKEN_IDS_DETAIL]: [issued.value.id] }),
+    detailsJson: JSON.stringify({
+      [USED_TOKEN_IDS_DETAIL]: [issued.value.id],
+      ...requestIdDetail,
+    }),
   });
   invalidateStoreData();
 
   return { kind: "sent", amountSat: result.sendAmount };
+};
+
+// ─── chat-pay.request ────────────────────────────────────────────────────
+
+export interface SendPaymentRequestArgs {
+  readonly peerNpub: string;
+  readonly amountSat: number;
+  /** Counterparty contact id, when the peer is a saved contact. */
+  readonly contactId?: string | undefined;
+}
+
+export type SendRequestOutcome =
+  | { readonly kind: "requested"; readonly amountSat: number; readonly requestId: string }
+  | PayFailure;
+
+/**
+ * Sends a NUT-18 payment request as a chat message (module doc): content =
+ * `creqA` encoding with a fresh local request id and OUR nprofile as the
+ * nostr transport; a pending REQUEST transaction row mirrors it into
+ * history. Delivered like any text send (optimistic pending + push marker
+ * — the peer SHOULD be alerted about a request, PoC parity).
+ */
+export const sendPaymentRequestInChat = async (
+  store: LinkyStore,
+  args: SendPaymentRequestArgs,
+): Promise<SendRequestOutcome> => {
+  const amountSat = Math.trunc(args.amountSat);
+  if (!Number.isFinite(args.amountSat) || amountSat <= 0) return failed("InvalidAmountError");
+
+  const session = await activePaySession();
+  if (session === null) return failed("NoSessionError");
+  if (npubToPublicKeyHex(args.peerNpub) === null) return failed("InvalidNpubError");
+
+  const requesterNprofile = encodeNprofile({
+    pubkeyHex: session.identity.publicKeyHex,
+    relays: environment.nostrRelayUrls,
+  });
+  if (requesterNprofile === null) return failed("InvalidNpubError");
+
+  const preferred = normalizeMintUrl(
+    (await createMintsRepository(store).getMainMintUrl()) ?? environment.cashuMintUrl,
+  );
+  const requestId = makeClientTag();
+  const content = buildPaymentRequestContent({
+    amountSat,
+    mintUrls: [preferred],
+    requesterNprofile,
+    requestId,
+  });
+  if (content === null) return failed("InvalidAmountError");
+
+  const sent = await sendChatMessage(store, args.peerNpub, content);
+  if (sent.outcome === "failed") return failed("MessageStoreError", sent.reason);
+
+  // The REQUEST history row (`tx.request-status`): pending until a token
+  // reply fulfills it (paid) or a decline message lands (declined).
+  const requestRow = createTransactionsRepository(store).record({
+    happenedAtSec: Math.max(1, Math.floor(Date.now() / 1000)),
+    direction: "in",
+    status: "pending",
+    category: CHAT_PAY_TRANSACTION_CATEGORY,
+    method: REQUEST_TRANSACTION_METHOD,
+    phase: "request",
+    amount: amountSat,
+    unit: "sat",
+    mintUrl: preferred,
+    ...(args.contactId === undefined ? {} : { contactId: args.contactId }),
+    detailsJson: JSON.stringify({
+      [REQUEST_ID_DETAIL]: requestId,
+      [REQUEST_TEXT_DETAIL]: content,
+    }),
+  });
+  if (!requestRow.ok) {
+    throw new Error(`record chat-request transaction failed: ${requestRow.error._tag}`);
+  }
+  invalidateStoreData();
+
+  return { kind: "requested", amountSat, requestId };
+};
+
+// ─── chat-pay.decline-request ────────────────────────────────────────────
+
+export type DeclineRequestOutcome = { readonly kind: "declined" } | PayFailure;
+
+/**
+ * Declines an incoming request: a reply to the request rumor whose content
+ * is the `linky:req-decline:v1:<rumorId>` marker (PoC wire shape — the id
+ * is embedded redundantly so history mirroring can read it content-only).
+ */
+export const declinePaymentRequestInChat = async (
+  store: LinkyStore,
+  args: { readonly peerNpub: string; readonly requestRumorId: string },
+): Promise<DeclineRequestOutcome> => {
+  const sent = await sendChatMessage(
+    store,
+    args.peerNpub,
+    buildPaymentRequestDeclineContent(args.requestRumorId),
+    { replyToId: args.requestRumorId },
+  );
+  if (sent.outcome === "failed") return failed("MessageStoreError", sent.reason);
+  return { kind: "declined" };
 };
 
 // ─── chat-pay.receive-cashu ──────────────────────────────────────────────
@@ -348,6 +514,8 @@ export interface IncomingTokenMessage {
   /** Conversation peer (the sender of the token). */
   readonly peerNpub: string;
   readonly content: string;
+  /** Reply target, when the message replies to something (#45 tie-back). */
+  readonly replyToRumorId?: string | undefined;
 }
 
 export type AcceptIncomingOutcome = "accepted" | "not-a-token" | "failed" | "no-session";
@@ -370,6 +538,15 @@ export const acceptIncomingTokenMessage = async (
   const contacts = await createContactsRepository(store).list();
   const contactId =
     contacts.find((contact) => String(contact.npub ?? "") === message.peerNpub)?.id ?? null;
+
+  // #45 tie-back: a token replying to one of OUR requests fulfills it —
+  // resolve the request id so the receive row mirrors "paid" into history.
+  let requestId: string | null = null;
+  if (message.replyToRumorId !== undefined) {
+    const target = await createMessagesRepository(store).getByRumorId(message.replyToRumorId);
+    if (target !== null) requestId = requestMessageInfo(target.content)?.requestId ?? null;
+  }
+  const requestIdDetail = requestId === null ? null : { [REQUEST_ID_DETAIL]: requestId };
 
   const transactions = createTransactionsRepository(store);
   const received = await runCashuEffect(
@@ -394,6 +571,9 @@ export const acceptIncomingTokenMessage = async (
       unit: info.unit,
       mintUrl: info.mintUrl,
       ...(contactId === null ? {} : { contactId }),
+      // Failed rows never merge (#43), so the request stays visibly unpaid;
+      // the id is kept for support correlation only.
+      ...(requestIdDetail === null ? {} : { detailsJson: JSON.stringify(requestIdDetail) }),
       error: `${received.errorTag}${received.detail === null ? "" : `: ${received.detail}`}`,
     });
     invalidateStoreData();
@@ -421,6 +601,8 @@ export const acceptIncomingTokenMessage = async (
     unit: received.result.unit,
     mintUrl: received.result.mintUrl,
     ...(contactId === null ? {} : { contactId }),
+    // The completed fulfillment row: #43 merges it into the request row.
+    ...(requestIdDetail === null ? {} : { detailsJson: JSON.stringify(requestIdDetail) }),
   });
   if (!logged.ok) throw new Error(`record receive transaction failed: ${logged.error._tag}`);
   invalidateStoreData();

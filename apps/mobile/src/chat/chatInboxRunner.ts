@@ -87,6 +87,8 @@ const applySignal = async (
           void acceptIncomingTokenMessage(store.store, {
             peerNpub: input.peerNpub,
             content: input.content,
+            // #45: a token replying to OUR request marks it paid in history.
+            replyToRumorId: input.replyToRumorId,
           })
             .then((outcome) => {
               if (__DEV__ && outcome !== "not-a-token") {

@@ -79,3 +79,46 @@ token with the PoC's `parseCashuToken` before emitting):
 cd /Users/kaladivo/workspace/linky/linky-poc/apps/web-app
 bun gen-chat-payments-fixtures.ts > .../src/domain/chat/__fixtures__/chatPayments.golden.json
 ```
+
+## `paymentRequests.golden.json`
+
+Pins the chat payment-request wire shapes (issue #45, `chat-pay.request` /
+`chat-pay.pay-request` / `chat-pay.decline-request`) against the PoC's own
+wire code (`paymentRequestMessage.ts`, the kind-14 tag layout of
+`useSendChatMessage.ts`):
+
+- **`requesterNprofile`** — the NUT-18 nostr transport target: the
+  REQUESTER's pubkey + the PoC relay set, encoded with nostr-tools'
+  `nip19.nprofileEncode` (relay TLV entries first, pubkey last — the
+  `encodeTLV` `.reverse()` order linky-next's codec must reproduce).
+- **`request`** — one NUT-18 payment request (100 sat, one mint,
+  `i = req-fixture-0001`, single use, NIP-17 nostr transport) in BOTH
+  encodings: `encodedPoc` (the PoC's cbor-x map) with `parsedByPoc` (what
+  the PoC's own parser reads back), and `encodedCashuTs` (the byte output
+  of `@cashu/cashu-ts@2.9.0`'s `PaymentRequest`, linky-next's encoder, fed
+  through the PoC's own parser before pinning — proving the PoC accepts
+  what linky-next sends). Plus the request chat rumor: a PLAIN kind-14
+  whose content IS the `creqA` string (`p`/`p`/`client` tags only).
+- **`payReply`** — paying = a normal Cashu token chat message REPLYING to
+  the request rumor (`["e", id, "", "root"]` + `["e", id, "", "reply"]`).
+  The tie-back is the reply reference; there is no content marker.
+- **`declineReply`** — declining = a chat message replying to the request
+  whose content is `linky:req-decline:v1:<requestRumorId>` (the rumor id
+  embedded redundantly in the content — the PoC's transactions screen
+  reads it from there).
+
+Request status is DERIVED, never on the wire: per request rumor, the
+latest reply by `created_at` that is a token ("paid") or a decline marker
+("declined") wins; otherwise "requested".
+
+Generated from the PoC's own dependencies (`nostr-tools@2.23.3`,
+`cbor-x@1.6.0`, `@cashu/cashu-ts@2.9.0`) on 2026-06-12 by the script
+preserved verbatim as
+[`generatePaymentRequestsFixtures.poc.ts.txt`](./generatePaymentRequestsFixtures.poc.ts.txt)
+(same fixture key pair; the script self-verifies every encode/parse round
+trip in both directions before emitting):
+
+```sh
+cd /Users/kaladivo/workspace/linky/linky-poc/apps/web-app
+bun gen-payment-request-fixtures.ts > .../src/domain/chat/__fixtures__/paymentRequests.golden.json
+```

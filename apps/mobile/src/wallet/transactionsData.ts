@@ -12,19 +12,31 @@
  * written moments apart, so a 500-row window cannot realistically split a
  * pair.
  *
- * Request-status data dependency (#45): the decline signal comes from chat
- * messages that #45 will parse; until it lands `DECLINED_REQUEST_IDS` stays
- * empty, so request rows only ever render pending/paid (the declined path
- * is built and unit-tested).
+ * Request-status data dependency (#45, `tx.request-status`): the DECLINE
+ * signal lives in chat, not in transaction rows — declining a request is a
+ * `linky:req-decline:v1:<requestRumorId>` chat message. Each history build
+ * scans the (rare) request/decline messages by content prefix
+ * (`loadMessagesByContentPrefix`), maps decline → request rumor → NUT-18
+ * `requestId` (chatPaymentsModel.declinedRequestIds, the PoC's
+ * TransactionsPage derivation), and feeds the set into the model; a
+ * completed fulfillment row still wins over a decline (paid > declined,
+ * PoC parity).
  */
+import {
+  PAYMENT_REQUEST_DECLINE_PREFIX,
+  PAYMENT_REQUEST_PREFIX,
+} from "@linky/core";
 import type { ContactRecord, MintRecord, TransactionRecord } from "@linky/evolu-store";
 import {
   createContactsRepository,
   createMintsRepository,
   createTransactionsRepository,
+  loadMessagesByContentPrefix,
 } from "@linky/evolu-store";
+import type { LinkyStore } from "@linky/evolu-store";
 import { Effect } from "effect";
 
+import { declinedRequestIds } from "../chat/chatPaymentsModel";
 import { getReadyLinkyStore } from "../store/storeManager";
 import { buildTransactionHistory } from "./transactionsModel";
 import type { HistoryItem } from "./transactionsModel";
@@ -33,8 +45,17 @@ import type { HistoryItem } from "./transactionsModel";
 export const HISTORY_FETCH_CAP = 500;
 const PAGE_LIMIT = 200;
 
-/** #45 seam: request ids declined via chat. Empty until #45 lands. */
-const DECLINED_REQUEST_IDS: ReadonlySet<string> = new Set();
+/** Request ids declined via chat (#45 — see module doc). */
+const loadDeclinedRequestIds = async (store: LinkyStore): Promise<ReadonlySet<string>> => {
+  const messages = await loadMessagesByContentPrefix(store, [
+    PAYMENT_REQUEST_PREFIX,
+    `${PAYMENT_REQUEST_DECLINE_PREFIX}:`,
+  ]);
+  return declinedRequestIds(
+    messages.filter((message) => message.content.startsWith(PAYMENT_REQUEST_PREFIX)),
+    messages.filter((message) => message.content.startsWith(PAYMENT_REQUEST_DECLINE_PREFIX)),
+  );
+};
 
 export interface TransactionHistoryView {
   /** Rendered history items, newest first (merged per the model). */
@@ -65,13 +86,14 @@ const fetchNewestRecords = async (
 
 const loadHistoryView = async (): Promise<TransactionHistoryView> => {
   const store = await getReadyLinkyStore();
-  const [{ records, truncated }, contacts, mints] = await Promise.all([
+  const [{ records, truncated }, contacts, mints, declined] = await Promise.all([
     fetchNewestRecords(createTransactionsRepository(store)),
     createContactsRepository(store).list(),
     createMintsRepository(store).list(),
+    loadDeclinedRequestIds(store),
   ]);
   return {
-    items: buildTransactionHistory(records, DECLINED_REQUEST_IDS),
+    items: buildTransactionHistory(records, declined),
     contactsById: new Map(contacts.map((contact) => [contact.id, contact])),
     mintsByUrl: new Map(mints.map((mint) => [mint.url, mint])),
     truncated,
@@ -107,7 +129,7 @@ export const loadTransactionDetail = (id: string): Effect.Effect<TransactionDeta
       const store = await getReadyLinkyStore();
       const record = await createTransactionsRepository(store).getById(id);
       if (record === null) return null;
-      item = buildTransactionHistory([record], DECLINED_REQUEST_IDS)[0] ?? null;
+      item = buildTransactionHistory([record], await loadDeclinedRequestIds(store))[0] ?? null;
       if (item === null) return null;
     }
     const contact =

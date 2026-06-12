@@ -16,6 +16,7 @@ export * from "./relaySettings.js";
 export * from "./muteList.js";
 export * from "./profileMetadata.js";
 export * from "./npub.js";
+export * from "./nprofile.js";
 export * from "./profileStatus.js";
 export * from "./fakeRelay.js";
 // Intentionally not exported (internal): `protocolCache.js` (TTL cache over

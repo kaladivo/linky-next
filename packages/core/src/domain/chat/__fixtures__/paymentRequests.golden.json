@@ -1,0 +1,138 @@
+{
+  "generatedAt": "2026-06-12",
+  "nostrToolsVersion": "2.23.3",
+  "cashuTsVersion": "2.9.0",
+  "cborXVersion": "1.6.0",
+  "requesterSecretKeyHex": "7f3b02c9d3a8e15b64f2a90c81d6e4775ab9c0d2e3f415263748596a7b8c9d0e",
+  "payerSecretKeyHex": "1e0d9c8b7a695847362514f3e2d1c0b95a7d86e4c2b0a1928374655647382910",
+  "requesterPublicKeyHex": "e529101c5403381a734e20f1364b81b01e0685457f86127509d77bb77576690f",
+  "payerPublicKeyHex": "5053b9d2a2871489a304cb5ec157957a6186d01399789e34c37113f3a19025d6",
+  "relays": [
+    "wss://relay.damus.io",
+    "wss://nos.lol",
+    "wss://relay.0xchat.com"
+  ],
+  "requesterNprofile": "nprofile1qy28wumn8ghj7un9d3shjtnyv9kh2uewd9hszrthwden5te0dehhxtnvdakqz9nhwden5te0wfjkccte9cc8scmgv96zucm0d5qzpeffzqw9gqecrfe5ug83xe9crvq7q6z52luxzf6sn4mmka6hv6g0ldd2js",
+  "request": {
+    "amountSat": 100,
+    "unit": "sat",
+    "mintUrls": [
+      "https://nofees.testnut.cashu.space"
+    ],
+    "requestId": "req-fixture-0001",
+    "singleUse": true,
+    "transportTags": [
+      [
+        "n",
+        "17"
+      ]
+    ],
+    "encodedPoc": "creqAuQAGYWEYZGF1Y3NhdGFz9WFtgXgiaHR0cHM6Ly9ub2ZlZXMudGVzdG51dC5jYXNodS5zcGFjZWF0gbkAA2F0ZW5vc3RyYWF4p25wcm9maWxlMXF5Mjh3dW1uOGdoajd1bjlkM3NoanRueXY5a2gydWV3ZDloc3pydGh3ZGVuNXRlMGRlaGh4dG52ZGFrcXo5bmh3ZGVuNXRlMHdmamtjY3RlOWNjOHNjbWd2OTZ6dWNtMGQ1cXpwZWZmenF3OWdxZWNyZmU1dWc4M3hlOWNydnE3cTZ6NTJsdXh6ZjZzbjRtbWthNmh2NmcwbGRkMmpzYWeBgmFuYjE3YWlwcmVxLWZpeHR1cmUtMDAwMQ",
+    "encodedCashuTs": "creqApmF0gaNhdGVub3N0cmFheKducHJvZmlsZTFxeTI4d3VtbjhnaGo3dW45ZDNzaGp0bnl2OWtoMnVld2Q5aHN6cnRod2RlbjV0ZTBkZWhoeHRudmRha3F6OW5od2RlbjV0ZTB3ZmprY2N0ZTljYzhzY21ndjk2enVjbTBkNXF6cGVmZnpxdzlncWVjcmZlNXVnODN4ZTljcnZxN3E2ejUybHV4emY2c240bW1rYTZodjZnMGxkZDJqc2FngYJhbmIxN2FpcHJlcS1maXh0dXJlLTAwMDFhYRhkYXVjc2F0YW2BeCJodHRwczovL25vZmVlcy50ZXN0bnV0LmNhc2h1LnNwYWNlYXP1",
+    "parsedByPoc": {
+      "amount": 100,
+      "description": null,
+      "encodedRequest": "creqAuQAGYWEYZGF1Y3NhdGFz9WFtgXgiaHR0cHM6Ly9ub2ZlZXMudGVzdG51dC5jYXNodS5zcGFjZWF0gbkAA2F0ZW5vc3RyYWF4p25wcm9maWxlMXF5Mjh3dW1uOGdoajd1bjlkM3NoanRueXY5a2gydWV3ZDloc3pydGh3ZGVuNXRlMGRlaGh4dG52ZGFrcXo5bmh3ZGVuNXRlMHdmamtjY3RlOWNjOHNjbWd2OTZ6dWNtMGQ1cXpwZWZmenF3OWdxZWNyZmU1dWc4M3hlOWNydnE3cTZ6NTJsdXh6ZjZzbjRtbWthNmh2NmcwbGRkMmpzYWeBgmFuYjE3YWlwcmVxLWZpeHR1cmUtMDAwMQ",
+      "mintUrls": [
+        "https://nofees.testnut.cashu.space"
+      ],
+      "requestId": "req-fixture-0001",
+      "transportNprofile": "nprofile1qy28wumn8ghj7un9d3shjtnyv9kh2uewd9hszrthwden5te0dehhxtnvdakqz9nhwden5te0wfjkccte9cc8scmgv96zucm0d5qzpeffzqw9gqecrfe5ug83xe9crvq7q6z52luxzf6sn4mmka6hv6g0ldd2js",
+      "unit": "sat"
+    },
+    "rumor": {
+      "created_at": 1750000000,
+      "kind": 14,
+      "pubkey": "e529101c5403381a734e20f1364b81b01e0685457f86127509d77bb77576690f",
+      "tags": [
+        [
+          "p",
+          "5053b9d2a2871489a304cb5ec157957a6186d01399789e34c37113f3a19025d6"
+        ],
+        [
+          "p",
+          "e529101c5403381a734e20f1364b81b01e0685457f86127509d77bb77576690f"
+        ],
+        [
+          "client",
+          "lk-client-req-0001"
+        ]
+      ],
+      "content": "creqAuQAGYWEYZGF1Y3NhdGFz9WFtgXgiaHR0cHM6Ly9ub2ZlZXMudGVzdG51dC5jYXNodS5zcGFjZWF0gbkAA2F0ZW5vc3RyYWF4p25wcm9maWxlMXF5Mjh3dW1uOGdoajd1bjlkM3NoanRueXY5a2gydWV3ZDloc3pydGh3ZGVuNXRlMGRlaGh4dG52ZGFrcXo5bmh3ZGVuNXRlMHdmamtjY3RlOWNjOHNjbWd2OTZ6dWNtMGQ1cXpwZWZmenF3OWdxZWNyZmU1dWc4M3hlOWNydnE3cTZ6NTJsdXh6ZjZzbjRtbWthNmh2NmcwbGRkMmpzYWeBgmFuYjE3YWlwcmVxLWZpeHR1cmUtMDAwMQ",
+      "id": "b8c3dae38b5a4adc076386a9634be53a1b6ebdf4dbf0170f24f9884c775d681e"
+    }
+  },
+  "payReply": {
+    "tokenText": "cashuBo2FteCJodHRwczovL25vZmVlcy50ZXN0bnV0LmNhc2h1LnNwYWNlYXVjc2F0YXSBomFpSACaHykyU-QeYXCCo2FhBGFzeEBmM2I2ZTFjOTJkMGE4NzU2NDBjZjEyYWI5OGRlMzQ1NjcxOTBhYWJiY2NkZGUwZjFhMmIzYzRkNWU2ZjcwODEyYWNYIQK8kJeZfYGvssxzRrXkNFqTRr0qUG63lYWYpy8M-FFj6qNhYRhgYXN4QDBhMWIyYzNkNGU1ZjYwNzE4MjkzYTRiNWM2ZDdlOGY5MDAwMTAyMDMwNDA1MDYwNzA4MDkwYTBiMGMwZDBlMGZhY1ghAp6OUFC4kKfWwJaNsWvB1dX6BA6h3ihPbsadYSmfZxBZ",
+    "rumor": {
+      "created_at": 1750000120,
+      "kind": 14,
+      "pubkey": "5053b9d2a2871489a304cb5ec157957a6186d01399789e34c37113f3a19025d6",
+      "tags": [
+        [
+          "p",
+          "e529101c5403381a734e20f1364b81b01e0685457f86127509d77bb77576690f"
+        ],
+        [
+          "p",
+          "5053b9d2a2871489a304cb5ec157957a6186d01399789e34c37113f3a19025d6"
+        ],
+        [
+          "client",
+          "lk-client-req-0002"
+        ],
+        [
+          "e",
+          "b8c3dae38b5a4adc076386a9634be53a1b6ebdf4dbf0170f24f9884c775d681e",
+          "",
+          "root"
+        ],
+        [
+          "e",
+          "b8c3dae38b5a4adc076386a9634be53a1b6ebdf4dbf0170f24f9884c775d681e",
+          "",
+          "reply"
+        ]
+      ],
+      "content": "cashuBo2FteCJodHRwczovL25vZmVlcy50ZXN0bnV0LmNhc2h1LnNwYWNlYXVjc2F0YXSBomFpSACaHykyU-QeYXCCo2FhBGFzeEBmM2I2ZTFjOTJkMGE4NzU2NDBjZjEyYWI5OGRlMzQ1NjcxOTBhYWJiY2NkZGUwZjFhMmIzYzRkNWU2ZjcwODEyYWNYIQK8kJeZfYGvssxzRrXkNFqTRr0qUG63lYWYpy8M-FFj6qNhYRhgYXN4QDBhMWIyYzNkNGU1ZjYwNzE4MjkzYTRiNWM2ZDdlOGY5MDAwMTAyMDMwNDA1MDYwNzA4MDkwYTBiMGMwZDBlMGZhY1ghAp6OUFC4kKfWwJaNsWvB1dX6BA6h3ihPbsadYSmfZxBZ",
+      "id": "d1f83e559b67c2c76d9c1fc28e52c22a01d27673dde3accc8c576db627dc61ce"
+    }
+  },
+  "declineReply": {
+    "prefix": "linky:req-decline:v1",
+    "content": "linky:req-decline:v1:b8c3dae38b5a4adc076386a9634be53a1b6ebdf4dbf0170f24f9884c775d681e",
+    "rumor": {
+      "created_at": 1750000060,
+      "kind": 14,
+      "pubkey": "5053b9d2a2871489a304cb5ec157957a6186d01399789e34c37113f3a19025d6",
+      "tags": [
+        [
+          "p",
+          "e529101c5403381a734e20f1364b81b01e0685457f86127509d77bb77576690f"
+        ],
+        [
+          "p",
+          "5053b9d2a2871489a304cb5ec157957a6186d01399789e34c37113f3a19025d6"
+        ],
+        [
+          "client",
+          "lk-client-req-0003"
+        ],
+        [
+          "e",
+          "b8c3dae38b5a4adc076386a9634be53a1b6ebdf4dbf0170f24f9884c775d681e",
+          "",
+          "root"
+        ],
+        [
+          "e",
+          "b8c3dae38b5a4adc076386a9634be53a1b6ebdf4dbf0170f24f9884c775d681e",
+          "",
+          "reply"
+        ]
+      ],
+      "content": "linky:req-decline:v1:b8c3dae38b5a4adc076386a9634be53a1b6ebdf4dbf0170f24f9884c775d681e",
+      "id": "29db1eed9a889da0eba6c24e230263d89272a3715fa743c47e4bf857a9cf03a5"
+    }
+  }
+}
