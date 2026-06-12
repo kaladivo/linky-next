@@ -17,9 +17,11 @@ import {
   transactionStatusPill,
   transactionTitle,
   ISSUED_TOKEN_ID_DETAIL,
+  QUEUED_TRANSACTION_PHASE,
   REQUEST_ID_DETAIL,
   REQUEST_TEXT_DETAIL,
   REQUEST_TRANSACTION_METHOD,
+  TX_ERROR_QUEUE_EXPIRED,
   USED_TOKEN_IDS_DETAIL,
 } from "./transactionsModel";
 
@@ -214,6 +216,32 @@ describe("error records (tx.record contract)", () => {
   it("completed rows show no pill (PoC parity)", () => {
     const items = buildTransactionHistory([record({ status: "completed" })]);
     expect(transactionStatusPill(items[0]!)).toBeNull();
+  });
+
+  it("expired queued payments show the dedicated 'expired' pill (#46)", () => {
+    // `chat-pay.queue` contract: an expired intent was never minted —
+    // visibly distinct (muted "expired") from a danger-red failure.
+    const items = buildTransactionHistory([
+      record({
+        status: "failed",
+        phase: QUEUED_TRANSACTION_PHASE,
+        error: TX_ERROR_QUEUE_EXPIRED,
+      }),
+    ]);
+    expect(transactionStatusPill(items[0]!)).toEqual({
+      tone: "muted",
+      labelKey: "transactionExpired",
+    });
+  });
+
+  it("failed rows with other errors keep the failed pill even in phase 'queued'", () => {
+    const items = buildTransactionHistory([
+      record({ status: "failed", phase: QUEUED_TRANSACTION_PHASE, error: "contact removed" }),
+    ]);
+    expect(transactionStatusPill(items[0]!)).toEqual({
+      tone: "danger",
+      labelKey: "transactionFailed",
+    });
   });
 });
 

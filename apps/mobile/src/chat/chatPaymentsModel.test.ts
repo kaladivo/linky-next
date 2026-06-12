@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 import {
   CHAT_PAY_TRANSACTION_CATEGORY,
   CHAT_PAY_TRANSACTION_METHOD,
+  contactPayMethodOptions,
   declinedRequestIds,
   declineMessageInfo,
   latestRequestResponses,
@@ -208,5 +209,67 @@ describe("declinedRequestIds (tx.request-status mirror, PoC TransactionsPage)", 
         [{ content: "linky:req-decline:v1:deadbeef" }, { content: "linky:req-decline:v1:" }],
       ).size,
     ).toBe(0);
+  });
+});
+
+describe("contactPayMethodOptions (chat-pay.contact-method, #46)", () => {
+  // Policy table pinned against the PoC's useContactPayMethod +
+  // ContactPayPage gating (no wire shape — the queue/choice is local-only).
+  const NPUB = "npub1example";
+  const LN = "alice@example.org";
+
+  it("both usable → chooser shown, Cashu is the default (PoC preference)", () => {
+    expect(
+      contactPayMethodOptions({ peerNpub: NPUB, lnAddress: LN, payWithCashuEnabled: true }),
+    ).toEqual({
+      canUseCashu: true,
+      canUseLightning: true,
+      defaultMethod: "cashu",
+      showChooser: true,
+    });
+  });
+
+  it("npub only → Cashu without a chooser", () => {
+    expect(
+      contactPayMethodOptions({ peerNpub: NPUB, lnAddress: null, payWithCashuEnabled: true }),
+    ).toEqual({
+      canUseCashu: true,
+      canUseLightning: false,
+      defaultMethod: "cashu",
+      showChooser: false,
+    });
+  });
+
+  it("settings.pay-with-cashu OFF gates Cashu → Lightning when available", () => {
+    expect(
+      contactPayMethodOptions({ peerNpub: NPUB, lnAddress: LN, payWithCashuEnabled: false }),
+    ).toEqual({
+      canUseCashu: false,
+      canUseLightning: true,
+      defaultMethod: "lightning",
+      showChooser: false,
+    });
+  });
+
+  it("settings.pay-with-cashu OFF and no lightning address → nothing payable", () => {
+    expect(
+      contactPayMethodOptions({ peerNpub: NPUB, lnAddress: "  ", payWithCashuEnabled: false }),
+    ).toEqual({
+      canUseCashu: false,
+      canUseLightning: false,
+      defaultMethod: null,
+      showChooser: false,
+    });
+  });
+
+  it("no npub (lightning-only contact) → Lightning regardless of the toggle", () => {
+    expect(
+      contactPayMethodOptions({ peerNpub: null, lnAddress: LN, payWithCashuEnabled: true }),
+    ).toEqual({
+      canUseCashu: false,
+      canUseLightning: true,
+      defaultMethod: "lightning",
+      showChooser: false,
+    });
   });
 });

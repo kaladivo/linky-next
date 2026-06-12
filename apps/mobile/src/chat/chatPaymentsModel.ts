@@ -171,3 +171,48 @@ export const declinedRequestIds = (
   }
   return declined;
 };
+
+// ─── chat-pay.contact-method (#46) ───────────────────────────────────────
+
+export type ContactPayMethod = "cashu" | "lightning";
+
+/**
+ * The pay sheet's method-choice state for one peer (`chat-pay.contact-method`).
+ *
+ * PoC policy (useContactPayMethod + ContactPayPage):
+ * - Cashu is usable when the `settings.pay-with-cashu` toggle is on AND the
+ *   peer has a Nostr identity (npub);
+ * - Lightning is usable when the contact has a lightning address;
+ * - the DEFAULT prefers Cashu when usable, else Lightning;
+ * - when BOTH are usable the chooser is shown — the user's explicit pick is
+ *   what gets paid, and a failing method NEVER falls back to the other one
+ *   (feature-map contract: contact pay never silently switches).
+ *
+ * Divergence from the PoC: with NO usable method the PoC kept "lightning"
+ * as a cosmetic default for its toggle button; here `defaultMethod` is null
+ * and the send button disables (same observable outcome — nothing payable).
+ */
+export interface ContactPayMethodOptions {
+  readonly canUseCashu: boolean;
+  readonly canUseLightning: boolean;
+  /** Pre-selected method when the user has not chosen; null = none usable. */
+  readonly defaultMethod: ContactPayMethod | null;
+  /** Both usable → render the explicit Cashu/Lightning chooser. */
+  readonly showChooser: boolean;
+}
+
+export const contactPayMethodOptions = (args: {
+  readonly peerNpub: string | null;
+  readonly lnAddress: string | null;
+  readonly payWithCashuEnabled: boolean;
+}): ContactPayMethodOptions => {
+  const canUseCashu =
+    args.payWithCashuEnabled && args.peerNpub !== null && args.peerNpub.trim() !== "";
+  const canUseLightning = (args.lnAddress ?? "").trim() !== "";
+  const defaultMethod: ContactPayMethod | null = canUseCashu
+    ? "cashu"
+    : canUseLightning
+      ? "lightning"
+      : null;
+  return { canUseCashu, canUseLightning, defaultMethod, showChooser: canUseCashu && canUseLightning };
+};

@@ -93,6 +93,7 @@ import type { PayFailure } from "../wallet/payModel";
 import { buildPayMintCandidates, selectPayMintCandidate } from "../wallet/payModel";
 import {
   ISSUED_TOKEN_ID_DETAIL,
+  QUEUED_TRANSACTION_PHASE,
   REQUEST_ID_DETAIL,
   REQUEST_TEXT_DETAIL,
   REQUEST_TRANSACTION_METHOD,
@@ -110,6 +111,12 @@ import {
 
 export type ChatPayOutcome =
   | { readonly kind: "sent"; readonly amountSat: number }
+  /**
+   * #46 `chat-pay.queue`: the mint was unreachable BEFORE anything was
+   * minted — the spend row stays pending (phase "queued") and the caller
+   * persists the retry intent (pendingPaymentQueue.ts). Funds untouched.
+   */
+  | { readonly kind: "queued"; readonly amountSat: number; readonly transactionId: string }
   | PayFailure;
 
 const failed = (errorTag: string, detail: string | null = null): PayFailure => ({
@@ -196,6 +203,17 @@ export interface SendCashuArgs {
     readonly requestId: string | null;
     readonly mintUrls: ReadonlyArray<string>;
   };
+  /**
+   * #46 `chat-pay.queue`: when set, a `MintConnectionError` during the swap
+   * (mint unreachable — nothing minted yet) yields the "queued" outcome
+   * instead of a failure. `reuseTransactionId` is the retry path: the flush
+   * loop re-runs the send over the ORIGINAL pending spend row so history
+   * shows one row per intent; a definitive retry failure marks that row
+   * failed (the intent is dropped by the caller).
+   */
+  readonly offlineQueue?: {
+    readonly reuseTransactionId?: string | undefined;
+  };
 }
 
 /**
@@ -207,17 +225,36 @@ export const sendCashuInChat = async (
   store: LinkyStore,
   args: SendCashuArgs,
 ): Promise<ChatPayOutcome> => {
+  const tokens = createTokensRepository(store);
+  const transactions = createTransactionsRepository(store);
+  const reuseTransactionId = args.offlineQueue?.reuseTransactionId;
+
+  // Queue retries (#46): a DEFINITIVE failure must not leave the reused
+  // pending row dangling — it flips to failed and the intent is dropped.
+  const definitiveFailure = (outcome: PayFailure): PayFailure => {
+    if (reuseTransactionId !== undefined) {
+      transactions.update(reuseTransactionId, {
+        status: "failed",
+        phase: QUEUED_TRANSACTION_PHASE,
+        error: `${outcome.errorTag}${outcome.detail === null ? "" : `: ${outcome.detail}`}`,
+      });
+      invalidateStoreData();
+    }
+    return outcome;
+  };
+
   const amountSat = Math.trunc(args.amountSat);
-  if (!Number.isFinite(args.amountSat) || amountSat <= 0) return failed("InvalidAmountError");
+  if (!Number.isFinite(args.amountSat) || amountSat <= 0) {
+    return definitiveFailure(failed("InvalidAmountError"));
+  }
 
   const session = await activePaySession();
+  // No session is NOT definitive: the queue flush only runs with a loaded
+  // session, so a reused row never strands here.
   if (session === null) return failed("NoSessionError");
   const sender = session.identity;
   const peerHex = npubToPublicKeyHex(args.peerNpub);
-  if (peerHex === null) return failed("InvalidNpubError");
-
-  const tokens = createTokensRepository(store);
-  const transactions = createTransactionsRepository(store);
+  if (peerHex === null) return definitiveFailure(failed("InvalidNpubError"));
 
   // Mint selection: single-mint payment, PoC comparator (main mint last).
   // Paying a request honors its NUT-18 `m` constraint when present.
@@ -237,22 +274,39 @@ export const sendCashuInChat = async (
     buildPayMintCandidates(fundable, preferred),
     amountSat,
   );
-  if (candidate === null) return failed("InsufficientFundsError");
+  if (candidate === null) return definitiveFailure(failed("InsufficientFundsError"));
 
-  // Pending spend row first — an interrupted payment leaves an honest record.
-  const spendRow = transactions.record({
-    happenedAtSec: Math.max(1, Math.floor(Date.now() / 1000)),
-    direction: "out",
-    status: "pending",
-    category: CHAT_PAY_TRANSACTION_CATEGORY,
-    method: CHAT_PAY_TRANSACTION_METHOD,
-    phase: "emit",
-    amount: amountSat,
-    unit: candidate.unit,
-    mintUrl: candidate.mintUrl,
-    ...(args.contactId === undefined ? {} : { contactId: args.contactId }),
-  });
-  if (!spendRow.ok) throw new Error(`record chat-pay transaction failed: ${spendRow.error._tag}`);
+  // Pending spend row first — an interrupted payment leaves an honest
+  // record. Queue retries (#46) re-arm the intent's ORIGINAL row instead of
+  // recording a second one (one history row per intent).
+  let spendRowId: string;
+  if (reuseTransactionId !== undefined) {
+    transactions.update(reuseTransactionId, {
+      status: "pending",
+      phase: "emit",
+      amount: amountSat,
+      unit: candidate.unit,
+      mintUrl: candidate.mintUrl,
+    });
+    spendRowId = reuseTransactionId;
+  } else {
+    const spendRow = transactions.record({
+      happenedAtSec: Math.max(1, Math.floor(Date.now() / 1000)),
+      direction: "out",
+      status: "pending",
+      category: CHAT_PAY_TRANSACTION_CATEGORY,
+      method: CHAT_PAY_TRANSACTION_METHOD,
+      phase: "emit",
+      amount: amountSat,
+      unit: candidate.unit,
+      mintUrl: candidate.mintUrl,
+      ...(args.contactId === undefined ? {} : { contactId: args.contactId }),
+    });
+    if (!spendRow.ok) {
+      throw new Error(`record chat-pay transaction failed: ${spendRow.error._tag}`);
+    }
+    spendRowId = spendRow.value.id;
+  }
   invalidateStoreData();
 
   const transitionOrThrow = async (
@@ -284,10 +338,22 @@ export const sendCashuInChat = async (
   );
 
   if (!swapped.ok) {
+    // Nothing was minted — the reserved funding rows come straight back.
     for (const record of candidate.records) {
       await transitionOrThrow(record.id, TokenStateTransition.Return());
     }
-    transactions.update(spendRow.value.id, {
+    // #46 `chat-pay.queue`: an unreachable mint with queueing allowed parks
+    // the INTENT (row stays pending, phase "queued"); the caller persists
+    // it. Only connectivity failures queue — anything else is definitive.
+    if (args.offlineQueue !== undefined && swapped.errorTag === "MintConnectionError") {
+      transactions.update(spendRowId, {
+        status: "pending",
+        phase: QUEUED_TRANSACTION_PHASE,
+      });
+      invalidateStoreData();
+      return { kind: "queued", amountSat, transactionId: spendRowId };
+    }
+    transactions.update(spendRowId, {
       status: "failed",
       phase: "emit",
       error: `${swapped.errorTag}${swapped.detail === null ? "" : `: ${swapped.detail}`}`,
@@ -367,7 +433,7 @@ export const sendCashuInChat = async (
   if (!applied.ok) {
     // The value is safe (issued row + emit row exist); surface the storage
     // failure but leave the wallet consistent.
-    transactions.update(spendRow.value.id, {
+    transactions.update(spendRowId, {
       status: "failed",
       phase: "publish",
       error: `message store failed: ${applied.error.reason}`,
@@ -393,7 +459,7 @@ export const sendCashuInChat = async (
     },
   );
 
-  transactions.update(spendRow.value.id, {
+  transactions.update(spendRowId, {
     status: "completed",
     phase: "complete",
     amount: result.sendAmount,

@@ -22,6 +22,7 @@ import type { Translator } from "@linky/locales";
 import { Effect } from "effect";
 
 import { initChatInboxRunner } from "../chat/chatInboxRunner";
+import { initPendingPaymentFlushRunner } from "../chat/pendingPaymentQueue";
 import type { AppServices } from "../runtime";
 import { runAppEffect } from "../runtime";
 import { toast } from "../toast";
@@ -93,6 +94,16 @@ const chatInboxTask: DeferredStartupTask = {
 };
 
 /**
+ * `chat-pay.queue` (#46): starts the pending contact-payment flush runner —
+ * retries queued (offline-created) payment INTENTS on relay reconnect and
+ * app foreground, and expires stale ones (funds untouched, row + toast).
+ */
+const pendingPaymentTask: DeferredStartupTask = {
+  name: "chat-pay-pending-flush",
+  task: ({ t }) => Effect.sync(() => initPendingPaymentFlushRunner(t)),
+};
+
+/**
  * `mints.autoswap` (#42): starts the background consolidation runner —
  * follows the session-scoped store lifecycle, melts the largest
  * foreign-mint balance toward the main mint when the threshold and the
@@ -109,6 +120,7 @@ export const deferredStartupTasks: readonly DeferredStartupTask[] = [
   relaySettingsWarmupTask,
   pendingFlushTask,
   chatInboxTask,
+  pendingPaymentTask,
   autoswapTask,
 ];
 

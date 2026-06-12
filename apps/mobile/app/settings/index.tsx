@@ -133,6 +133,12 @@ export default function SettingsScreen() {
       <Link href="/dev/link-lab" className="p-4">
         <Text className="text-primary">Deep-link lab (dev)</Text>
       </Link>
+      {/* Pending-payment queue lab (#46): deterministic queue/expiry
+          verification + the pay-with-cashu stand-in toggle (settings UI
+          lands with #56). The screen is dev-profile gated. */}
+      <Link href="/dev/pay-queue" className="p-4">
+        <Text className="text-primary">Pay queue lab (dev)</Text>
+      </Link>
       {/* TEMPORARY (#8): dev-only platform port smoke test; renders null in production. */}
       <PlatformSmokeTestPanel />
     </ScrollView>
