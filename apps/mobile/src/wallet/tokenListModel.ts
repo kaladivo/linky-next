@@ -12,7 +12,7 @@
  * "spendable → broken → dead".
  */
 import type { TokenRecord, TokenState } from "@linky/core";
-import { buildCashuShareUrl } from "@linky/core";
+import { buildCashuShareUrl, canTransitionTokenState } from "@linky/core";
 import { Effect, Either } from "effect";
 
 // ---------------------------------------------------------------------------
@@ -159,6 +159,12 @@ export interface TokenDetailActions {
   readonly canReturn: boolean;
   /** Re-accept at the mint then `Recover` (error rows only). */
   readonly canReaccept: boolean;
+  /**
+   * `Externalize` via NFC write (#50, `cashu.write-nfc`): accepted | issued
+   * only (the #33 transition table). The screen additionally gates on
+   * device NFC support — this flag is state-only.
+   */
+  readonly canWriteNfc: boolean;
 }
 
 /** PoC parity: which repair/check buttons the detail page shows per state. */
@@ -167,4 +173,5 @@ export const tokenDetailActions = (state: TokenState): TokenDetailActions => ({
   canReserve: state === "accepted",
   canReturn: OUT_STATES.has(state),
   canReaccept: state === "error",
+  canWriteNfc: canTransitionTokenState(state, "Externalize"),
 });

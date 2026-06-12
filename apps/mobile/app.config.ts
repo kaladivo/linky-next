@@ -129,6 +129,22 @@ const config: ExpoConfig = {
         recordAudioAndroid: false,
       },
     ],
+    // react-native-nfc-manager (#50; scanner.nfc-read / profile.share-nfc /
+    // cashu.write-nfc): declares the iOS NFC entitlement
+    // (com.apple.developer.nfc.readersession.formats: NDEF + TAG), the
+    // NFCReaderUsageDescription, and the Android NFC permission. The JS side
+    // loads the module lazily and gates every entry point on
+    // NfcManager.isSupported() (src/nfc/) — simulators and NFC-less devices
+    // build and run identically with all NFC UI hidden.
+    // NOTE: the iOS App ID must have the NFC Tag Reading capability enabled
+    // for release signing; dev signing adds it from the entitlement.
+    [
+      "react-native-nfc-manager",
+      {
+        nfcPermission:
+          "Linky uses NFC to read contact and payment tags and to write your profile or a token to a tag.",
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

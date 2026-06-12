@@ -31,8 +31,8 @@ import type { ImperativeRouter } from "expo-router";
 export const SCAN_ENTRY_POINTS = ["scan", "contacts", "send", "receive"] as const;
 export type ScanEntryPoint = (typeof SCAN_ENTRY_POINTS)[number];
 
-/** Which input surface produced the value (`scanner.camera/paste/gallery/manual`). */
-export type ScanSource = "camera" | "paste" | "gallery" | "manual";
+/** Which input surface produced the value (`scanner.camera/paste/gallery/manual/nfc-read`). */
+export type ScanSource = "camera" | "paste" | "gallery" | "manual" | "nfc";
 
 /** One raw captured value. `value` is trimmed and never empty. */
 export interface ScanCapture {

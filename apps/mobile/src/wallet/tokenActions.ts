@@ -243,6 +243,16 @@ export const reserveToken = (store: LinkyStore, id: string): Promise<boolean> =>
 export const returnTokenToWallet = (store: LinkyStore, id: string): Promise<boolean> =>
   applyTransition(store, id, TokenStateTransition.Return());
 
+/**
+ * `Externalize` (#50, `cashu.externalize-token` NFC path): the token now
+ * lives on a physical tag — excluded from available balance, returnable via
+ * the Return action above. Called ONLY after the NFC write is CONFIRMED
+ * (PoC `writeCashuTokenToNfc` ordering): a failed/cancelled tag write
+ * leaves the row untouched.
+ */
+export const externalizeToken = (store: LinkyStore, id: string): Promise<boolean> =>
+  applyTransition(store, id, TokenStateTransition.Externalize());
+
 /** `Delete`: soft delete (the detail screen confirms first). */
 export const deleteToken = (store: LinkyStore, id: string): Promise<boolean> =>
   applyTransition(store, id, TokenStateTransition.Delete());

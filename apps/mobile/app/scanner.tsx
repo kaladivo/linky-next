@@ -30,6 +30,8 @@ import { Linking, Pressable, ScrollView, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTranslator } from "../src/locales";
+import { cancelNfcSession, readNfcTag } from "../src/nfc/nfcSession";
+import { useNfcSupported } from "../src/nfc/nfcSupport";
 import { runAppEffect } from "../src/runtime";
 import type { ScanCapture, ScanSource } from "../src/scanner/scanContract";
 import { handleScanCapture } from "../src/scanner/scanResultHandler";
@@ -54,6 +56,10 @@ export default function ScannerScreen() {
   const [error, setError] = useState<string | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualText, setManualText] = useState("");
+
+  /** `scanner.nfc-read` (#50): gated on device support, like every NFC UI. */
+  const nfcSupported = useNfcSupported();
+  const [nfcReading, setNfcReading] = useState(false);
 
   /** One capture in flight at a time (the #48 handler may be async). */
   const busyRef = useRef(false);
@@ -134,6 +140,47 @@ export default function ScannerScreen() {
       deliver(data, "gallery");
     } catch {
       setError(t("scanImageUnsupported"));
+    }
+  };
+
+  /**
+   * One-tag NFC read feeding the SAME parse path as every other source
+   * (feature-map contract). Cancel (system sheet on iOS, the inline cancel
+   * below on Android) is a silent non-event; everything else fails visibly.
+   */
+  const readTag = async () => {
+    if (nfcReading || busyRef.current) return;
+    setError(null);
+    setNfcReading(true);
+    try {
+      const outcome = await readNfcTag({
+        prompt: t("nfcReadPrompt"),
+        success: t("nfcReadSuccess"),
+      });
+      switch (outcome.kind) {
+        case "value":
+          deliver(outcome.value, "nfc");
+          return;
+        case "empty":
+          setError(t("nfcReadEmpty"));
+          return;
+        case "cancelled":
+          return;
+        case "busy":
+          setError(t("nfcWriteBusy"));
+          return;
+        case "disabled":
+          setError(t("nfcWriteDisabled"));
+          return;
+        case "unavailable":
+          setError(t("nfcWriteUnsupported"));
+          return;
+        case "failed":
+          setError(outcome.message ?? t("nfcReadFailed"));
+          return;
+      }
+    } finally {
+      setNfcReading(false);
     }
   };
 
@@ -219,7 +266,27 @@ export default function ScannerScreen() {
             onPress={() => void pickFromGallery()}
             testID="scanner-gallery"
           />
+          {/* scanner.nfc-read: rendered ONLY on NFC-capable devices. */}
+          {nfcSupported && (
+            <Button
+              label={t("nfcReadTag")}
+              variant="secondary"
+              className="flex-1"
+              disabled={nfcReading}
+              onPress={() => void readTag()}
+              testID="scanner-nfc"
+            />
+          )}
         </View>
+
+        {/* While a read session runs: iOS shows the system sheet; Android
+            scans silently, so this inline prompt (with cancel) is its UI. */}
+        {nfcReading && (
+          <Surface className="gap-3" testID="scanner-nfc-pending">
+            <Text className="text-sm opacity-70">{t("nfcReadPrompt")}</Text>
+            <Button label={t("cancel")} variant="secondary" onPress={() => cancelNfcSession()} />
+          </Surface>
+        )}
 
         {/* Manual entry (scanner.manual): quiet "can't scan?" escape
             hatch per common UX practice (PoC divergence, per issue). */}
