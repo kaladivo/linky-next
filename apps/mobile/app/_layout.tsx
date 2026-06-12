@@ -59,10 +59,18 @@ function RootNavigator() {
       <Stack.Screen name="contact/[id]" options={{ headerShown: true }} />
       <Stack.Screen name="chat/[id]" options={{ headerShown: true }} />
       <Stack.Screen name="wallet/token/[id]" options={{ headerShown: true }} />
-      {/* Wallet home entry points (#36); the flows land with #37/#39/#43. */}
+      {/* Wallet home entry points (#36); receive/top-up flow is #37. */}
       <Stack.Screen
         name="wallet/receive"
         options={{ headerShown: true, title: t("walletReceive") }}
+      />
+      <Stack.Screen
+        name="wallet/receive-invoice"
+        options={{ headerShown: true, title: t("topupInvoiceTitle") }}
+      />
+      <Stack.Screen
+        name="wallet/receive-address"
+        options={{ headerShown: true, title: t("topupNoAmountTitle") }}
       />
       <Stack.Screen name="wallet/send" options={{ headerShown: true, title: t("walletSend") }} />
       <Stack.Screen

@@ -6,6 +6,7 @@
 export { useEffectQuery } from "./useEffectQuery";
 export { useEffectMutation } from "./useEffectMutation";
 export { runAppEffect } from "./runAppEffect";
+export { runCashuEffect } from "./runCashuEffect";
 export type { EffectQueryState } from "./queryState";
 export type { EffectMutation, EffectMutationState } from "./useEffectMutation";
 export type { AppServices } from "./appLayer";

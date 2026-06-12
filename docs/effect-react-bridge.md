@@ -42,6 +42,24 @@ The Linky store (`createLinkyStore` from `@linky/evolu-store`) is the one piece 
 
 Why not a Layer in `appLayer`? A per-session Layer would require either rebuilding the runtime per login (forbidden — one-runtime rule) or a mutable service holding "maybe a store", which moves the same lifecycle problem behind a Tag without removing it. Why not React context? The store is consumed on screens outside the gate's subtree (Settings is pushed above the tabs), and teardown must be reachable from the non-React logout action. The module singleton keeps one owner for boot (the gate), one for teardown (logout), and read-only subscription everywhere else.
 
+Non-React consumers that run *behind* the gate (the wallet-data seam, the cashu flows below) reach the store through `getReadyLinkyStore()` — a promise that resolves once the gate's boot finished. It must only be called from code paths that render after the gate; with no identity it would never resolve, exactly like the screens themselves never rendering.
+
+## Cashu workflows and the session-scoped CounterStore (#37)
+
+Core's Cashu engine (#32) takes all counter state through the `CounterStore` port, and the production backend (#35 `createCashuCounterStoreLayer`) is built **on the session store** — the `_cashuCounter` table of the per-identity database. That makes `CounterStore` the one core service that cannot live in `appLayer` (same lifecycle argument as the store itself).
+
+The wiring is [`apps/mobile/src/runtime/runCashuEffect.ts`](../apps/mobile/src/runtime/runCashuEffect.ts):
+
+```ts
+runCashuEffect(store, claimTopup({ ... })) // Effect<A, E, AppServices | CounterStore>
+```
+
+- It builds the CounterStore service from the given store and provides it over `runAppEffect`, so the workflow's remaining requirements stay ⊆ `AppServices`.
+- **One service instance per store** (WeakMap-memoized): the #32 fund-safety contract serializes counter-consuming mint operations through an in-memory per-keyset FIFO lock that lives inside the service. Rebuilding the Layer per call would hand every call its own lock map and void the contract. A new session (new store) gets a fresh service; the old one is garbage with its store.
+- Flows that need it: top-up claim (#37), send/melt and restore later (#39/#42). Quote creation/checking need only `HttpClient` and keep using `runAppEffect`.
+
+The wallet-data seam closed the same way: `loadWalletData` (`src/wallet/walletData.ts`) awaits `getReadyLinkyStore()` and reads `TokensRepository.balances()`; screens re-query by passing the store data version (`subscribeToStoreData`) as a `useEffectQuery` dep.
+
 ## The hook pattern: `useEffectQuery`
 
 [`apps/mobile/src/runtime/useEffectQuery.ts`](../apps/mobile/src/runtime/useEffectQuery.ts) is the bridge for read-style workflows:

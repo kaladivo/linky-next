@@ -556,6 +556,12 @@ export const cs = {
   topupInvoiceAmount: "Dobíjíš {amount} {unit}.",
   topupFetchingInvoice: "Načítám fakturu…",
   topupInvoiceFailed: "Nepodařilo se načíst fakturu",
+  topupWaitingForPayment: "Čekáme na zaplacení…",
+  topupClaiming: "Připisujeme do peněženky…",
+  topupQuoteExpired: "Faktura vypršela.",
+  topupClaimFailed: "Připsání dobití se nepovedlo.",
+  topupNewInvoice: "Nová faktura",
+  topupResumePending: "Pokračovat v dobití: {amount} sat",
 
   scan: "Skenovat",
   scanUnsupported: "Nepodporovaný QR kód.",

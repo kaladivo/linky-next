@@ -10,11 +10,12 @@
  */
 import { Amount, Button, Surface, Text } from "@linky/ui";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
 import { useLocale } from "../../src/locales";
 import { runAppEffect, useEffectQuery } from "../../src/runtime";
+import { getStoreDataVersion, subscribeToStoreData } from "../../src/store/storeManager";
 import { useAmountDisplay } from "../../src/wallet/AmountDisplayProvider";
 import {
   loadWalletWarningDismissed,
@@ -53,7 +54,10 @@ export default function WalletScreen() {
   const router = useRouter();
   const { unit, hidden, cycleUnit, toggleHidden } = useAmountDisplay();
 
-  const walletData = useEffectQuery(loadWalletData);
+  // Balances come from the session store (#35/#37 seam); writes bump the
+  // store data version, so the balance re-queries after seeds and claims.
+  const dataVersion = useSyncExternalStore(subscribeToStoreData, getStoreDataVersion);
+  const walletData = useEffectQuery(loadWalletData, [dataVersion]);
   const persistedDismissed = useEffectQuery(loadWalletWarningDismissed);
   const [dismissedOverride, setDismissedOverride] = useState<boolean | null>(null);
 

@@ -66,6 +66,27 @@ const setState = (next: LinkyStoreState): void => {
 
 export const getStoreState = (): LinkyStoreState => state;
 
+/**
+ * Resolves once the session store is ready. For non-React consumers that
+ * run AFTER the boot gate mounted (wallet data loads, cashu flows): with a
+ * loaded session the gate's `ensureStoreForSession` always follows, so the
+ * wait is bounded by store creation. Callers must only run from screens
+ * behind the gate — with no identity the promise would never resolve
+ * (matching the screens themselves never rendering).
+ */
+export const getReadyLinkyStore = (): Promise<LinkyStore> => {
+  if (state.status === "ready") return Promise.resolve(state.store);
+  if (creating !== null) return creating;
+  return new Promise((resolve) => {
+    const unsubscribe = subscribeToStore(() => {
+      if (state.status === "ready") {
+        unsubscribe();
+        resolve(state.store);
+      }
+    });
+  });
+};
+
 export const subscribeToStore = (listener: Listener): (() => void) => {
   listeners.add(listener);
   return () => {

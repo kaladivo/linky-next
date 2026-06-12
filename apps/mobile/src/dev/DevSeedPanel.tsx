@@ -1,8 +1,8 @@
 /**
- * TEMPORARY dev-only seed panel (#26): inserts a few demo contacts,
- * messages and an unknown thread through the real repositories so the
- * Contacts tab (and later the chat work, #29) has data to render. Remove
- * once real add-contact (#27) + messaging (#22/#29) make it redundant.
+ * TEMPORARY dev-only seed panel (#26, wallet seed unified here by #37):
+ * inserts demo contacts/messages and demo wallet token records through the
+ * real repositories so the Contacts tab and the wallet home have data to
+ * render. Remove once real flows make it redundant.
  *
  * Dev-panel convention (see DevLogoutPanel): hardcoded copy, hidden in
  * production builds.
@@ -17,6 +17,7 @@ import { useState } from "react";
 import { appProfile } from "../environment";
 import { invalidateStoreData } from "../store/storeManager";
 import { useLinkyStore } from "../store/useLinkyStore";
+import { seedDevWallet } from "./devWalletSeed";
 import type { LinkyStore } from "@linky/evolu-store";
 
 /** Bob — the committed second dev identity (dev/test-identities/bob.json). */
@@ -90,14 +91,15 @@ export function DevSeedPanel() {
 
   const ready = storeState.status === "ready";
 
-  const onSeed = () => {
+  const runSeed = (seed: (store: LinkyStore) => Promise<"seeded" | "already-seeded">) => {
     if (storeState.status !== "ready") return;
     setBusy(true);
     setStatus(null);
-    seedDemoData(storeState.store)
-      .then((outcome) =>
-        setStatus(outcome === "seeded" ? "Demo data inserted." : "Already seeded."),
-      )
+    seed(storeState.store)
+      .then((outcome) => {
+        invalidateStoreData();
+        setStatus(outcome === "seeded" ? "Demo data inserted." : "Already seeded.");
+      })
       .catch((error: unknown) => setStatus(`Seeding failed: ${String(error)}`))
       .finally(() => setBusy(false));
   };
@@ -106,15 +108,22 @@ export function DevSeedPanel() {
     <Surface className="gap-3" testID="dev-seed-panel">
       <Text weight="bold">Demo data (dev only)</Text>
       <Text className="text-sm opacity-70">
-        TEMPORARY: inserts demo contacts, messages and an unknown sender through the repositories
-        so the Contacts tab has something to show.
+        TEMPORARY: inserts demo contacts/messages and demo wallet token records through the real
+        repositories (wallet rows persist across relaunches).
       </Text>
       <Button
-        label={busy ? "Seeding…" : "Seed demo data"}
+        label={busy ? "Seeding…" : "Seed demo contacts"}
         variant="secondary"
         disabled={busy || !ready}
-        onPress={onSeed}
+        onPress={() => runSeed(seedDemoData)}
         testID="dev-seed-demo-data"
+      />
+      <Button
+        label={busy ? "Seeding…" : "Seed demo wallet"}
+        variant="secondary"
+        disabled={busy || !ready}
+        onPress={() => runSeed(seedDevWallet)}
+        testID="dev-seed-demo-wallet"
       />
       {status !== null && <Text className="text-sm opacity-70">{status}</Text>}
     </Surface>
