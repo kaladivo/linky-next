@@ -37,3 +37,22 @@ verbatim and the golden test carries an explicit divergence table:
    `https://domain/.well-known/lnurlp/lnurlp%3A%2F%2Fuser`. The new parser
    strips the scheme first (the behavior `normalizeLnurlSchemeUrl` in the PoC
    was clearly written to have) and resolves `user@domain`'s well-known URL.
+
+## `lnurlPayCallback.golden.json` (issue #39)
+
+Pins the PoC's LNURL-pay WIRE behavior: the metadata request URL, min/max
+sat preview rounding, and the invoice-callback request URLs (amount param,
+LUD-12 comment handling incl. the silent no-comment retry). Generated on
+2026-06-12 by running `generate-callback.poc.ts.txt` (verbatim provenance
+copy) with bun from inside `linky-poc/apps/web-app`, importing the PoC's own
+`src/lnurlPay.ts` with a stubbed global fetch that records every request.
+
+Intentional divergences (asserted in `lnurlPayCallback.golden.test.ts`):
+
+1. **Inverted LUD-12 condition** — the PoC only ever sent a comment to
+   providers that did NOT advertise `commentAllowed` (the advertised-comment
+   URL was built, then ignored). Core sends the truncated comment exactly
+   when support is advertised.
+2. **Query encoding** — PoC `URLSearchParams` spells a space `+`, core's
+   `appendQueryParams` spells it `%20`; same x-www-form-urlencoded value,
+   normalized in the golden comparison.

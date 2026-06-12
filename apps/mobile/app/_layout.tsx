@@ -93,6 +93,15 @@ function RootNavigator() {
         options={{ headerShown: true, title: t("topupNoAmountTitle") }}
       />
       <Stack.Screen name="wallet/send" options={{ headerShown: true, title: t("walletSend") }} />
+      {/* Pay flows (#39): BOLT11 confirmation + Lightning-address/LNURL pay. */}
+      <Stack.Screen
+        name="wallet/pay-invoice"
+        options={{ headerShown: true, title: t("pay") }}
+      />
+      <Stack.Screen
+        name="wallet/pay-address"
+        options={{ headerShown: true, title: t("payTo") }}
+      />
       <Stack.Screen
         name="wallet/transactions"
         options={{ headerShown: true, title: t("transactionsTitle") }}
