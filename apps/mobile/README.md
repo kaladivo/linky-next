@@ -40,6 +40,52 @@ checks each instance rendered via agent-device. See
 [`scripts/README.md`](../../scripts/README.md) and the throwaway identities in
 [`dev/test-identities/`](../../dev/test-identities/README.md).
 
+## Push notifications (dev) — #52
+
+`src/notifications/` implements `notifications.enable/disable/replace-stale/
+notify-message/notify-payment/closed-app/debug` against the apps/push service.
+
+**Copy split (notifications.md contract, PoC parity):** the service can never
+decrypt, so its remote payload carries generic copy ("Linky / You have a new
+message") plus `eventId` + `recipientPubkey`. Rich copy (sender name, content
+preview, payment amount) exists only where on-device decryption happened: the
+chat inbox runner presents a rich LOCAL notification for messages/payments
+arriving while the app is awake (suppressed for the open thread and for a
+non-active app), and a tapped remote notification resolves the wrap on-device
+(relay fetch by id → NIP-17 decrypt) to route into the right chat. An iOS
+Notification Service Extension could enrich closed-app banners, but is not
+expressible through Expo config plugins (CNG rule) — closed-app banners stay
+generic by design.
+
+**Dev verification without APNs credentials:**
+
+```sh
+# local service (the dev profile's pushServiceUrl is http://localhost:8787)
+pnpm --filter @linky/push build
+PUSH_PUBLIC_URL=http://localhost:8787 PUSH_DB_PATH=/tmp/linky-push.sqlite \
+  node apps/push/dist/main.js
+
+# real relay event addressed to a registered identity (alice → <pubkey>)
+node apps/push/scripts/publishMarkedWrap.mjs <recipientPubkeyHex> "hi"
+
+# closed-app banner on a simulator (shape = what Expo delivers; data under
+# the APNs "body" key is Expo's convention)
+xcrun simctl push <udid> fit.linky.app.dev payload.json
+```
+
+**Dev-gated fake token:** simulators have no APNs and dev builds have no EAS
+project id, so `getExpoPushTokenAsync` fails there. In the `development`
+profile ONLY, the token falls back to `ExponentPushToken[dev-<installId>]`
+(marked `dev-fake` on the debug screen) so registration, replace-stale and
+unregister run for real against the service. Real delivery end-to-end needs a
+physical device with a real Expo token. Note: Expo reports fake tokens as
+`DeviceNotRegistered` after the first delivery attempt, so the service then
+drops the registration row (dead-token cleanup) — re-register from the debug
+screen when testing repeatedly.
+
+Settings → Notifications is the user toggle; Settings → Notifications →
+Notification debug (also under Advanced) shows registration/delivery state.
+
 ## Routes
 
 Expo Router, file-based, under `app/`:
