@@ -48,6 +48,12 @@ export const cs = {
   notificationsDenied: "Zamítnuto",
   notificationsError: "Chyba",
   notificationReceivedMoney: "Přijali jste peníze",
+  notificationReceivedAmount: "Přijali jste {amount} sat",
+  notificationsEnableHint:
+    "Dostávejte upozornění na nové zprávy a příchozí platby, i když je aplikace zavřená.",
+  notificationsDisable: "Vypnout",
+  notificationsDisabled: "Vypnuto",
+  notificationsDebugTitle: "Ladění notifikací",
 
   onboardingTitle: "Linky",
   onboardingSubtitle: "Lightning kontakty pro platby a zprávy.",

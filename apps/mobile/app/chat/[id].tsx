@@ -45,6 +45,7 @@ import {
   toggleReaction,
 } from "../../src/chat/chatActions";
 import { sendCashuInChat } from "../../src/chat/chatPayActions";
+import { setActiveChatThread } from "../../src/notifications/activeThread";
 import {
   mintHostOf,
   parseChatPayAmount,
@@ -313,6 +314,13 @@ export default function ChatScreen() {
   useEffect(() => {
     if (store !== null) maybeCheckIssuedTokens(store);
   }, [store]);
+
+  // notifications (#52): the open conversation never alerts — the in-app
+  // rich notifier skips the active thread (duplicate-alert suppression).
+  useEffect(() => {
+    setActiveChatThread(id ?? null);
+    return () => setActiveChatThread(null);
+  }, [id]);
 
   const ready: ChatConversation | null = state.status === "ready" ? state : null;
   const unknownThread = ready?.thread.kind === "unknown" ? ready.thread.thread : null;

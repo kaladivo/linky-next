@@ -47,6 +47,12 @@ export const en = {
   notificationsDenied: "Denied",
   notificationsError: "Error",
   notificationReceivedMoney: "You received money",
+  notificationReceivedAmount: "You received {amount} sat",
+  notificationsEnableHint:
+    "Get notified about new messages and incoming payments, even when the app is closed.",
+  notificationsDisable: "Disable",
+  notificationsDisabled: "Disabled",
+  notificationsDebugTitle: "Notification debug",
 
   onboardingTitle: "Linky",
   onboardingSubtitle: "Lightning contacts for payments and messages.",

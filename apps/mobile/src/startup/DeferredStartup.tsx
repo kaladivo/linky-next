@@ -7,17 +7,17 @@
  */
 import { useEffect } from "react";
 
-import { useTranslator } from "../locales";
+import { useLocale } from "../locales";
 import { runDeferredStartup } from "./startupCoordinator";
 
 export function DeferredStartup() {
-  const t = useTranslator();
+  const { t, locale } = useLocale();
 
   useEffect(() => {
-    runDeferredStartup({ t });
-    // First mount only (`t` intentionally untracked) — the coordinator must
-    // not re-run on locale change, and runDeferredStartup is idempotent
-    // anyway.
+    runDeferredStartup({ t, locale });
+    // First mount only (`t`/`locale` intentionally untracked) — the
+    // coordinator must not re-run on locale change, and runDeferredStartup
+    // is idempotent anyway.
   }, []);
 
   return null;

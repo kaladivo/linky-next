@@ -30,8 +30,13 @@ import type { LinkyStore, MessagesRepository } from "@linky/evolu-store";
 import { Effect, Stream } from "effect";
 
 import { runAppEffect } from "../runtime";
+import {
+  notifyInboundChatMessage,
+  notifyIncomingChatPayment,
+} from "../notifications/inAppRichNotifier";
 import { acceptIncomingTokenMessage } from "./chatPayActions";
 import { toChatEventInput } from "./chatEventMapping";
+import { tokenMessageInfo } from "./chatPaymentsModel";
 import { getSessionVersion, subscribeToSessionVersion } from "../session/sessionStore";
 import {
   getStoreState,
@@ -84,6 +89,16 @@ const applySignal = async (
       ) {
         const store = getStoreState();
         if (store.status === "ready") {
+          const tokenInfo = tokenMessageInfo(input.content);
+          if (tokenInfo === null) {
+            // notifications.notify-message (#52): rich in-app alert for a
+            // decrypted inbound text message — fire-and-forget, suppressed
+            // for the open thread / a non-active app (inAppRichNotifier).
+            void notifyInboundChatMessage(store.store, {
+              peerNpub: input.peerNpub,
+              content: input.content,
+            }).catch(() => undefined);
+          }
           void acceptIncomingTokenMessage(store.store, {
             peerNpub: input.peerNpub,
             content: input.content,
@@ -91,6 +106,16 @@ const applySignal = async (
             .then((outcome) => {
               if (__DEV__ && outcome !== "not-a-token") {
                 console.log(`[chat-pay] auto-accept: ${outcome} (${input.content.length} chars)`);
+              }
+              // notifications.notify-payment (#52): the QUIET token message
+              // stays unannounced; the wallet's successful accept is what
+              // carries the rich payment copy (sender + amount). The marked
+              // payment notice only rings the closed-app path.
+              if (outcome === "accepted") {
+                void notifyIncomingChatPayment(store.store, {
+                  peerNpub: input.peerNpub,
+                  amountSat: tokenInfo?.amountSat ?? null,
+                }).catch(() => undefined);
               }
             })
             .catch((error: unknown) => {

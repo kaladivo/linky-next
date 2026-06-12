@@ -35,6 +35,13 @@ export default function AdvancedSettingsScreen() {
           onPress={() => router.push("/settings/relays")}
           testID="open-relays"
         />
+        {/* #52 notifications.debug: registration + delivery state. */}
+        <Button
+          label={t("notificationsDebugTitle")}
+          variant="secondary"
+          onPress={() => router.push("/settings/push-debug")}
+          testID="open-push-debug"
+        />
       </Surface>
       <Surface>
         <Text>{t("shellAdvancedPlaceholder")}</Text>

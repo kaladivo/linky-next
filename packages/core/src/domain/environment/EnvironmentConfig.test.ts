@@ -37,6 +37,7 @@ describe("environmentForProfile — defaults match the spec table", () => {
       presetMintUrls: ["https://testnut.cashu.space", "https://nofees.testnut.cashu.space"],
       nostrRelayUrls: SPEC_RELAYS,
       evoluSyncUrls: ["wss://free.evoluhq.com"],
+      pushServiceUrl: "http://localhost:8787",
     });
   });
 
@@ -48,6 +49,7 @@ describe("environmentForProfile — defaults match the spec table", () => {
       presetMintUrls: ["https://testnut.cashu.space", "https://nofees.testnut.cashu.space"],
       nostrRelayUrls: SPEC_RELAYS,
       evoluSyncUrls: ["wss://free.evoluhq.com"],
+      pushServiceUrl: "https://push.linky.fit",
     });
   });
 
@@ -65,6 +67,7 @@ describe("environmentForProfile — defaults match the spec table", () => {
       ],
       nostrRelayUrls: SPEC_RELAYS,
       evoluSyncUrls: ["wss://evolu.linky.fit", "wss://free.evoluhq.com"],
+      pushServiceUrl: "https://push.linky.fit",
     });
   });
 });
@@ -74,6 +77,7 @@ describe("structural mainnet guard", () => {
     presetMintUrls: ["https://testnut.cashu.space"],
     nostrRelayUrls: ["wss://relay.damus.io"],
     evoluSyncUrls: ["wss://free.evoluhq.com"],
+    pushServiceUrl: "https://push.linky.fit",
   };
 
   it("refuses a mainnet mint for the development profile", () => {
@@ -161,6 +165,36 @@ describe("structural mainnet guard", () => {
         network: "test",
         cashuMintUrl: "https://testnut.cashu.space",
         presetMintUrls: ["https://testnut.cashu.space", "https://cashu.cz"],
+      }),
+    ).toThrow();
+  });
+
+  it("allows a localhost http push service for development, refuses it for production", () => {
+    const config = decodeEnvironmentConfig({
+      ...base,
+      profile: "development",
+      network: "test",
+      cashuMintUrl: "https://testnut.cashu.space",
+      pushServiceUrl: "http://localhost:8787",
+    });
+    expect(config.pushServiceUrl).toBe("http://localhost:8787");
+    expect(() =>
+      decodeEnvironmentConfig({
+        ...base,
+        profile: "production",
+        network: "main",
+        cashuMintUrl: "https://cashu.cz",
+        pushServiceUrl: "http://localhost:8787",
+      }),
+    ).toThrow();
+    // Non-localhost plain http is refused even for development.
+    expect(() =>
+      decodeEnvironmentConfig({
+        ...base,
+        profile: "development",
+        network: "test",
+        cashuMintUrl: "https://testnut.cashu.space",
+        pushServiceUrl: "http://push.linky.fit",
       }),
     ).toThrow();
   });

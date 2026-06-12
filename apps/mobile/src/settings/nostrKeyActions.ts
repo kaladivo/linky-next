@@ -11,13 +11,29 @@
 import { Clipboard, activateCustomNostrKey, revertToDerivedNostrKey } from "@linky/core";
 import { Effect, Option } from "effect";
 
+import {
+  reconcileNotificationRegistration,
+  unregisterBeforeIdentitySwitch,
+} from "../notifications/notificationActions";
 import { runAppEffect } from "../runtime";
 import { invalidateSession } from "../session/sessionStore";
 
 export type ActivateCustomKeyResult = "activated" | "invalid" | "failed";
 
+/**
+ * Push registrations (#52, notifications.replace-stale) around a key
+ * switch: the OLD identity unregisters BEFORE the switch — the only moment
+ * its secret can still sign the unregister proof — and the NEW identity
+ * registers right after, so a key change never leaves a broken or
+ * duplicate registration behind. Both halves are best-effort.
+ */
+const reregisterAfterSwitch = (): void => {
+  void reconcileNotificationRegistration().catch(() => undefined);
+};
+
 /** Validates + activates a pasted nsec override. */
 export const activateCustomKey = async (input: string): Promise<ActivateCustomKeyResult> => {
+  await unregisterBeforeIdentitySwitch();
   const result = await runAppEffect(
     activateCustomNostrKey(input).pipe(
       Effect.as("activated" as const),
@@ -26,11 +42,15 @@ export const activateCustomKey = async (input: string): Promise<ActivateCustomKe
     ),
   );
   if (result === "activated") invalidateSession();
+  // Runs on failure too: an invalid nsec must re-register the unchanged
+  // identity that was unregistered above.
+  reregisterAfterSwitch();
   return result;
 };
 
 /** Reverts to the derived default key. Returns false on storage failure. */
 export const revertToDerivedKey = async (): Promise<boolean> => {
+  await unregisterBeforeIdentitySwitch();
   const ok = await runAppEffect(
     revertToDerivedNostrKey.pipe(
       Effect.as(true),
@@ -38,6 +58,7 @@ export const revertToDerivedKey = async (): Promise<boolean> => {
     ),
   );
   if (ok) invalidateSession();
+  reregisterAfterSwitch();
   return ok;
 };
 

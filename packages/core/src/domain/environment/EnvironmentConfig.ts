@@ -109,6 +109,30 @@ const TestSyncUrl = WssUrl.pipe(
   }),
 );
 
+/** Hosts a non-production build may reach over plain http (local services). */
+const LOCAL_HTTP_HOSTS: ReadonlyArray<string> = ["localhost", "127.0.0.1"];
+
+const HttpLocalhostUrl = Schema.String.pipe(
+  Schema.filter(
+    (url) => {
+      if (!urlWithProtocol("http")(url)) return false;
+      const host = hostOf(url);
+      return host !== undefined && LOCAL_HTTP_HOSTS.includes(host);
+    },
+    {
+      identifier: "HttpLocalhostUrl",
+      description: "an http:// URL pointing at localhost (dev-only services)",
+    },
+  ),
+);
+
+/**
+ * Push service base URL (#51/#52). Production must be https; non-production
+ * profiles may additionally point at a locally-run `apps/push` (plain http,
+ * localhost only — the iOS simulator reaches the host's localhost directly).
+ */
+const TestPushServiceUrl = Schema.Union(HttpsUrl, HttpLocalhostUrl);
+
 // ---------------------------------------------------------------------------
 // EnvironmentConfig — discriminated union on `network`
 // ---------------------------------------------------------------------------
@@ -126,6 +150,7 @@ export const TestEnvironmentConfig = Schema.Struct({
   cashuMintUrl: TestMintUrl,
   presetMintUrls: Schema.NonEmptyArray(TestMintUrl),
   evoluSyncUrls: Schema.NonEmptyArray(TestSyncUrl),
+  pushServiceUrl: TestPushServiceUrl,
   ...sharedFields,
 });
 export type TestEnvironmentConfig = typeof TestEnvironmentConfig.Type;
@@ -137,6 +162,7 @@ export const MainEnvironmentConfig = Schema.Struct({
   cashuMintUrl: HttpsUrl,
   presetMintUrls: Schema.NonEmptyArray(HttpsUrl),
   evoluSyncUrls: Schema.NonEmptyArray(WssUrl),
+  pushServiceUrl: HttpsUrl,
   ...sharedFields,
 });
 export type MainEnvironmentConfig = typeof MainEnvironmentConfig.Type;
@@ -191,4 +217,10 @@ export const environmentForProfile = (profile: AppProfile): EnvironmentConfig =>
       profile === "production"
         ? ["wss://evolu.linky.fit", "wss://free.evoluhq.com"]
         : ["wss://free.evoluhq.com"],
+    // Push service (#52): development points at a locally-run apps/push
+    // (`PUSH_PUBLIC_URL=http://localhost:8787` — the URL is signed into the
+    // NIP-98 proof, so client and service must agree on it); staging and
+    // production use the hosted service (PoC parity: push.linky.fit).
+    pushServiceUrl:
+      profile === "development" ? "http://localhost:8787" : "https://push.linky.fit",
   });
