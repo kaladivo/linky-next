@@ -73,14 +73,29 @@ const config: ExpoConfig = {
       },
     ],
     // expo-image-picker: optional custom profile photo during onboarding
-    // (#17). The plugin declares the iOS photo-library usage description;
-    // camera/microphone are not requested (library picks only).
+    // (#17) and gallery QR scan (#47, scanner.gallery). The plugin declares
+    // the iOS photo-library usage description. cameraPermission MUST match
+    // expo-camera's below — `false` here would DELETE the
+    // NSCameraUsageDescription that expo-camera's plugin sets (both plugins
+    // manage the same Info.plist key; the deleting mod runs last).
     [
       "expo-image-picker",
       {
-        photosPermission: "Linky uses your photo library to set a custom profile picture.",
-        cameraPermission: false,
+        photosPermission:
+          "Linky uses your photo library to set a custom profile picture and to read QR codes from saved images.",
+        cameraPermission: "Linky uses the camera to scan QR codes (contacts and payments).",
         microphonePermission: false,
+      },
+    ],
+    // expo-camera: QR scanning for the scanner surface (#47,
+    // scanner.camera). Microphone is explicitly NOT requested — Linky never
+    // records audio/video, the camera is for QR codes only.
+    [
+      "expo-camera",
+      {
+        cameraPermission: "Linky uses the camera to scan QR codes (contacts and payments).",
+        microphonePermission: false,
+        recordAudioAndroid: false,
       },
     ],
   ],

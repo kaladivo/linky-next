@@ -634,6 +634,19 @@ export const en = {
   scanHintContact: "Adds contact",
   scanHintWithdraw: "Withdraws funds",
 
+  // Native scanner surface (#47).
+  scannerRequestingCamera: "Requesting camera access…",
+  scannerPermissionHint:
+    "Camera access is off. You can still paste a value, pick a QR image from the gallery, or type it in.",
+  scannerOpenSettings: "Open settings",
+  scannerManualLink: "Can't scan? Type the value in",
+  scannerManualPlaceholder: "npub, Lightning invoice, Cashu token, or LNURL",
+  scannerManualSubmit: "Continue",
+  scannerPreviewTitle: "Captured value",
+  scannerPreviewNote:
+    "Nothing was done with this value yet — handling of scanned values lands in #48.",
+  scannerScanAgain: "Scan again",
+
   unit: "Units",
   unitUseBitcoin: "Show ₿ instead of sat",
   unitCurrent: "Active",
