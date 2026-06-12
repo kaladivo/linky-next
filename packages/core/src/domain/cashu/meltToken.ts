@@ -12,11 +12,10 @@
  *   outputs consume counter slots and persist at the mint even when the
  *   mint signs fewer change outputs (or none).
  */
-import type { MeltProofsResponse } from "@cashu/cashu-ts";
 import { Effect, Option } from "effect";
 
 import type { CounterStoreError } from "../../ports/CounterStore.js";
-import { CounterStore } from "../../ports/CounterStore.js";
+import type { CounterStore } from "../../ports/CounterStore.js";
 import type { HttpClient } from "../../ports/index.js";
 import type { CashuSeed } from "../identity/DerivedIdentities.js";
 import type {
@@ -25,15 +24,9 @@ import type {
   KeysetUnavailableError,
   WrongMintError,
 } from "./errors.js";
-import { InsufficientFundsError, isRecoverableOutputCollision } from "./errors.js";
-import {
-  COLLISION_BUMP,
-  MAX_COLLISION_ATTEMPTS,
-  computeNumberOfBlankOutputs,
-  decodeTokenForMint,
-  effectiveCounter,
-  keysetRefOf,
-} from "./internal/deterministic.js";
+import { InsufficientFundsError } from "./errors.js";
+import { decodeTokenForMint } from "./internal/deterministic.js";
+import { executeMeltWithCounters, readFeePaid } from "./internal/meltExecute.js";
 import { loadWallet, runMintCall } from "./internal/wallet.js";
 import { dedupeProofs, filterUnspentProofs } from "./proofStates.js";
 import type { CashuProof } from "./tokenCodec.js";
@@ -73,29 +66,11 @@ export type PayInvoiceError =
   | CashuMintFailure
   | CounterStoreError;
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
-
-/** Mint-reported actual fee, when present (PoC reads fee_paid/feePaid/fee). */
-const readFeePaid = (melt: MeltProofsResponse): number => {
-  for (const source of [melt as unknown, melt.quote as unknown]) {
-    if (!isRecord(source)) continue;
-    for (const field of ["fee_paid", "feePaid", "fee"]) {
-      const raw = source[field];
-      const value = Number(raw);
-      if (raw !== undefined && Number.isFinite(value) && value > 0) return Math.trunc(value);
-    }
-  }
-  return 0;
-};
-
 export const payInvoice = (
   args: PayInvoiceArgs,
 ): Effect.Effect<PayInvoiceResult, PayInvoiceError, HttpClient.HttpClient | CounterStore> =>
   Effect.gen(function* () {
-    const counters = yield* CounterStore;
     const handle = yield* loadWallet({ mintUrl: args.mintUrl, unit: args.unit, seed: args.seed });
-    const ref = keysetRefOf(handle);
 
     const allProofs: CashuProof[] = [];
     for (const tokenText of args.tokens) {
@@ -127,44 +102,7 @@ export const payInvoice = (
       );
     }
 
-    const meltAttempts: Effect.Effect<MeltProofsResponse, PayInvoiceError> = Effect.gen(
-      function* () {
-        let lastFailure: CashuMintFailure | null = null;
-
-        for (let attempt = 0; attempt < MAX_COLLISION_ATTEMPTS; attempt += 1) {
-          const counter = effectiveCounter(yield* counters.getCounter(ref));
-          const outcome = yield* Effect.either(
-            runMintCall(handle.mintUrl, () =>
-              handle.wallet.meltProofs(quote, spendable, { counter }),
-            ),
-          );
-          if (outcome._tag === "Right") {
-            // Advance past the FULL blank-output range, not just the signed
-            // change count — unsigned blanks still sit in the mint's
-            // promises table and would collide with future derivations.
-            const blankCount = computeNumberOfBlankOutputs(feeReserve);
-            const changeCount = outcome.right.change.length;
-            yield* counters.ensureCounterAtLeast(
-              ref,
-              counter + Math.max(blankCount, changeCount),
-            );
-            return outcome.right;
-          }
-
-          const failure = outcome.left;
-          if (!isRecoverableOutputCollision(failure)) return yield* Effect.fail(failure);
-          lastFailure = failure;
-          yield* counters.bumpCounter(ref, COLLISION_BUMP);
-        }
-
-        if (lastFailure === null) {
-          return yield* Effect.die(new Error("unreachable: collision loop without failure"));
-        }
-        return yield* Effect.fail(lastFailure);
-      },
-    );
-
-    const melt = yield* counters.withCounterLock(ref, meltAttempts);
+    const melt = yield* executeMeltWithCounters({ handle, quote, proofs: spendable });
 
     const changeProofs = melt.change;
     const changeAmount = sumProofAmounts(changeProofs);

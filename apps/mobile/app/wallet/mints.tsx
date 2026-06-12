@@ -8,19 +8,30 @@
  * consolidation warning → hosted npub.cash sync → persist locally
  * (mintActions.selectMainMint enforces the sync-then-persist half).
  *
- * PoC divergence (documented): the PoC's pre-change warning is about
- * AUTOSWAP (which the rewrite does not have yet); here the warning tells
- * the user their spendable funds STAY on the current mint — same decision
- * point, adapted copy.
+ * Consolidation hook (#42, PoC `getMintSelectionAutoswapPlan` — pinned by
+ * core's consolidation golden fixtures): with autoswap ON and ≥128 sat on
+ * the current main, warn that the change will SWAP those funds to the new
+ * mint (decline = change anyway, autoswap off); picking a test mint turns
+ * autoswap off silently. With autoswap OFF the pre-#42 "funds stay put"
+ * warning is kept (documented divergence: the PoC warned nothing there).
  */
+import {
+  canonicalizeMintUrl,
+  mintDisplayName,
+  mintSelectionAutoswapPlan,
+} from "@linky/core";
 import { Button, Surface, Text } from "@linky/ui";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
 
 import { useTranslator } from "../../src/locales";
-import { useEffectQuery } from "../../src/runtime";
+import { runAppEffect, useEffectQuery } from "../../src/runtime";
 import { getStoreDataVersion, subscribeToStoreData } from "../../src/store/storeManager";
+import {
+  loadCashuAutoswapEnabled,
+  persistCashuAutoswapEnabled,
+} from "../../src/wallet/autoswapSetting";
 import type { MintListEntry, MintsData } from "../../src/wallet/mintActions";
 import {
   loadMintsData,
@@ -96,10 +107,13 @@ export default function MintsScreen() {
   const router = useRouter();
   const dataVersion = useSyncExternalStore(subscribeToStoreData, getStoreDataVersion);
   const mintsQuery = useEffectQuery(loadMintsData, [dataVersion]);
+  const autoswapQuery = useEffectQuery(loadCashuAutoswapEnabled, [dataVersion]);
   const [busy, setBusy] = useState(false);
   const [customUrl, setCustomUrl] = useState("");
 
   const data: MintsData | null = mintsQuery.status === "success" ? mintsQuery.data : null;
+  // Default-enabled (PoC) until the stored value loads.
+  const autoswapEnabled = autoswapQuery.status === "success" ? autoswapQuery.data : true;
 
   // Background info refresh for stale mints (`mints.fetch-info`).
   useEffect(() => {
@@ -114,9 +128,37 @@ export default function MintsScreen() {
       const current = [...data.regularMints, ...data.testMints].find((entry) => entry.isMain);
       if (current !== undefined && current.url === url) return;
 
-      // Optional consolidation warning (`mints.select-main` flow): the
-      // current main still holds spendable funds that will NOT move.
-      if (current !== undefined && current.spendableSat > 0) {
+      // #42 select-main decision (PoC getMintSelectionAutoswapPlan): does
+      // this change swap funds (warn) or land on a test mint (autoswap off)?
+      const plan = mintSelectionAutoswapPlan({
+        autoswapEnabled,
+        currentMainSpendableSat: current?.spendableSat ?? 0,
+        currentMintUrl: current?.url ?? null,
+        nextMintUrl: url,
+      });
+      let disableAutoswap = plan.shouldDisableAutoswapForTestMint;
+
+      if (plan.shouldWarnAboutMintChange) {
+        // Autoswap will move the current main's funds to the new mint;
+        // declining keeps the change but turns autoswap off (PoC modal).
+        const keepAutoswap = await new Promise<boolean>((resolve) => {
+          Alert.alert(
+            t("mintAutoswapChangeWarningTitle"),
+            t("mintAutoswapChangeWarning", {
+              fromMint: current?.displayName ?? "",
+              toMint: mintDisplayName(canonicalizeMintUrl(url)),
+            }),
+            [
+              { text: t("mintAutoswapChangeWarningDisable"), onPress: () => resolve(false) },
+              { text: t("mintAutoswapChangeWarningKeep"), onPress: () => resolve(true) },
+            ],
+            { cancelable: true, onDismiss: () => resolve(false) },
+          );
+        });
+        if (!keepAutoswap) disableAutoswap = true;
+      } else if (!autoswapEnabled && current !== undefined && current.spendableSat > 0) {
+        // Autoswap off: the funds stay put — keep the pre-#42 warning
+        // (documented divergence; the PoC warned nothing here).
         const confirmed = await new Promise<boolean>((resolve) => {
           Alert.alert(
             t("mintChangeKeepsFundsTitle"),
@@ -140,7 +182,16 @@ export default function MintsScreen() {
         const outcome = await selectMainMint(url);
         if (outcome === "saved") {
           setCustomUrl("");
-          toast.success(t("mintSaved"));
+          if (disableAutoswap && autoswapEnabled) {
+            await runAppEffect(persistCashuAutoswapEnabled(false));
+            toast.success(
+              plan.shouldDisableAutoswapForTestMint
+                ? t("mintSavedAutoswapDisabledTestMint")
+                : t("mintSavedAutoswapDisabled"),
+            );
+          } else {
+            toast.success(t("mintSaved"));
+          }
         } else if (outcome === "invalid") {
           toast.error(t("mintUrlInvalid"));
         } else if (outcome === "no-session") {
@@ -154,7 +205,7 @@ export default function MintsScreen() {
         setBusy(false);
       }
     },
-    [busy, data, t],
+    [autoswapEnabled, busy, data, t],
   );
 
   const openDetail = useCallback(

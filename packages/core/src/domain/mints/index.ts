@@ -5,3 +5,5 @@ export * from "./npubCashServer.js";
 export * from "./nip98.js";
 export * from "./syncHostedMintPreference.js";
 export * from "./fetchMintInfo.js";
+export * from "./consolidation.js";
+export * from "./meltToMain.js";

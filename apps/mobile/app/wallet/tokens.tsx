@@ -22,6 +22,10 @@ import { getStoreDataVersion, subscribeToStoreData } from "../../src/store/store
 import { useLinkyStore } from "../../src/store/useLinkyStore";
 import { toast } from "../../src/toast";
 import { useAmountDisplay } from "../../src/wallet/AmountDisplayProvider";
+import {
+  loadMeltToMainAvailabilityData,
+  meltLargestToMainFromScreens,
+} from "../../src/wallet/consolidationActions";
 import { cleanupSpentTokens, loadTokenList, restoreWalletTokens } from "../../src/wallet/tokenActions";
 import {
   mintDisplayName,
@@ -84,10 +88,12 @@ export default function WalletTokensScreen() {
 
   const dataVersion = useSyncExternalStore(subscribeToStoreData, getStoreDataVersion);
   const list = useEffectQuery(loadTokenList, [dataVersion]);
+  const meltAvailability = useEffectQuery(loadMeltToMainAvailabilityData, [dataVersion]);
 
   const [cleanupBusy, setCleanupBusy] = useState(false);
   const [restoreBusy, setRestoreBusy] = useState(false);
-  const busy = cleanupBusy || restoreBusy;
+  const [meltBusy, setMeltBusy] = useState(false);
+  const busy = cleanupBusy || restoreBusy || meltBusy;
 
   const runCleanup = async () => {
     if (store === null || busy) return;
@@ -124,6 +130,38 @@ export default function WalletTokensScreen() {
       toast.error(t("restoreFailed"));
     } finally {
       setRestoreBusy(false);
+    }
+  };
+
+  // `mints.melt-to-main` (#42): manual consolidation of the largest
+  // foreign-mint balance toward the main mint (PoC token-list button).
+  const meltTarget = meltAvailability.status === "success" ? meltAvailability.data : null;
+
+  const runMeltToMain = async () => {
+    if (seed === null || busy || meltTarget === null) return;
+    setMeltBusy(true);
+    toast.info(t("cashuMeltToMainMintProcessing"));
+    try {
+      const outcome = await meltLargestToMainFromScreens(seed);
+      if (outcome.kind === "consolidated") {
+        toast.success(
+          t("cashuMeltToMainMintDone", {
+            amount: outcome.amountSat,
+            unit: "sat",
+            mint: meltTarget.targetDisplayName,
+          }),
+        );
+      } else if (outcome.kind === "pending-claim") {
+        toast.info(t("cashuMeltToMainMintPending", { amount: outcome.amountSat, unit: "sat" }));
+      } else if (outcome.kind === "nothing") {
+        toast.info(t("cashuMeltToMainMintUnavailable"));
+      } else {
+        toast.error(`${t("cashuMeltToMainMintFailed")}: ${outcome.reason}`);
+      }
+    } catch {
+      toast.error(t("cashuMeltToMainMintFailed"));
+    } finally {
+      setMeltBusy(false);
     }
   };
 
@@ -176,6 +214,19 @@ export default function WalletTokensScreen() {
           </View>
 
           <View className="gap-3 pt-2">
+            {meltTarget !== null && (
+              <Button
+                label={
+                  meltBusy
+                    ? t("cashuMeltToMainMintProcessing")
+                    : t("cashuMeltToMainMint", { mint: meltTarget.targetDisplayName })
+                }
+                variant="secondary"
+                disabled={busy || store === null || seed === null}
+                onPress={() => void runMeltToMain()}
+                testID="tokens-melt-to-main"
+              />
+            )}
             <Button
               label={
                 cleanupBusy

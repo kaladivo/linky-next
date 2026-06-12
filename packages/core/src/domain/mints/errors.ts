@@ -27,3 +27,26 @@ export class HostedMintSyncError extends Data.TaggedError("HostedMintSyncError")
   /** HTTP status when the service answered, null on transport failure. */
   readonly status: number | null;
 }> {}
+
+/**
+ * Melt-to-main found nothing to move: the source tokens decode to no
+ * spendable proofs (`mints.melt-to-main`, issue #42).
+ */
+export class ConsolidationUnavailableError extends Data.TaggedError(
+  "ConsolidationUnavailableError",
+)<{
+  readonly sourceMintUrl: string;
+}> {}
+
+/**
+ * Every melt amount attempt failed with a retryable shortage and the
+ * attempt cap was reached (`mints.melt-to-main` fee-retry ladder). The
+ * source funds are untouched. `lastError` is a mint/wallet message string
+ * (secret-free; same material as `MintProtocolError.detail`).
+ */
+export class ConsolidationExhaustedError extends Data.TaggedError("ConsolidationExhaustedError")<{
+  readonly sourceMintUrl: string;
+  readonly targetMintUrl: string;
+  readonly attempts: number;
+  readonly lastError: string;
+}> {}

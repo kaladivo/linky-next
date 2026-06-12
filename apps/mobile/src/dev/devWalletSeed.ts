@@ -73,6 +73,61 @@ export const DEV_SEED_WALLET_TOKENS: ReadonlyArray<DevSeedToken> = [
   seedToken("spent-1", 9_999, "spent"), // must never count anywhere
 ];
 
+/**
+ * #42 verification rows: a FOREIGN-mint balance above the 128-sat autoswap
+ * threshold, so the token-list "Melt to <main>" button appears and the
+ * autoswap runner has a trigger to chew on. Same fake-proof caveat as the
+ * main seed: mint-side operations fail — which IS the dev verification
+ * path for the consolidation error UX while the test mints are down.
+ */
+export const DEV_SEED_FOREIGN_MINT_URL = "https://nofees.testnut.cashu.space";
+
+const foreignSeedToken = (id: string, amount: number): DevSeedToken => ({
+  amount,
+  state: "accepted",
+  token: Effect.runSync(
+    encodeCashuToken({
+      mintUrl: DEV_SEED_FOREIGN_MINT_URL,
+      unit: "sat",
+      memo: DEV_SEED_MEMO,
+      proofs: [fakeProof(id, amount)],
+    }),
+  ),
+});
+
+export const DEV_SEED_FOREIGN_TOKENS: ReadonlyArray<DevSeedToken> = [
+  foreignSeedToken("foreign-1", 128),
+  foreignSeedToken("foreign-2", 72),
+];
+
+/** Idempotent foreign-mint seed (melt-to-main / autoswap targets, #42). */
+export const seedDevForeignMint = async (
+  store: LinkyStore,
+): Promise<"seeded" | "already-seeded"> => {
+  const tokens = createTokensRepository(store);
+  const existing = await tokens.list({
+    mintUrl: DEV_SEED_FOREIGN_MINT_URL,
+    includeDeleted: true,
+  });
+  const seededTokens = new Set(DEV_SEED_FOREIGN_TOKENS.map((seed) => seed.token));
+  if (existing.some((record) => seededTokens.has(record.token))) return "already-seeded";
+
+  const ensured = await createMintsRepository(store).ensure(DEV_SEED_FOREIGN_MINT_URL);
+  if (!ensured.ok) throw new Error(`seed mint failed: ${ensured.error._tag}`);
+
+  for (const seed of DEV_SEED_FOREIGN_TOKENS) {
+    const inserted = tokens.insert({
+      mintUrl: DEV_SEED_FOREIGN_MINT_URL,
+      unit: "sat",
+      amount: seed.amount,
+      state: seed.state,
+      token: seed.token,
+    });
+    if (!inserted.ok) throw new Error(`seed token failed: ${inserted.error.reason}`);
+  }
+  return "seeded";
+};
+
 /** Idempotent: re-running after the rows exist is a no-op. */
 export const seedDevWallet = async (
   store: LinkyStore,

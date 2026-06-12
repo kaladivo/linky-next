@@ -1,4 +1,4 @@
-# Mints golden fixtures (issue #41)
+# Mints golden fixtures (issues #41, #42)
 
 `mints.golden.json` pins the PoC's mint-management semantics: mint URL
 normalization (`utils/mint.ts normalizeMintUrl` / `getMintOriginAndHost`),
@@ -36,3 +36,26 @@ is byte-exact.
    mainnet guard) is a deliberate superset of the PoC's
    (`TEST_MINTS = [testnut]`): it also treats
    `nofees.testnut.cashu.space` and localhost as test mints.
+
+## consolidation.golden.json (issue #42)
+
+Pins the PoC's consolidation policy: the full-balance fee-retry ladder
+(`paymentAmountFallback.ts`: `buildPaymentAmountAttempts` over fee steps
+[0,1,2,3,5,8,13,21], `getPaymentAmountShortage`,
+`isRetryablePaymentAmountFailure`, `buildPaymentFailureAmountAttempts`),
+the autoswap threshold (`CASHU_AUTOSWAP_MIN_SOURCE_SUM = 128`), and the
+select-main autoswap plan (`useNpubCashMintSelection.ts
+getMintSelectionAutoswapPlan`). Generated on 2026-06-12, **before**
+`consolidation.ts` was written, by running
+`consolidation.generate.poc.ts.txt` (copied verbatim here) with bun from
+inside `linky-poc/apps/web-app`, importing the PoC's own modules. Asserted
+by `consolidation.golden.test.ts`. The plan fixture cases only use mints
+both repos classify identically (the `isTestMintUrl` superset divergence
+above applies to `getMintSelectionAutoswapPlan` too).
+
+PoC behaviors that are inline code (not importable) — the largest-foreign
+source selection, the probe-sizing queue rewrite, the 8-attempt cap, the
+800ms retry pause and the test-mint autoswap force-disable — are
+replicated in `consolidation.ts` and covered by `consolidation.test.ts`
+unit tables instead (documented divergence: source-selection ties resolve
+lexicographically; the PoC's tie-break depended on row insertion order).
