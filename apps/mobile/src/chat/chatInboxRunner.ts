@@ -30,6 +30,7 @@ import type { LinkyStore, MessagesRepository } from "@linky/evolu-store";
 import { Effect, Stream } from "effect";
 
 import { runAppEffect } from "../runtime";
+import { acceptIncomingTokenMessage } from "./chatPayActions";
 import { toChatEventInput } from "./chatEventMapping";
 import { getSessionVersion, subscribeToSessionVersion } from "../session/sessionStore";
 import {
@@ -70,6 +71,33 @@ const applySignal = async (
         return;
       }
       if (applied.value.outcome !== "blocked") invalidateStoreData();
+
+      // chat-pay.receive-cashu (#44): a newly APPLIED inbound message whose
+      // content carries a Cashu token is auto-accepted into the wallet.
+      // Only "applied" — rumor-id dedup upstream makes replays/echoes
+      // no-ops, so a token is never double-accepted from the same message.
+      // Fire-and-forget: the mint swap must not block the inbox loop.
+      if (
+        applied.value.outcome === "applied" &&
+        input.kind === "message" &&
+        input.direction === "in"
+      ) {
+        const store = getStoreState();
+        if (store.status === "ready") {
+          void acceptIncomingTokenMessage(store.store, {
+            peerNpub: input.peerNpub,
+            content: input.content,
+          })
+            .then((outcome) => {
+              if (__DEV__ && outcome !== "not-a-token") {
+                console.log(`[chat-pay] auto-accept: ${outcome} (${input.content.length} chars)`);
+              }
+            })
+            .catch((error: unknown) => {
+              if (__DEV__) console.warn("[chat-inbox] token auto-accept died:", error);
+            });
+        }
+      }
       return;
     }
     case "ChatRumorDuplicate": {

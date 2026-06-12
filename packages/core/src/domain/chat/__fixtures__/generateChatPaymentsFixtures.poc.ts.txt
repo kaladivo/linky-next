@@ -1,0 +1,170 @@
+/**
+ * One-off golden fixture generator for linky-next issue #44 (chat payments).
+ * Run from the PoC so every byte comes from the PoC's own dependencies
+ * (nostr-tools, @cashu/cashu-ts) and the PoC's own wire code
+ * (pushWrappedEvent.ts createLinkyPaymentNoticeEvent / wrapEventWithPushMarker
+ * / wrapEventWithoutPushMarker — the exact functions
+ * usePayContactWithCashuMessage.ts sends with):
+ *
+ *   cd /Users/kaladivo/workspace/linky/linky-poc/apps/web-app
+ *   bun gen-chat-payments-fixtures.ts > /path/to/chatPayments.golden.json
+ *
+ * This file is temporary and is NOT committed to the PoC repo.
+ */
+import { getEncodedToken } from "@cashu/cashu-ts";
+import { getEventHash, getPublicKey, verifyEvent } from "nostr-tools";
+import type { Event as NostrToolsEvent, UnsignedEvent } from "nostr-tools";
+import { unwrapEvent } from "nostr-tools/nip17";
+import { parseCashuToken } from "./src/cashu";
+import {
+  createLinkyPaymentNoticeEvent,
+  isLinkyPaymentNoticeEvent,
+  wrapEventWithPushMarker,
+  wrapEventWithoutPushMarker,
+} from "./src/app/lib/pushWrappedEvent";
+
+const hexToBytes = (hex: string): Uint8Array =>
+  Uint8Array.from(hex.match(/.{2}/g)!.map((b) => parseInt(b, 16)));
+
+// Throwaway fixture keys — the SAME pair as nip17.golden.json (committed to
+// the linky-next repo, never use for a real identity).
+const senderSecretKeyHex =
+  "7f3b02c9d3a8e15b64f2a90c81d6e4775ab9c0d2e3f415263748596a7b8c9d0e";
+const recipientSecretKeyHex =
+  "1e0d9c8b7a695847362514f3e2d1c0b95a7d86e4c2b0a1928374655647382910";
+
+const senderSk = hexToBytes(senderSecretKeyHex);
+const recipientSk = hexToBytes(recipientSecretKeyHex);
+const senderPub = getPublicKey(senderSk);
+const recipientPub = getPublicKey(recipientSk);
+
+// --- A deterministic cashu token (PoC's own cashu-ts encoder) --------------
+// Structurally valid v4 (cashuB) token over fixed fake proofs; the PoC's own
+// parseCashuToken must read it back (self-verified below).
+const tokenText = getEncodedToken({
+  mint: "https://nofees.testnut.cashu.space",
+  unit: "sat",
+  proofs: [
+    {
+      id: "009a1f293253e41e",
+      amount: 2,
+      secret: "407915bc212be61a77e3e6d2aeb4c727980bda51cd06a6afc29e2861768a7837",
+      C: "02bc9097997d81afb2cc7346b5e4345a9346bd2a506eb7958598a72f0cf85163ea",
+    },
+    {
+      id: "009a1f293253e41e",
+      amount: 8,
+      secret: "fe15109314e61d7756b0f8ee0f23a624acaa3f4e042f61433c728c7057b931be",
+      C: "029e8e5050b890a7d6c0968db16bc1d5d5fa040ea1de284f6ec69d61299f671059",
+    },
+  ],
+});
+const parsedBack = parseCashuToken(tokenText);
+if (!parsedBack || parsedBack.amount !== 10) {
+  throw new Error("fixture token failed PoC parse round trip");
+}
+
+const at = 1750000000;
+
+// --- Case 1: cashu token chat message ---------------------------------------
+// PoC wire shape (usePayContactWithCashuMessage.ts): a plain kind-14 whose
+// content IS the serialized token; BOTH wraps go without the push marker
+// (the separate payment notice carries the alert).
+const tokenMessageRumorTemplate: UnsignedEvent = {
+  created_at: at,
+  kind: 14,
+  pubkey: senderPub,
+  tags: [
+    ["p", recipientPub],
+    ["p", senderPub],
+    ["client", "lk-client-pay-0001"],
+  ],
+  content: tokenText,
+};
+const tokenMessageRumor = {
+  ...tokenMessageRumorTemplate,
+  id: getEventHash(tokenMessageRumorTemplate),
+};
+const tokenWrapForRecipient = wrapEventWithoutPushMarker(
+  tokenMessageRumorTemplate,
+  senderSk,
+  recipientPub,
+);
+const tokenWrapForSender = wrapEventWithoutPushMarker(
+  tokenMessageRumorTemplate,
+  senderSk,
+  senderPub,
+);
+
+// --- Case 2: payment notice (kind 24133) ------------------------------------
+// PoC wire shape: createLinkyPaymentNoticeEvent + wrapEventWithPushMarker,
+// sent ONLY to the recipient (publishSingleWrappedWithRetry) — no self wrap.
+const noticeTemplate = createLinkyPaymentNoticeEvent({
+  clientId: "lk-client-pay-0002",
+  createdAt: at + 60,
+  recipientPublicKey: recipientPub,
+  senderPublicKey: senderPub,
+});
+const noticeRumor = { ...noticeTemplate, id: getEventHash(noticeTemplate) };
+if (!isLinkyPaymentNoticeEvent(noticeRumor)) {
+  throw new Error("notice rumor failed the PoC's own notice predicate");
+}
+const noticeWrapForRecipient = wrapEventWithPushMarker(
+  noticeTemplate,
+  senderSk,
+  recipientPub,
+);
+const hasPushMarker = noticeWrapForRecipient.tags.some(
+  (tag) => tag[0] === "linky" && tag[1] === "push",
+);
+if (!hasPushMarker) throw new Error("notice wrap is missing the push marker");
+const tokenWrapsMarked = [tokenWrapForRecipient, tokenWrapForSender].some((wrap) =>
+  wrap.tags.some((tag) => tag[0] === "linky" && tag[1] === "push"),
+);
+if (tokenWrapsMarked) throw new Error("token message wraps must stay quiet");
+
+// --- Self-verify every wrap with the PoC's own unwrapping --------------------
+const canonical = (e: UnsignedEvent & { id: string }) =>
+  JSON.stringify([e.id, e.pubkey, e.created_at, e.kind, e.tags, e.content]);
+const checks: Array<[NostrToolsEvent, Uint8Array, UnsignedEvent & { id: string }]> = [
+  [tokenWrapForRecipient, recipientSk, tokenMessageRumor],
+  [tokenWrapForSender, senderSk, tokenMessageRumor],
+  [noticeWrapForRecipient, recipientSk, noticeRumor],
+];
+for (const [wrap, sk, rumor] of checks) {
+  if (!verifyEvent(wrap)) throw new Error("wrap failed verification");
+  if (wrap.kind !== 1059) throw new Error("wrap kind");
+  const inner = unwrapEvent(wrap, sk) as UnsignedEvent & { id: string };
+  if (canonical(inner) !== canonical(rumor)) throw new Error("unwrap mismatch");
+}
+
+const fixture = {
+  generatedAt: new Date().toISOString().slice(0, 10),
+  nostrToolsVersion: (await import("nostr-tools/package.json")).default.version,
+  cashuTsVersion: (await import("@cashu/cashu-ts/package.json")).default.version,
+  senderSecretKeyHex,
+  recipientSecretKeyHex,
+  senderPublicKeyHex: senderPub,
+  recipientPublicKeyHex: recipientPub,
+  cashuTokenText: tokenText,
+  cashuTokenAmount: parsedBack.amount,
+  cashuTokenMintUrl: String(parsedBack.mint ?? ""),
+  cashuTokenUnit: String(parsedBack.unit ?? ""),
+  tokenMessage: {
+    pushMarkerOnRecipientWrap: false,
+    rumor: tokenMessageRumor,
+    wrapForRecipient: tokenWrapForRecipient,
+    wrapForSender: tokenWrapForSender,
+  },
+  paymentNotice: {
+    kind: noticeRumor.kind,
+    content: noticeRumor.content,
+    markerTag: ["linky", "payment_notice"],
+    pushMarkerOnRecipientWrap: true,
+    selfWrap: false,
+    rumor: noticeRumor,
+    wrapForRecipient: noticeWrapForRecipient,
+  },
+};
+
+console.log(JSON.stringify(fixture, null, 2));

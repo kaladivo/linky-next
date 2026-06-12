@@ -420,6 +420,10 @@ export const en = {
   chatReplyUnavailable: "Original message unavailable",
   chatEditing: "Editing",
   chatEdited: "edited",
+  chatPayAction: "Send sats",
+  chatPayAmountPlaceholder: "Amount (sat)",
+  chatPaymentOutgoing: "Sent {amount} {unit}",
+  chatPaymentIncoming: "Received {amount} {unit}",
   send: "Send",
 
   profile: "Profile",

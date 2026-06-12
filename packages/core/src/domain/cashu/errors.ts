@@ -145,7 +145,12 @@ export const isOutputsAlreadySignedFailure = (failure: CashuMintFailure): boolea
     message.includes("outputs have already been signed") ||
     message.includes("outputs already signed") ||
     message.includes("already been signed before") ||
-    message.includes("keyset id already signed")
+    message.includes("keyset id already signed") ||
+    // cdk mints (testnut.cashu.space since cdk 0.17) reject previously seen
+    // blinded messages as "Duplicate outputs". Our requests never contain
+    // internal duplicates, so in these flows the message always means a
+    // counter-window overlap (verified on-device, #44).
+    message.includes("duplicate outputs")
   );
 };
 

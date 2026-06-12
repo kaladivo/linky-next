@@ -20,7 +20,7 @@
  * Tokens are bearer instruments: never log them; parse failures carry only
  * a coarse reason, never the input text.
  */
-import type { Proof, Token } from "@cashu/cashu-ts";
+import type { MintKeyset, Proof, Token } from "@cashu/cashu-ts";
 import { getDecodedToken, getEncodedToken } from "@cashu/cashu-ts";
 import { Effect, Either, Option } from "effect";
 
@@ -41,6 +41,48 @@ export interface ParsedCashuToken {
 export const sumProofAmounts = (proofs: ReadonlyArray<{ readonly amount: number }>): number =>
   proofs.reduce((sum, proof) => sum + (Number(proof.amount) || 0), 0);
 
+// ---------------------------------------------------------------------------
+// NUT-02 v2 keyset-id decode fallback (cashu-ts 2.9.0 limitation)
+// ---------------------------------------------------------------------------
+
+const V2_NO_KEYSETS_RE = /short keyset ID v2 was encountered/i;
+const V2_UNMAPPED_RE = /map short keyset ID ([0-9a-fA-F]+) to any known/;
+
+/** Pathological-input guard for the id-collection loop (one id per pass). */
+const MAX_DISTINCT_KEYSET_IDS = 16;
+
+/**
+ * Decodes a serialized token, tolerating NUT-02 **v2 keyset ids** (version
+ * byte `0x01` — what current cdk mints like testnut issue). cashu-ts 2.9.0
+ * (pinned) refuses to decode such tokens without a mint keyset list to map
+ * the ids against — but a PURE parse has no mint at hand, and every caller
+ * here either only needs amount/mint/unit (chat token detection, #44) or
+ * sends the proofs back to the SAME mint that produced these exact ids
+ * (receive/check/melt — the mint accepts its own id form). So v2 ids are
+ * identity-mapped: each id cashu-ts reports as unmappable is fed back as a
+ * known keyset, which makes the prefix-match a no-op and preserves the ids
+ * byte-for-byte. v1 (hex, `0x00`) tokens take the normal path.
+ */
+const decodeTokenLenient = (raw: string): Token => {
+  try {
+    return getDecodedToken(raw);
+  } catch (error) {
+    if (!V2_NO_KEYSETS_RE.test(String(error))) throw error;
+  }
+  const keysets: MintKeyset[] = [];
+  for (let attempt = 0; attempt < MAX_DISTINCT_KEYSET_IDS; attempt += 1) {
+    try {
+      return getDecodedToken(raw, keysets);
+    } catch (error) {
+      const match = V2_UNMAPPED_RE.exec(String(error));
+      const id = match?.[1];
+      if (id === undefined) throw error;
+      keysets.push({ id, unit: "sat", active: true });
+    }
+  }
+  throw new Error("token carries too many distinct keyset ids");
+};
+
 /**
  * Strictly decodes a raw token string (V3 or V4). The mint URL is
  * normalized; the unit defaults to `sat` (Cashu convention).
@@ -54,7 +96,7 @@ export const parseCashuToken = (
 
     let decoded: Token;
     try {
-      decoded = getDecodedToken(raw);
+      decoded = decodeTokenLenient(raw);
     } catch {
       return Effect.fail(new InvalidCashuTokenError({ reason: "unparseable" }));
     }
