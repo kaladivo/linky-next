@@ -145,6 +145,13 @@ const config: ExpoConfig = {
           "Linky uses NFC to read contact and payment tags and to write your profile or a token to a tag.",
       },
     ],
+    // expo-notifications (#52, notifications.*): remote + local notification
+    // support. The plugin wires the iOS push entitlement (aps-environment)
+    // and the Android notification icon/channel plumbing through CNG — this
+    // entry is the ONLY place the native projects learn about push. No
+    // custom sounds/icons yet (service copy is generic by design; rich copy
+    // is rendered on-device, see src/notifications/).
+    "expo-notifications",
   ],
   experiments: {
     typedRoutes: true,

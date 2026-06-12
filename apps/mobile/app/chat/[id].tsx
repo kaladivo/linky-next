@@ -22,8 +22,8 @@
  * older pages — full history, no hard caps (`chat.retention`).
  */
 import { Button, Surface, Text } from "@linky/ui";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -49,6 +49,7 @@ import {
   sendCashuInChat,
   sendPaymentRequestInChat,
 } from "../../src/chat/chatPayActions";
+import { setActiveChatThread } from "../../src/notifications/activeThread";
 import {
   declineMessageInfo,
   latestRequestResponses,
@@ -428,6 +429,17 @@ export default function ChatScreen() {
   useEffect(() => {
     if (store !== null) maybeCheckIssuedTokens(store);
   }, [store]);
+
+  // notifications (#52): the open conversation never alerts — the in-app
+  // rich notifier skips the active thread (duplicate-alert suppression).
+  // Focus-scoped, not mount-scoped: a screen pushed OVER this chat keeps it
+  // mounted, but the user is no longer looking at it.
+  useFocusEffect(
+    useCallback(() => {
+      setActiveChatThread(id ?? null);
+      return () => setActiveChatThread(null);
+    }, [id]),
+  );
 
   const ready: ChatConversation | null = state.status === "ready" ? state : null;
   const unknownThread = ready?.thread.kind === "unknown" ? ready.thread.thread : null;

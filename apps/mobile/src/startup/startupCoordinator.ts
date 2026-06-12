@@ -18,10 +18,13 @@
  * template for real tasks later.
  */
 import { RelaySettingsStore, runPendingFlushLoop } from "@linky/core";
-import type { Translator } from "@linky/locales";
+import type { SupportedLocale, Translator } from "@linky/locales";
 import { Effect } from "effect";
 
 import { initChatInboxRunner } from "../chat/chatInboxRunner";
+import { initInAppRichNotifier } from "../notifications/inAppRichNotifier";
+import { initNotificationEvents } from "../notifications/notificationEvents";
+import { reconcileNotificationRegistration } from "../notifications/notificationActions";
 import type { AppServices } from "../runtime";
 import { runAppEffect } from "../runtime";
 import { toast } from "../toast";
@@ -30,6 +33,8 @@ import { initAutoswapRunner } from "../wallet/autoswapRunner";
 export interface StartupTaskContext {
   /** Translator bound to the resolved locale, for any user-visible output. */
   readonly t: Translator;
+  /** The resolved locale ("en"/"cs") — default-name derivation, copy. */
+  readonly locale: SupportedLocale;
 }
 
 export interface DeferredStartupTask {
@@ -103,6 +108,26 @@ const autoswapTask: DeferredStartupTask = {
   task: ({ t }) => Effect.sync(() => initAutoswapRunner(t)),
 };
 
+/**
+ * `notifications.*` (#52): installs the foreground-suppression handler and
+ * the tap-routing listeners, arms the in-app rich notifier the chat inbox
+ * runner calls into, and runs the replace-stale reconciliation — when
+ * notifications are enabled, any drift between the registered credentials
+ * and the current ones (rotated Expo token, reinstall, identity/service
+ * change) re-registers with the push service, which replaces the stale rows
+ * (no broken or duplicate registrations survive a credential change).
+ */
+const notificationsTask: DeferredStartupTask = {
+  name: "notifications",
+  task: ({ t, locale }) =>
+    Effect.promise(async () => {
+      initInAppRichNotifier(t, locale);
+      initNotificationEvents();
+      const outcome = await reconcileNotificationRegistration();
+      if (__DEV__) console.log(`[notifications] startup reconcile: ${outcome}`);
+    }),
+};
+
 /** Real deferred work (sync refresh, relay warm-up, …) appends here. */
 export const deferredStartupTasks: readonly DeferredStartupTask[] = [
   demoStartupTask,
@@ -110,6 +135,7 @@ export const deferredStartupTasks: readonly DeferredStartupTask[] = [
   pendingFlushTask,
   chatInboxTask,
   autoswapTask,
+  notificationsTask,
 ];
 
 let hasRun = false;

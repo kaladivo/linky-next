@@ -83,6 +83,16 @@ function RootNavigator() {
         name="settings/relays"
         options={{ headerShown: true, title: t("nostrRelay") }}
       />
+      {/* Notifications (#52): enable/disable toggle (settings.notifications)
+          + the advanced registration/delivery debug screen. */}
+      <Stack.Screen
+        name="settings/notifications"
+        options={{ headerShown: true, title: t("notifications") }}
+      />
+      <Stack.Screen
+        name="settings/push-debug"
+        options={{ headerShown: true, title: t("notificationsDebugTitle") }}
+      />
       <Stack.Screen name="contact/new" options={{ headerShown: true, title: t("newContact") }} />
       {/* Scanner surface (#47): camera/paste/gallery/manual input. Custom
           in-screen header (PoC scan sheet); result routing lands with #48

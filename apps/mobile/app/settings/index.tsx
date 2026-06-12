@@ -110,6 +110,13 @@ export default function SettingsScreen() {
       <EnvironmentSummary />
       <Surface className="gap-3">
         <Text>{t("shellSettingsPlaceholder")}</Text>
+        {/* settings.notifications (#52): enable/disable + debug entry. */}
+        <Button
+          label={t("notifications")}
+          variant="secondary"
+          onPress={() => router.push("/settings/notifications")}
+          testID="open-notifications"
+        />
         <Button
           label={t("advanced")}
           variant="secondary"

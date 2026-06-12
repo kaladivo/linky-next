@@ -52,6 +52,7 @@ export const testEnvironmentLayer = (
       presetMintUrls: ["https://testnut.cashu.space"],
       nostrRelayUrls: relayUrls,
       evoluSyncUrls: ["wss://free.evoluhq.com"],
+      pushServiceUrl: "http://localhost:8787",
     }),
   );
 
