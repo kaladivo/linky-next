@@ -118,3 +118,51 @@ describe("proof-state helpers", () => {
     expect(partition.unknownStateIds).toEqual(["pending", "truncated"]);
   });
 });
+
+describe("NUT-02 v2 keyset-id tokens (#44 — cashu-ts 2.9.0 decode fallback)", () => {
+  // A v2 keyset id: version byte 0x01 + hash bytes (what cdk mints like
+  // testnut.cashu.space issue since 0.17). cashu-ts 2.9.0 refuses to decode
+  // such tokens without a keysets list; parseCashuToken identity-maps.
+  const V2_ID = `01${"ab".repeat(32)}`;
+  const v2Proof = {
+    id: V2_ID,
+    amount: 21,
+    secret: "9a6f1f7d3f9f4e0d9af7e3c5b1d2a4c6e8f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8",
+    C: "02bc9097997d81afb2cc7346b5e4345a9346bd2a506eb7958598a72f0cf85163ea",
+  };
+
+  const encodedV2 = Effect.runSync(
+    encodeCashuToken({
+      mintUrl: "https://testnut.cashu.space",
+      unit: "sat",
+      proofs: [v2Proof],
+    }),
+  );
+
+  it("parses a v2-keyset token, preserving the id exactly as encoded", () => {
+    const parsed = Effect.runSync(parseCashuToken(encodedV2));
+    expect(parsed.mintUrl).toBe("https://testnut.cashu.space");
+    expect(parsed.amount).toBe(21);
+    expect(parsed.unit).toBe("sat");
+    expect(parsed.proofs).toHaveLength(1);
+    // cashu-ts V4-encodes v2 ids in their NUT-02 SHORT form; the lenient
+    // decode must hand back that id untouched (mint-bound flows re-map it
+    // against real keysets in decodeTokenForMint).
+    const decodedId = parsed.proofs[0]!.id;
+    expect(decodedId.startsWith("01")).toBe(true);
+    expect(V2_ID.startsWith(decodedId)).toBe(true);
+    expect(parsed.proofs[0]!.secret).toBe(v2Proof.secret);
+  });
+
+  it("extractCashuTokenFromText finds v2-keyset tokens (chat-pay detection)", () => {
+    expect(Option.getOrNull(extractCashuTokenFromText(encodedV2))).toBe(encodedV2);
+    expect(Option.getOrNull(extractCashuTokenFromText(`payment:\n${encodedV2}\nenjoy`))).toBe(
+      encodedV2,
+    );
+  });
+
+  it("still rejects garbage that merely looks like a token", () => {
+    const broken = `${encodedV2.slice(0, 40)}xx`;
+    expect(Effect.runSync(Effect.either(parseCashuToken(broken)))._tag).toBe("Left");
+  });
+});

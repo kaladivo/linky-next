@@ -51,10 +51,10 @@ import { runAppEffect } from "../runtime";
 import { invalidateStoreData } from "../store/storeManager";
 import { planReactionToggle } from "./conversationModel";
 
-const nowSec = (): number => Math.ceil(Date.now() / 1000);
+export const nowSec = (): number => Math.ceil(Date.now() / 1000);
 
 /** PoC `makeLocalId` equivalent: a short unique local id for `client` tags. */
-const makeClientTag = (): string =>
+export const makeClientTag = (): string =>
   `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 
 /** The active identity, or null when no session is loaded (defensive). */
@@ -71,8 +71,9 @@ const activeIdentity = async (): Promise<NostrIdentity | null> => {
  * Wraps + delivers one rumor template to the peer and to ourselves (sync
  * copy). Resolves with how it left the device; never throws — a total
  * failure resolves "failed" (the persistent queue path itself failing).
+ * Shared with the chat-payment send path (#44, chatPayActions.ts).
  */
-const publishChatTemplate = async (
+export const publishChatTemplate = async (
   template: NostrEventTemplate,
   sender: NostrIdentity,
   recipientPublicKeyHex: string,

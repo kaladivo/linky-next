@@ -422,6 +422,10 @@ export const cs = {
   chatReplyUnavailable: "Původní zpráva není dostupná",
   chatEditing: "Upravujete",
   chatEdited: "upraveno",
+  chatPayAction: "Poslat saty",
+  chatPayAmountPlaceholder: "Částka (sat)",
+  chatPaymentOutgoing: "Odesláno {amount} {unit}",
+  chatPaymentIncoming: "Přijato {amount} {unit}",
   send: "Odeslat",
 
   profile: "Profil",

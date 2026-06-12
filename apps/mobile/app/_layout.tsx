@@ -1,4 +1,7 @@
 import "../global.css";
+// TextDecoder/TextEncoder for Hermes — MUST precede anything that parses
+// Cashu tokens (cashu-ts CBOR decode needs TextDecoder; #44).
+import "../lib/textEncodingPolyfill";
 
 import {
   Manrope_400Regular,

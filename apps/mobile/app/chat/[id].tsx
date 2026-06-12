@@ -36,17 +36,31 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { formatAmountParts } from "@linky/ui/amount";
+
 import {
   deleteChat,
   editChatMessage,
   sendChatMessage,
   toggleReaction,
 } from "../../src/chat/chatActions";
+import { sendCashuInChat } from "../../src/chat/chatPayActions";
+import {
+  mintHostOf,
+  parseChatPayAmount,
+  tokenMessageInfo,
+} from "../../src/chat/chatPaymentsModel";
+import type { TokenMessageInfo } from "../../src/chat/chatPaymentsModel";
 import {
   myReactionsOnMessage,
   reactionChipsByMessage,
   replyPreviewText,
 } from "../../src/chat/conversationModel";
+import { paidOverlay } from "../../src/paidOverlay";
+import { useAmountDisplay } from "../../src/wallet/AmountDisplayProvider";
+import { payFailureMessage } from "../../src/wallet/payModel";
+import { paidOverlayTitle } from "../../src/wallet/payOverlayCopy";
+import { maybeCheckIssuedTokens } from "../../src/wallet/tokenActions";
 import type { ReactionChip } from "../../src/chat/conversationModel";
 import { chatThreadNpub, useChatThread } from "../../src/chat/useChatThread";
 import type { ChatConversation } from "../../src/chat/useChatThread";
@@ -73,10 +87,19 @@ const PLACEHOLDER_COLOR = "rgba(226, 232, 240, 0.4)";
 
 // ─── Message bubble ──────────────────────────────────────────────────────
 
+/** Render model of a token-message bubble (chat-pay, #44). */
+interface PaymentBubble {
+  /** "Sent 21 sat" / "Received 21 sat" (amount-display formatted). */
+  readonly label: string;
+  /** Mint host, as a small provenance hint. */
+  readonly mintHost: string;
+}
+
 interface BubbleProps {
   readonly message: MessageRecord;
   readonly chips: ReadonlyArray<ReactionChip>;
   readonly replyQuote: string | null;
+  readonly payment: PaymentBubble | null;
   readonly locale: string;
   readonly pendingLabel: string;
   readonly editedLabel: string;
@@ -88,6 +111,7 @@ function MessageBubble({
   message,
   chips,
   replyQuote,
+  payment,
   locale,
   pendingLabel,
   editedLabel,
@@ -124,9 +148,31 @@ function MessageBubble({
               </Text>
             </View>
           )}
-          <Text className={isOut ? "text-primary-foreground" : "text-foreground"}>
-            {message.content}
-          </Text>
+          {payment !== null ? (
+            <View
+              className="flex-row items-center gap-2 py-0.5"
+              testID={`chat-payment-${message.rumorId.slice(0, 12)}`}
+            >
+              <Text className="text-2xl leading-8">💸</Text>
+              <View>
+                <Text
+                  weight="semibold"
+                  className={isOut ? "text-primary-foreground" : "text-foreground"}
+                >
+                  {payment.label}
+                </Text>
+                <Text
+                  className={`text-xs ${isOut ? "text-primary-foreground opacity-70" : "opacity-50"}`}
+                >
+                  {payment.mintHost}
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <Text className={isOut ? "text-primary-foreground" : "text-foreground"}>
+              {message.content}
+            </Text>
+          )}
         </View>
       </Pressable>
       {chips.length > 0 && (
@@ -250,6 +296,7 @@ export default function ChatScreen() {
   const storeState = useLinkyStore();
   const store = storeState.status === "ready" ? storeState.store : null;
   const { state, loadOlder } = useChatThread(store, id ?? null);
+  const { unit: amountUnit, hidden: amountHidden } = useAmountDisplay();
   const [busy, setBusy] = useState(false);
 
   const [draft, setDraft] = useState("");
@@ -257,6 +304,15 @@ export default function ChatScreen() {
   const [editing, setEditing] = useState<MessageRecord | null>(null);
   const [actionTarget, setActionTarget] = useState<MessageRecord | null>(null);
   const [sendBusy, setSendBusy] = useState(false);
+
+  const [payOpen, setPayOpen] = useState(false);
+  const [payAmount, setPayAmount] = useState("");
+  const [payBusy, setPayBusy] = useState(false);
+
+  // Claim detection (#44): notice issued chat tokens the peer accepted.
+  useEffect(() => {
+    if (store !== null) maybeCheckIssuedTokens(store);
+  }, [store]);
 
   const ready: ChatConversation | null = state.status === "ready" ? state : null;
   const unknownThread = ready?.thread.kind === "unknown" ? ready.thread.thread : null;
@@ -286,6 +342,67 @@ export default function ChatScreen() {
     () => reactionChipsByMessage(ready?.reactions ?? [], ready?.ownNpub ?? null),
     [ready?.reactions, ready?.ownNpub],
   );
+
+  // Token messages (#44): decoded once per loaded window, rendered as
+  // payment bubbles instead of raw token text.
+  const paymentInfoByRumorId = useMemo(() => {
+    const map = new Map<string, TokenMessageInfo>();
+    for (const message of ready?.messages ?? []) {
+      const info = tokenMessageInfo(message.content);
+      if (info !== null) map.set(message.rumorId, info);
+    }
+    return map;
+  }, [ready?.messages]);
+
+  const paymentBubbleFor = (message: MessageRecord): PaymentBubble | null => {
+    const info = paymentInfoByRumorId.get(message.rumorId);
+    if (info === undefined) return null;
+    const parts = formatAmountParts(info.amountSat, {
+      unit: amountUnit,
+      hidden: amountHidden,
+      locale,
+    });
+    const values = { amount: parts.text, unit: parts.unitLabel };
+    return {
+      label:
+        message.direction === "out"
+          ? t("chatPaymentOutgoing", values)
+          : t("chatPaymentIncoming", values),
+      mintHost: mintHostOf(info.mintUrl),
+    };
+  };
+
+  // ── chat-pay.send-cashu ───────────────────────────────────────────────
+
+  const onChatPay = () => {
+    if (store === null || peerNpub === null || payBusy) return;
+    const amountSat = parseChatPayAmount(payAmount);
+    if (amountSat === null) return;
+    setPayBusy(true);
+    void sendCashuInChat(store, {
+      peerNpub,
+      amountSat,
+      contactId: contact?.id,
+    })
+      .then((outcome) => {
+        if (outcome.kind === "sent") {
+          setPayOpen(false);
+          setPayAmount("");
+          paidOverlay.show(
+            paidOverlayTitle(
+              t,
+              outcome.amountSat,
+              { unit: amountUnit, hidden: amountHidden, locale },
+              title,
+            ),
+          );
+          return;
+        }
+        const message = payFailureMessage(outcome);
+        toast.error(`${t(message.key)}${message.detail === null ? "" : `: ${message.detail}`}`);
+      })
+      .finally(() => setPayBusy(false));
+  };
 
   const replyQuoteFor = (message: MessageRecord): string | null => {
     if (message.replyToRumorId === null) return null;
@@ -528,6 +645,7 @@ export default function ChatScreen() {
                     message={item}
                     chips={chipsByMessage.get(item.rumorId) ?? []}
                     replyQuote={replyQuoteFor(item)}
+                    payment={paymentBubbleFor(item)}
                     locale={locale}
                     pendingLabel={t("chatPendingShort")}
                     editedLabel={t("chatEdited")}
@@ -566,6 +684,15 @@ export default function ChatScreen() {
                   </View>
                 )}
                 <View className="flex-row items-end gap-2">
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t("chatPayAction")}
+                    testID="chat-pay-open"
+                    onPress={() => setPayOpen(true)}
+                    className="h-11 w-11 items-center justify-center rounded-full bg-surface active:opacity-60"
+                  >
+                    <Text className="text-xl leading-7">⚡</Text>
+                  </Pressable>
                   <TextInput
                     value={draft}
                     onChangeText={setDraft}
@@ -589,6 +716,62 @@ export default function ChatScreen() {
           </>
         )}
       </KeyboardAvoidingView>
+
+      {/* chat-pay.send-cashu: amount sheet (#44). */}
+      <Modal
+        visible={payOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPayOpen(false)}
+      >
+        <KeyboardAvoidingView
+          className="flex-1 justify-end"
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <Pressable
+            className="absolute inset-0 bg-black/50"
+            onPress={() => {
+              if (!payBusy) setPayOpen(false);
+            }}
+            accessibilityLabel={t("cancel")}
+            testID="chat-pay-backdrop"
+          />
+          <View
+            className="gap-3 rounded-t-3xl bg-surface px-6 pt-5"
+            style={{ paddingBottom: insets.bottom + 16 }}
+            testID="chat-pay-sheet"
+          >
+            <Text weight="bold" className="text-lg">
+              {t("chatPayAction")}
+            </Text>
+            <TextInput
+              value={payAmount}
+              onChangeText={setPayAmount}
+              placeholder={t("chatPayAmountPlaceholder")}
+              placeholderTextColor={PLACEHOLDER_COLOR}
+              keyboardType="number-pad"
+              autoFocus
+              editable={!payBusy}
+              className="rounded-2xl bg-background px-4 py-3 font-sans text-base text-foreground"
+              testID="chat-pay-amount"
+            />
+            <Button
+              label={payBusy ? "…" : t("send")}
+              variant="primary"
+              disabled={payBusy || parseChatPayAmount(payAmount) === null}
+              testID="chat-pay-send"
+              onPress={onChatPay}
+            />
+            <Button
+              label={t("cancel")}
+              variant="secondary"
+              disabled={payBusy}
+              testID="chat-pay-cancel"
+              onPress={() => setPayOpen(false)}
+            />
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
 
       <MessageActionSheet
         message={actionTarget}

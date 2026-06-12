@@ -225,6 +225,76 @@ export const reacceptToken = async (
 };
 
 // ---------------------------------------------------------------------------
+// Issued-entry claim detection (#44 / #43)
+// ---------------------------------------------------------------------------
+
+export interface IssuedCheckOutcome {
+  /** Issued rows whose proofs were checked with their mint. */
+  readonly checked: number;
+  /** Issued rows newly confirmed claimed (→ `spent`). */
+  readonly claimed: number;
+}
+
+/**
+ * Claim detection for outgoing chat tokens: NUT-07-checks every `issued`
+ * row and reconciles (#33) — a token the recipient accepted flips to
+ * `spent`, which is what lets the #43 history keep showing the merged
+ * emit-then-send item as settled value (the issued amount leaves the
+ * total balance). Unreachable mints leave their rows untouched.
+ */
+export const checkIssuedTokens = async (store: LinkyStore): Promise<IssuedCheckOutcome> => {
+  const tokens = createTokensRepository(store);
+  const issued = await tokens.list({ states: ["issued"] });
+  if (issued.length === 0) return { checked: 0, claimed: 0 };
+
+  const groupsByMint = new Map<string, { mintUrl: string; unit: string; groups: ProofGroup[] }>();
+  for (const record of issued) {
+    const parsed = parseStoredToken(record);
+    if (parsed === null) continue;
+    const key = `${record.mintUrl}|${record.unit}`;
+    const entry =
+      groupsByMint.get(key) ?? { mintUrl: record.mintUrl, unit: record.unit, groups: [] };
+    entry.groups.push({ id: record.id, proofs: dedupeProofs(parsed.proofs) });
+    groupsByMint.set(key, entry);
+  }
+
+  let checked = 0;
+  let claimed = 0;
+  for (const { mintUrl, unit, groups } of groupsByMint.values()) {
+    const states = await checkProofStatesOrNull({
+      mintUrl,
+      unit,
+      proofs: groups.flatMap((group) => group.proofs),
+    });
+    if (states === null) continue;
+    checked += groups.length;
+    const partition = partitionProofGroupsByState(groups, states);
+    const { updated } = await tokens.reconcile(partition, Date.now());
+    claimed += updated.filter((record) => record.state === "spent").length;
+  }
+
+  if (claimed > 0) invalidateStoreData();
+  return { checked, claimed };
+};
+
+/** Min interval between opportunistic issued-row checks (screen mounts). */
+const ISSUED_CHECK_THROTTLE_MS = 30_000;
+let lastIssuedCheckAtMs = 0;
+
+/**
+ * Throttled, fire-and-forget claim detection — called from screen mounts
+ * (wallet tab, chat thread) so a claimed token is noticed without polling.
+ */
+export const maybeCheckIssuedTokens = (store: LinkyStore): void => {
+  const now = Date.now();
+  if (now - lastIssuedCheckAtMs < ISSUED_CHECK_THROTTLE_MS) return;
+  lastIssuedCheckAtMs = now;
+  void checkIssuedTokens(store).catch((error: unknown) => {
+    if (__DEV__) console.warn("[wallet] issued-token check died:", error);
+  });
+};
+
+// ---------------------------------------------------------------------------
 // Cleanup spent (`cashu.cleanup-spent`)
 // ---------------------------------------------------------------------------
 

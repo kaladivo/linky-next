@@ -16,7 +16,9 @@ import { Pressable, ScrollView, View } from "react-native";
 import { useLocale } from "../../src/locales";
 import { runAppEffect, useEffectQuery } from "../../src/runtime";
 import { getStoreDataVersion, subscribeToStoreData } from "../../src/store/storeManager";
+import { useLinkyStore } from "../../src/store/useLinkyStore";
 import { useAmountDisplay } from "../../src/wallet/AmountDisplayProvider";
+import { maybeCheckIssuedTokens } from "../../src/wallet/tokenActions";
 import {
   loadWalletWarningDismissed,
   persistWalletWarningDismissed,
@@ -57,6 +59,13 @@ export default function WalletScreen() {
   // Balances come from the session store (#35/#37 seam); writes bump the
   // store data version, so the balance re-queries after seeds and claims.
   const dataVersion = useSyncExternalStore(subscribeToStoreData, getStoreDataVersion);
+  const storeState = useLinkyStore();
+
+  // Claim detection (#44): issued chat tokens the recipient accepted flip
+  // to spent, so the total stops counting value that already moved.
+  useEffect(() => {
+    if (storeState.status === "ready") maybeCheckIssuedTokens(storeState.store);
+  }, [storeState]);
   const walletData = useEffectQuery(loadWalletData, [dataVersion]);
   const persistedDismissed = useEffectQuery(loadWalletWarningDismissed);
   const [dismissedOverride, setDismissedOverride] = useState<boolean | null>(null);

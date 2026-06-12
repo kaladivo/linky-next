@@ -48,3 +48,34 @@ the recorded rumor; every NIP-44 vector round-trips through the PoC's
 
 The two secret keys are throwaway fixture keys (they appear in this
 repository; they must never be used for a real identity).
+
+## `chatPayments.golden.json`
+
+Pins the chat-payment wire shapes (issue #44, `chat-pay.*`) against the
+PoC's own send code (`usePayContactWithCashuMessage.ts` via
+`pushWrappedEvent.ts`):
+
+- **`tokenMessage`** — a Cashu token chat message: a plain kind-14 rumor
+  whose `content` IS the serialized token (encoded with the PoC's own
+  `@cashu/cashu-ts@2.9.0`, the version this repo pins), with the usual
+  `p`/`p`/`client` tags. BOTH wraps are produced by the PoC's plain
+  `wrapEventWithoutPushMarker` — token messages stay notification-QUIET
+  (the push relay must not alert on the value-carrying message).
+- **`paymentNotice`** — the notify-only companion event
+  (`createLinkyPaymentNoticeEvent`): kind 24133, content
+  `"payment_notice"`, tags `p` recipient / `p` sender / `client` /
+  `["linky","payment_notice"]`. Wrapped ONCE for the recipient by the
+  PoC's `wrapEventWithPushMarker` (wrap tags `["p", recipient]` +
+  `["linky","push"]`); there is no self wrap.
+
+Generated from the PoC's own dependencies (`nostr-tools@2.23.3`,
+`@cashu/cashu-ts@2.9.0`) on 2026-06-12 by the script preserved verbatim as
+[`generateChatPaymentsFixtures.poc.ts.txt`](./generateChatPaymentsFixtures.poc.ts.txt)
+(same fixture key pair as `nip17.golden.json`; the script self-verifies
+every wrap with nostr-tools' `verifyEvent` + `nip17.unwrapEvent` and the
+token with the PoC's `parseCashuToken` before emitting):
+
+```sh
+cd /Users/kaladivo/workspace/linky/linky-poc/apps/web-app
+bun gen-chat-payments-fixtures.ts > .../src/domain/chat/__fixtures__/chatPayments.golden.json
+```
