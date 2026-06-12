@@ -100,7 +100,9 @@ describe("restoreFromMint", () => {
     expect(result.scans[0]?.scanned).toBe(true);
   });
 
-  it("falls back to a deep scan from 0 when the window misses old value", async () => {
+  // The deep scan runs many BDHKE rounds; under full-parallel turbo load it
+  // can exceed vitest's 5s default (seen twice in agent runs and CI-class load).
+  it("falls back to a deep scan from 0 when the window misses old value", { timeout: 60_000 }, async () => {
     const mint = new FakeMint();
     const secrets = await seedWalletValue(mint); // signatures at 1..3
 
