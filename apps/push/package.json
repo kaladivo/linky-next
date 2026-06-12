@@ -5,14 +5,25 @@
   "description": "Push service for Nostr inbox notifications.",
   "type": "module",
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "echo \"@linky/push: no tests yet\""
+    "test": "vitest run",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@effect/platform": "^0.96.1",
+    "@linky/core": "workspace:*",
+    "@noble/hashes": "^2.0.1",
+    "better-sqlite3": "^12.1.1",
+    "effect": "^3.21.3"
   },
   "devDependencies": {
     "@linky/config": "workspace:*",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.10.9",
     "eslint": "^9.39.0",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.8"
   }
 }

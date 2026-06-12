@@ -161,10 +161,29 @@ importers:
         version: 4.1.8(@types/node@24.13.2)(vite@8.0.16(@types/node@24.13.2)(jiti@1.21.7)(terser@5.48.0)(yaml@2.9.0))
 
   apps/push:
+    dependencies:
+      '@effect/platform':
+        specifier: ^0.96.1
+        version: 0.96.1(effect@3.21.3)
+      '@linky/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@noble/hashes':
+        specifier: ^2.0.1
+        version: 2.2.0
+      better-sqlite3:
+        specifier: ^12.1.1
+        version: 12.10.0
+      effect:
+        specifier: ^3.21.3
+        version: 3.21.3
     devDependencies:
       '@linky/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@types/better-sqlite3':
+        specifier: ^7.6.13
+        version: 7.6.13
       '@types/node':
         specifier: ^24.10.9
         version: 24.13.2
@@ -174,6 +193,9 @@ importers:
       typescript:
         specifier: ~5.9.3
         version: 5.9.3
+      vitest:
+        specifier: ^4.1.8
+        version: 4.1.8(@types/node@24.13.2)(vite@8.0.16(@types/node@24.13.2)(jiti@1.21.7)(terser@5.48.0)(yaml@2.9.0))
 
   apps/web: {}
 
