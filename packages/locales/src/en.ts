@@ -509,6 +509,11 @@ export const en = {
   contactsLimitReached: "Contact limit reached ({max}).",
   contactSaved: "Contact saved.",
   contactUpdated: "Contact updated.",
+  // Contact form + refresh-from-Nostr (#27).
+  invalidNpub: "This is not a valid npub.",
+  refreshFromNostr: "Refresh from Nostr",
+  contactRefreshed: "Contact updated from Nostr.",
+  contactRefreshNoProfile: "No Nostr profile found.",
   contactDeleted: "Contact deleted.",
   contactArchived: "Contact archived.",
   contactRestored: "Contact restored.",

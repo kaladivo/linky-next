@@ -155,6 +155,16 @@ export const profilePictureUrl = (
   return null;
 };
 
+/** The best display name of a metadata record: `display_name`, else `name` (PoC `getBestNostrName`). */
+export const bestProfileName = (
+  metadata: NostrProfileMetadata | null | undefined,
+): string | null => metadata?.displayName ?? metadata?.name ?? null;
+
+/** The Lightning address of a metadata record: `lud16`, else `lud06` (PoC refresh rule). */
+export const profileLightningAddress = (
+  metadata: NostrProfileMetadata | null | undefined,
+): string | null => metadata?.lud16 ?? metadata?.lud06 ?? null;
+
 // ---------------------------------------------------------------------------
 // Publishing own metadata
 // ---------------------------------------------------------------------------
@@ -230,6 +240,12 @@ export interface FetchProfileOptions {
   readonly sinceSec?: number;
   /** Override the relay collection window (tests use TestClock). */
   readonly queryWindow?: Duration.DurationInput;
+  /**
+   * Skip the cache READ and go to the relays (the explicit
+   * `contacts.refresh-nostr` button, #27). The result is still written to
+   * the cache, so the rest of the app sees the refreshed profile.
+   */
+  readonly ignoreCache?: boolean;
 }
 
 /** Keeps the newest event by `created_at`; first received wins ties (PoC stable sort). */
@@ -251,8 +267,10 @@ export const fetchProfileMetadata = (
   RelayPool | KeyValueStorage.KeyValueStore
 > =>
   Effect.gen(function* () {
-    const cached = yield* metadataCache.read(pubkeyHex);
-    if (Option.isSome(cached)) return Option.fromNullable(cached.value);
+    if (options.ignoreCache !== true) {
+      const cached = yield* metadataCache.read(pubkeyHex);
+      if (Option.isSome(cached)) return Option.fromNullable(cached.value);
+    }
 
     const pool = yield* RelayPool;
     const filter: NostrFilter = {

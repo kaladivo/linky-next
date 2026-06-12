@@ -25,11 +25,13 @@ import { layerRelayPool } from "./RelayPool.js";
 import {
   PROFILE_METADATA_CACHE_KEY_PREFIX,
   PROFILE_METADATA_KIND,
+  bestProfileName,
   fetchProfileMetadata,
   fetchProfilePictureUrl,
   isDisplayableProfilePictureUrl,
   ownProfileMetadataContent,
   parseProfileMetadataContent,
+  profileLightningAddress,
   profilePictureUrl,
   publishProfileMetadata,
 } from "./profileMetadata.js";
@@ -164,6 +166,20 @@ describe("profilePictureUrl", () => {
     expect(isDisplayableProfilePictureUrl("data:image/png;base64,iVBORw0KGgo=")).toBe(true);
     expect(isDisplayableProfilePictureUrl("data:text/html;base64,PGI+")).toBe(false);
     expect(isDisplayableProfilePictureUrl("data:image/svg+xml,<svg/>")).toBe(false);
+  });
+
+  it("bestProfileName prefers display_name over name (PoC getBestNostrName)", () => {
+    expect(bestProfileName({ displayName: "Display", name: "Plain" })).toBe("Display");
+    expect(bestProfileName({ name: "Plain" })).toBe("Plain");
+    expect(bestProfileName({ picture: "https://example.com/a.png" })).toBeNull();
+    expect(bestProfileName(null)).toBeNull();
+  });
+
+  it("profileLightningAddress prefers lud16 over lud06 (PoC refresh rule)", () => {
+    expect(profileLightningAddress({ lud16: "a@b.c", lud06: "lnurl1..." })).toBe("a@b.c");
+    expect(profileLightningAddress({ lud06: "lnurl1..." })).toBe("lnurl1...");
+    expect(profileLightningAddress({ name: "x" })).toBeNull();
+    expect(profileLightningAddress(null)).toBeNull();
   });
 });
 
@@ -370,6 +386,41 @@ describe("fetchProfileMetadata", () => {
         yield* TestClock.adjust("13 hours");
         const refreshed = yield* fetchInWindow(fetchProfileMetadata(first.pubkey));
         expect(Option.getOrThrow(refreshed).name).toBe("Second");
+      }),
+    );
+  });
+
+  it("ignoreCache skips the cache read but still refreshes the cache (#27 refresh button)", async () => {
+    await withHarness({}, ({ network }) =>
+      Effect.gen(function* () {
+        const relay = yield* network.relay(RELAY);
+        const first = yield* makeSignedEvent({
+          kind: PROFILE_METADATA_KIND,
+          created_at: FIXED_SEC - 100,
+          content: JSON.stringify({ name: "First" }),
+        });
+        yield* relay.emitEvent(first);
+
+        const initial = yield* fetchInWindow(fetchProfileMetadata(first.pubkey));
+        expect(Option.getOrThrow(initial).name).toBe("First");
+
+        // A newer event appears within the positive TTL; the explicit
+        // refresh bypasses the fresh cache and picks it up...
+        const second = yield* makeSignedEvent({
+          kind: PROFILE_METADATA_KIND,
+          created_at: FIXED_SEC + 100,
+          content: JSON.stringify({ name: "Second" }),
+        });
+        yield* relay.emitEvent(second);
+        const refreshed = yield* fetchInWindow(
+          fetchProfileMetadata(first.pubkey, { ignoreCache: true }),
+        );
+        expect(Option.getOrThrow(refreshed).name).toBe("Second");
+
+        // ...and rewrites the cache: a normal fetch now serves "Second"
+        // without a relay round trip (no clock advance needed).
+        const cached = yield* fetchProfileMetadata(first.pubkey);
+        expect(Option.getOrThrow(cached).name).toBe("Second");
       }),
     );
   });
