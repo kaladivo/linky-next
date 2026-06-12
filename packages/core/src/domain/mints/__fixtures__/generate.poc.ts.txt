@@ -1,0 +1,343 @@
+/**
+ * Golden fixture generator for linky-next issue #41 (Mints).
+ * Run from the PoC repo with bun:
+ *   cd /Users/kaladivo/workspace/linky/linky-poc/apps/web-app && bun /tmp/gen-mints-golden.ts
+ * Pins the PoC's mint URL normalization, mint info parsing (fees/icon),
+ * npub.cash server resolution and the NIP-98 hosted mint-sync request shape.
+ */
+import { sha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex } from "@noble/hashes/utils.js";
+import { finalizeEvent, nip98 } from "nostr-tools";
+
+import {
+  getMintOriginAndHost,
+  isTestMintUrl,
+  normalizeMintUrl,
+} from "/Users/kaladivo/workspace/linky/linky-poc/apps/web-app/src/utils/mint";
+import {
+  getMintInfoIconUrl,
+  parseMintInfoPayload,
+} from "/Users/kaladivo/workspace/linky/linky-poc/apps/web-app/src/app/hooks/mint/mintInfoHelpers";
+import {
+  getMintSelectionDisplayName,
+  resolveMintSyncServerBaseUrl,
+} from "/Users/kaladivo/workspace/linky/linky-poc/apps/web-app/src/app/hooks/mint/useNpubCashMintSelection";
+import { resolveNpubCashServerBaseUrl } from "/Users/kaladivo/workspace/linky/linky-poc/apps/web-app/src/utils/npubCashServer";
+
+// --- normalizeMintUrl --------------------------------------------------------
+const NORMALIZE_INPUTS = [
+  "https://cashu.cz",
+  "https://cashu.cz/",
+  "https://cashu.cz///",
+  "  https://cashu.cz  ",
+  "HTTPS://CASHU.CZ",
+  "https://CASHU.cz/Keys/",
+  "https://testnut.cashu.space",
+  "https://nofees.testnut.cashu.space/",
+  "https://mint.minibits.cash",
+  "https://mint.minibits.cash/",
+  "https://mint.minibits.cash/Bitcoin",
+  "https://mint.minibits.cash/Bitcoin/",
+  "https://MINT.MINIBITS.CASH/whatever",
+  "http://localhost:3338",
+  "http://localhost:3338/",
+  "https://example.com:443/mint",
+  "http://example.com:80/mint",
+  "https://example.com:8080/mint/",
+  "https://example.com/mint?x=1#frag",
+  "https://example.com/mint/?a=b",
+  "https://example.com//double//slash//",
+  "https://user:pass@example.com/mint",
+  "https://example.com/path/sub/../up",
+  "https://example.com/./x",
+  "wss://relay.example.com/x",
+  "foo://bar/baz",
+  "testnut.cashu.space",
+  "mint.example.com/path",
+  "not a url",
+  "",
+  "   ",
+];
+
+// --- getMintOriginAndHost ----------------------------------------------------
+const ORIGIN_HOST_INPUTS = [
+  "https://cashu.cz/x",
+  "https://example.com:8080/p",
+  "cashu.cz",
+  "mint.example.com:8080/p",
+  "https://user@host.example/x",
+  "http://localhost:3338",
+  "not a url",
+  "",
+];
+
+// --- getMintSelectionDisplayName ----------------------------------------------
+const DISPLAY_NAME_INPUTS = [
+  "https://cashu.cz",
+  "https://mint.minibits.cash/Bitcoin",
+  "http://localhost:3338",
+  "https://example.com:8080/mint/",
+  "testnut.cashu.space",
+  "not a url",
+  "",
+];
+
+// --- isTestMintUrl -------------------------------------------------------------
+const TEST_MINT_INPUTS = [
+  "https://testnut.cashu.space",
+  "https://testnut.cashu.space/",
+  "HTTPS://TESTNUT.CASHU.SPACE",
+  "https://nofees.testnut.cashu.space",
+  "https://cashu.cz",
+  "https://mint.minibits.cash/Bitcoin",
+  "http://localhost:3338",
+];
+
+// --- parseMintInfoPayload --------------------------------------------------------
+const LONG_DESCRIPTION = "x".repeat(1200);
+const INFO_PAYLOADS: Record<string, unknown> = {
+  testnutLike: {
+    name: "Test Nut Mint",
+    pubkey: "02a1b2c3d4e5f60718293a4b5c6d7e8f9001122334455667788990aabbccddeeff",
+    version: "Nutshell/0.16.0",
+    description: "A test mint",
+    description_long: "A longer description of the test mint.",
+    contact: [{ method: "email", info: "ops@example.com" }],
+    motd: "hello",
+    icon_url: "https://mint.example.com/icon.png",
+    time: 1750000000,
+    nuts: {
+      "4": { methods: [{ method: "bolt11", unit: "sat" }], disabled: false },
+      "5": { methods: [{ method: "bolt11", unit: "sat" }], disabled: false },
+      "15": { methods: [{ method: "bolt11", unit: "sat" }] },
+    },
+  },
+  noNut15: {
+    name: "Plain Mint",
+    nuts: {
+      "4": { methods: [{ method: "bolt11", unit: "sat" }] },
+    },
+  },
+  feesPpk: { name: "Fee Mint", fees: { ppk: 100 } },
+  feeNumber: { name: "Flat Fee Mint", fee: 2 },
+  feesNestedPpkString: { fees: { sat: { ppk: "150" } } },
+  topLevelPpk: { ppk: 42, nuts: {} },
+  uppercaseNuts: { NUTS: { nut15: { methods: [] } } },
+  longInfoTruncates: { name: "Big", description_long: LONG_DESCRIPTION },
+  empty: {},
+};
+
+// --- getMintInfoIconUrl ------------------------------------------------------------
+const ICON_CASES: Array<{ name: string; mintUrl: string; infoJson: string | null }> = [
+  {
+    name: "absoluteIcon",
+    mintUrl: "https://mint.example.com/Bitcoin",
+    infoJson: JSON.stringify({ icon_url: "https://cdn.example.com/i.png" }),
+  },
+  {
+    name: "rootRelative",
+    mintUrl: "https://mint.example.com/Bitcoin",
+    infoJson: JSON.stringify({ icon_url: "/icon.png" }),
+  },
+  {
+    name: "relativeReplacesLastSegment",
+    mintUrl: "https://mint.example.com/Bitcoin",
+    infoJson: JSON.stringify({ icon_url: "icon.png" }),
+  },
+  {
+    name: "relativeWithDirs",
+    mintUrl: "https://mint.example.com/a/b",
+    infoJson: JSON.stringify({ iconUrl: "img/x.png" }),
+  },
+  {
+    name: "protocolRelative",
+    mintUrl: "https://mint.example.com",
+    infoJson: JSON.stringify({ logo: "//cdn.example.com/l.png" }),
+  },
+  {
+    name: "dataUrl",
+    mintUrl: "https://mint.example.com",
+    infoJson: JSON.stringify({ image: "data:image/png;base64,AAAA" }),
+  },
+  {
+    name: "nestedIcon",
+    mintUrl: "https://mint.example.com",
+    infoJson: JSON.stringify({ info: { branding: { image: "https://cdn.example.com/n.png" } } }),
+  },
+  {
+    name: "priorityIconUrlFirst",
+    mintUrl: "https://mint.example.com",
+    infoJson: JSON.stringify({ logo: "https://cdn.example.com/logo.png", icon_url: "https://cdn.example.com/first.png" }),
+  },
+  {
+    name: "whitespaceIconSkipped",
+    mintUrl: "https://mint.example.com",
+    infoJson: JSON.stringify({ icon: "   ", logo: "https://cdn.example.com/l2.png" }),
+  },
+  { name: "invalidJson", mintUrl: "https://mint.example.com", infoJson: "{nope" },
+  { name: "nullInfo", mintUrl: "https://mint.example.com", infoJson: null },
+  {
+    name: "rootMintTrailingResolved",
+    mintUrl: "https://mint.example.com/",
+    infoJson: JSON.stringify({ icon_url: "icon.png" }),
+  },
+];
+
+// --- npub.cash server resolution -----------------------------------------------------
+const NPUB_CASH_BASE_INPUTS = [
+  "npub1abc@linky.fit",
+  "someone@npub.cash",
+  "user@other.example",
+  "user@LINKY.FIT",
+  "no-at-sign",
+  "",
+  null,
+];
+
+// --- NIP-98 hosted mint sync request (PoC makeNip98AuthHeader + updateNpubCashMint) ---
+const NIP98_PRIV_HEX = bytesToHex(sha256(new TextEncoder().encode("linky-#41-golden-nip98")));
+const NIP98_PRIV = (() => {
+  const bytes = new Uint8Array(32);
+  for (let i = 0; i < 32; i += 1) {
+    bytes[i] = Number.parseInt(NIP98_PRIV_HEX.slice(i * 2, i * 2 + 2), 16);
+  }
+  return bytes;
+})();
+
+interface Nip98Case {
+  name: string;
+  baseUrl: string;
+  mintUrl: string;
+  nowSec: number;
+}
+
+const NIP98_CASES: Nip98Case[] = [
+  {
+    name: "linkyFitHosted",
+    baseUrl: "https://npub.linky.fit",
+    mintUrl: "https://cashu.cz",
+    nowSec: 1750000000,
+  },
+  {
+    name: "npubCashDefault",
+    baseUrl: "https://npub.cash",
+    mintUrl: "https://testnut.cashu.space",
+    nowSec: 1777777777,
+  },
+];
+
+const makeNip98Fixture = async ({ name, baseUrl, mintUrl, nowSec }: Nip98Case) => {
+  // Exactly what useNpubCashMintSelection.updateNpubCashMint does:
+  const cleaned = normalizeMintUrl(mintUrl);
+  const url = `${baseUrl}/api/v1/info/mint`;
+  const payload = { mintUrl: cleaned };
+
+  // nip98.getToken uses `new Date().getTime()` — freeze it for determinism.
+  const RealDate = Date;
+  const fixedMs = nowSec * 1000;
+  // @ts-expect-error deliberate global override
+  globalThis.Date = class extends RealDate {
+    constructor() {
+      super(fixedMs);
+    }
+    static now() {
+      return fixedMs;
+    }
+  };
+  let token: string;
+  try {
+    token = await nip98.getToken(
+      url,
+      "PUT",
+      async (event) => finalizeEvent(event as never, NIP98_PRIV),
+      true,
+      payload,
+    );
+  } finally {
+    globalThis.Date = RealDate;
+  }
+
+  const eventJson = new TextDecoder().decode(
+    Uint8Array.from(atob(token.slice("Nostr ".length)), (c) => c.charCodeAt(0)),
+  );
+  const eventJsonSigMasked = eventJson.replace(/"sig":"[0-9a-f]{128}"/, '"sig":"SIG"');
+
+  return {
+    name,
+    baseUrl,
+    inputMintUrl: mintUrl,
+    nowSec,
+    request: {
+      url,
+      method: "PUT",
+      contentType: "application/json",
+      body: JSON.stringify(payload),
+    },
+    authorizationScheme: "Nostr ",
+    eventJsonSigMasked,
+    payloadHashHex: bytesToHex(sha256(new TextEncoder().encode(JSON.stringify(payload)))),
+  };
+};
+
+const main = async () => {
+  const fixture = {
+    generatedAt: new Date().toISOString(),
+    source: "linky-poc/apps/web-app (PoC's own modules + nostr-tools as resolved by the PoC lockfile)",
+    normalizeMintUrl: NORMALIZE_INPUTS.map((input) => ({ input, output: normalizeMintUrl(input) })),
+    getMintOriginAndHost: ORIGIN_HOST_INPUTS.map((input) => ({
+      input,
+      output: getMintOriginAndHost(input),
+    })),
+    getMintSelectionDisplayName: DISPLAY_NAME_INPUTS.map((input) => ({
+      input,
+      output: getMintSelectionDisplayName(input),
+    })),
+    isTestMintUrl: TEST_MINT_INPUTS.map((input) => ({ input, output: isTestMintUrl(input) })),
+    parseMintInfoPayload: Object.entries(INFO_PAYLOADS).map(([name, payload]) => ({
+      name,
+      payload,
+      output: parseMintInfoPayload(payload),
+    })),
+    getMintInfoIconUrl: ICON_CASES.map(({ name, mintUrl, infoJson }) => ({
+      name,
+      mintUrl,
+      infoJson,
+      output: getMintInfoIconUrl(mintUrl, infoJson),
+    })),
+    resolveNpubCashServerBaseUrl: NPUB_CASH_BASE_INPUTS.map((input) => ({
+      input,
+      output: resolveNpubCashServerBaseUrl(input),
+    })),
+    resolveMintSyncServerBaseUrl: [
+      {
+        name: "noOwnedAddresses",
+        args: {
+          npubCashServerBaseUrl: "https://npub.cash",
+          ownedLightningAddresses: [],
+          profileClaimLightningAddressServerBaseUrl: "https://npub.linky.fit",
+        },
+      },
+      {
+        name: "ownedAddressPresent",
+        args: {
+          npubCashServerBaseUrl: "https://npub.cash",
+          ownedLightningAddresses: ["alice@linky.fit"],
+          profileClaimLightningAddressServerBaseUrl: "https://npub.linky.fit",
+        },
+      },
+    ].map(({ name, args }) => ({ name, args, output: resolveMintSyncServerBaseUrl(args) })),
+    nip98: {
+      privHex: NIP98_PRIV_HEX,
+      // Sequential on purpose: each case freezes the global Date.
+      cases: await (async () => {
+        const cases = [];
+        for (const item of NIP98_CASES) cases.push(await makeNip98Fixture(item));
+        return cases;
+      })(),
+    },
+  };
+
+  console.log(JSON.stringify(fixture, null, 2));
+};
+
+await main();

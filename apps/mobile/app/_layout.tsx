@@ -93,6 +93,12 @@ function RootNavigator() {
         options={{ headerShown: true, title: t("topupNoAmountTitle") }}
       />
       <Stack.Screen name="wallet/send" options={{ headerShown: true, title: t("walletSend") }} />
+      {/* Mint management (#41): presets/custom/main-mint + detail. */}
+      <Stack.Screen name="wallet/mints" options={{ headerShown: true, title: t("mints") }} />
+      <Stack.Screen
+        name="wallet/mint/[url]"
+        options={{ headerShown: true, title: t("mints") }}
+      />
       <Stack.Screen
         name="wallet/transactions"
         options={{ headerShown: true, title: t("transactionsTitle") }}

@@ -117,11 +117,14 @@ const sharedFields = {
   nostrRelayUrls: Schema.NonEmptyArray(WssUrl),
 } as const;
 
-/** Non-production config: test funds only, enforced by the schema itself. */
+/** Non-production config: test funds only, enforced by the schema itself.
+ * Preset mints (`mints.presets`) are part of the guard: a dev/staging build
+ * cannot even OFFER a mainnet mint in its preset list. */
 export const TestEnvironmentConfig = Schema.Struct({
   profile: Schema.Literal("development", "staging"),
   network: Schema.Literal("test"),
   cashuMintUrl: TestMintUrl,
+  presetMintUrls: Schema.NonEmptyArray(TestMintUrl),
   evoluSyncUrls: Schema.NonEmptyArray(TestSyncUrl),
   ...sharedFields,
 });
@@ -132,6 +135,7 @@ export const MainEnvironmentConfig = Schema.Struct({
   profile: Schema.Literal("production"),
   network: Schema.Literal("main"),
   cashuMintUrl: HttpsUrl,
+  presetMintUrls: Schema.NonEmptyArray(HttpsUrl),
   evoluSyncUrls: Schema.NonEmptyArray(WssUrl),
   ...sharedFields,
 });
@@ -153,6 +157,25 @@ const DEFAULT_NOSTR_RELAY_URLS = [
 ] as const;
 
 /**
+ * Default preset mints (`mints.presets`). Production mirrors the PoC's
+ * PRESET_MINTS verbatim (incl. the test mint — the UI separates it);
+ * non-production profiles only offer known test mints, because the
+ * structural mainnet guard above refuses anything else for them.
+ */
+const PRODUCTION_PRESET_MINT_URLS = [
+  "https://cashu.cz",
+  "https://testnut.cashu.space",
+  "https://mint.minibits.cash/Bitcoin",
+  "https://kashu.me",
+  "https://cashu.21m.lol",
+] as const;
+
+const TEST_PRESET_MINT_URLS = [
+  "https://testnut.cashu.space",
+  "https://nofees.testnut.cashu.space",
+] as const;
+
+/**
  * The default, spec-mandated configuration for a profile. Runs through the
  * schema, so a defaults/spec mismatch fails loudly instead of shipping.
  */
@@ -161,6 +184,8 @@ export const environmentForProfile = (profile: AppProfile): EnvironmentConfig =>
     profile,
     network: networkForProfile(profile),
     cashuMintUrl: profile === "production" ? "https://cashu.cz" : "https://testnut.cashu.space",
+    presetMintUrls:
+      profile === "production" ? PRODUCTION_PRESET_MINT_URLS : TEST_PRESET_MINT_URLS,
     nostrRelayUrls: DEFAULT_NOSTR_RELAY_URLS,
     evoluSyncUrls:
       profile === "production"
