@@ -71,6 +71,10 @@ function RootNavigator() {
         options={{ headerShown: true, title: t("nostrRelay") }}
       />
       <Stack.Screen name="contact/new" options={{ headerShown: true, title: t("newContact") }} />
+      {/* Scanner surface (#47): camera/paste/gallery/manual input. Custom
+          in-screen header (PoC scan sheet); result routing lands with #48
+          (contract: src/scanner/scanContract.ts). */}
+      <Stack.Screen name="scanner" options={{ presentation: "fullScreenModal" }} />
       <Stack.Screen name="contact/[id]" options={{ headerShown: true }} />
       <Stack.Screen name="chat/[id]" options={{ headerShown: true }} />
       <Stack.Screen

@@ -621,6 +621,19 @@ export const cs = {
   scanHintContact: "Kontakt přidá",
   scanHintWithdraw: "Peníze vybere",
 
+  // Native scanner surface (#47).
+  scannerRequestingCamera: "Žádám o přístup ke kameře…",
+  scannerPermissionHint:
+    "Přístup ke kameře je vypnutý. Stále můžete hodnotu vložit ze schránky, vybrat QR obrázek z galerie nebo ji napsat.",
+  scannerOpenSettings: "Otevřít nastavení",
+  scannerManualLink: "Nejde skenovat? Zadejte hodnotu ručně",
+  scannerManualPlaceholder: "npub, Lightning faktura, Cashu token nebo LNURL",
+  scannerManualSubmit: "Pokračovat",
+  scannerPreviewTitle: "Načtená hodnota",
+  scannerPreviewNote:
+    "S touto hodnotou se zatím nic nestalo — zpracování naskenovaných hodnot přijde s #48.",
+  scannerScanAgain: "Skenovat znovu",
+
   unit: "Jednotky",
   unitUseBitcoin: "Zobrazit ₿ místo sat",
   unitCurrent: "Aktivní",
