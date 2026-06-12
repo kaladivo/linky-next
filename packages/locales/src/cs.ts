@@ -478,6 +478,10 @@ export const cs = {
   archiveContact: "Archivovat",
   archiveArmedHint: "Pro archivaci klikněte ještě jednou.",
   restoreArchivedContact: "Vrátit mezi kontakty",
+  // contacts.delete-to-unknown (#28).
+  deleteContact: "Smazat kontakt",
+  deleteContactConfirm:
+    "Smazat tento kontakt? Konverzace zůstane zachována u neznámého odesílatele.",
 
   contact: "Kontakt",
   editContact: "Upravit kontakt",

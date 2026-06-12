@@ -20,14 +20,17 @@
  *     — that lands with the block/unknown-sender work, not #27.)
  *
  * The PoC contact screen has no delete button (its "delete" IS the
- * archive), so there is no TODO(#28) stub here; delete-to-unknown gets its
- * own entry point in #28.
+ * archive). #28 adds the two lifecycle actions on top of this screen:
+ * Delete contact → delete-to-unknown (conversation preserved under a
+ * local-only unknown thread; tombstone syncs so no device recreates the
+ * row), and Block on archived contacts (local block + merged kind-10000
+ * mute-list publish) — both via src/contacts/contactThreadActions.
  */
 import { deriveGeneratedAvatar } from "@linky/core";
 import { Button, Surface, Text } from "@linky/ui";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, Pressable, ScrollView, View } from "react-native";
+import { Alert, Image, Pressable, ScrollView, View } from "react-native";
 
 import { ContactFormFields } from "../../src/contacts/ContactFormFields";
 import type { RestorableField } from "../../src/contacts/ContactFormFields";
@@ -47,6 +50,10 @@ import {
   valuesFromRecord,
 } from "../../src/contacts/contactFormModel";
 import type { ContactFormState } from "../../src/contacts/contactFormModel";
+import {
+  blockArchivedContact,
+  deleteContactToUnknown,
+} from "../../src/contacts/contactThreadActions";
 import { contactDisplayName, shortNpub } from "../../src/contacts/contactsListModel";
 import { useContactEditorData } from "../../src/contacts/useContactEditorData";
 import { useLocale } from "../../src/locales";
@@ -203,6 +210,58 @@ function ContactScreenBody({
     setMode("view");
   };
 
+  // #28 contacts.delete-to-unknown: confirm, soft-delete the contact row,
+  // preserve any conversation under a local-only unknown thread.
+  const onDelete = () => {
+    if (busy) return;
+    Alert.alert(t("deleteContact"), t("deleteContactConfirm"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("deleteContact"),
+        style: "destructive",
+        onPress: () => {
+          setBusy(true);
+          void deleteContactToUnknown(store, record.id)
+            .then((result) => {
+              if (result === "failed") {
+                toast.error(t("errorPrefix"));
+                return;
+              }
+              toast.success(t("contactDeleted"));
+              router.replace("/(tabs)");
+            })
+            .finally(() => setBusy(false));
+        },
+      },
+    ]);
+  };
+
+  // #28 contacts.block (archived contacts, PoC parity): confirm, local
+  // block + merged kind-10000 mute-list publish, contact row removed.
+  const onBlock = () => {
+    if (busy) return;
+    Alert.alert(t("blockContact"), t("chatUnknownContactBlockConfirm"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("blockContact"),
+        style: "destructive",
+        onPress: () => {
+          setBusy(true);
+          void blockArchivedContact(store, record.id)
+            .then((result) => {
+              if (!result.blocked) {
+                toast.error(t("errorPrefix"));
+                return;
+              }
+              toast.success(t("contactBlocked"));
+              router.replace("/(tabs)");
+            })
+            .finally(() => setBusy(false));
+        },
+      },
+    ]);
+  };
+
   if (mode === "edit") {
     const savable = isContactEditSavable(formFromRecord(record), form) && !busy;
     return (
@@ -232,12 +291,21 @@ function ContactScreenBody({
           />
 
           {isArchived ? (
-            <Button
-              label={t("restoreArchivedContact")}
-              variant="secondary"
-              onPress={onUnarchive}
-              testID="contact-unarchive"
-            />
+            <>
+              <Button
+                label={t("restoreArchivedContact")}
+                variant="secondary"
+                onPress={onUnarchive}
+                testID="contact-unarchive"
+              />
+              <Button
+                label={t("blockContact")}
+                variant="danger"
+                disabled={busy}
+                testID="contact-block"
+                onPress={onBlock}
+              />
+            </>
           ) : (
             <>
               <Button
@@ -253,6 +321,14 @@ function ContactScreenBody({
               )}
             </>
           )}
+
+          <Button
+            label={t("deleteContact")}
+            variant="danger"
+            disabled={busy}
+            testID="contact-delete"
+            onPress={onDelete}
+          />
 
           <Button
             label={t("cancel")}

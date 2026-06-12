@@ -1,13 +1,24 @@
 /**
- * TEMPORARY dev-only seed panel (#26, wallet seed unified here by #37):
- * inserts demo contacts/messages and demo wallet token records through the
- * real repositories so the Contacts tab and the wallet home have data to
- * render. Remove once real flows make it redundant.
+ * TEMPORARY dev-only seed panel (#26, wallet seed unified by #37, extended
+ * by #28): inserts demo contacts/messages, an unknown thread, and demo
+ * wallet token records through the real repositories so the Contacts tab,
+ * the wallet home, and the chat work (#29) have data to render. Remove
+ * once real flows make it redundant.
+ *
+ * #28 additions for unknown-sender verification:
+ * - the stranger is a REAL (throwaway) npub, so promote/block can decode
+ *   it to a hex pubkey and the kind-10000 mute-list publish works;
+ * - "Inbound from stranger" replays an inbound chat event through
+ *   `applyChatEvent` — after blocking, the outcome must be "blocked" and
+ *   no thread may reappear;
+ * - "List blocked senders" surfaces `BlocksRepository.list()` (the dev
+ *   verification window into the blocked list).
  *
  * Dev-panel convention (see DevLogoutPanel): hardcoded copy, hidden in
  * production builds.
  */
 import {
+  createBlocksRepository,
   createContactsRepository,
   createMessagesRepository,
 } from "@linky/evolu-store";
@@ -26,7 +37,12 @@ const BOB_NPUB = "npub1swl0lmqxtuz75j6chdq9p3lntq5ruf792458fhdty7wlm4kw7ecq47mgj
 const CAROL_NPUB = "npub1carolcarolcarolcarolcarolcarolcarolcarolcarolcarolcaseed";
 const DAN_NPUB = "npub1dandandandandandandandandandandandandandandandandanseed";
 const EVE_NPUB = "npub1eveeveeveeveeveeveeveeveeveeveeveeveeveeveeveeveeveseed";
-const STRANGER_NPUB = "npub1strangerstrangerstrangerstrangerstrangerstrangerseed";
+/**
+ * The unknown sender — a VALID throwaway npub (secret key 0x7f×32, pubkey
+ * hex 142715675faf8da1ecc4d51e0b9e539fa0d52fdd96ed60dbe99adb15d6b05ad9) so
+ * the #28 promote/block flows can decode it; never a real identity.
+ */
+const STRANGER_NPUB = "npub1zsn32e6l47x6rmxy650qh8jnn7sd2t7ajmkkpklfntd3t44sttvsgg5m7h";
 const SELF_NPUB = "npub1selfselfselfselfselfselfselfselfselfselfselfselfseed";
 
 const seedDemoData = async (store: LinkyStore): Promise<"seeded" | "already-seeded"> => {
@@ -82,6 +98,41 @@ const seedDemoData = async (store: LinkyStore): Promise<"seeded" | "already-seed
   return "seeded";
 };
 
+/**
+ * #28 verification action: replays a fresh inbound chat event from the
+ * stranger through `applyChatEvent` — exactly what the NIP-17 engine will
+ * do. While the stranger is blocked the outcome is "blocked" and no
+ * unknown thread may (re)appear.
+ */
+const seedInboundFromStranger = async (store: LinkyStore): Promise<string> => {
+  const messages = createMessagesRepository(store);
+  const nowSec = Math.floor(Date.now() / 1000);
+  const applied = await messages.applyChatEvent({
+    kind: "message",
+    rumorId: `dev-stranger-${Date.now()}`,
+    peerNpub: STRANGER_NPUB,
+    senderNpub: STRANGER_NPUB,
+    direction: "in",
+    content: `dev ping at ${new Date().toISOString()}`,
+    sentAtSec: nowSec,
+  });
+  invalidateStoreData();
+  if (!applied.ok) return `applyChatEvent failed: ${applied.error.reason}`;
+  return `outcome=${applied.value.outcome}, unknownThreadCreated=${String(
+    applied.value.unknownThreadCreated,
+  )}`;
+};
+
+/** #28 verification window: the active blocked-sender rows. */
+const listBlockedSenders = async (store: LinkyStore): Promise<string> => {
+  const blocks = createBlocksRepository(store);
+  const records = await blocks.list();
+  if (records.length === 0) return "Blocked senders: none";
+  return `Blocked senders (${records.length}): ${records
+    .map((record) => `${record.npub.slice(0, 12)}…${record.npub.slice(-6)}`)
+    .join(", ")}`;
+};
+
 export function DevSeedPanel() {
   const storeState = useLinkyStore();
   const [status, setStatus] = useState<string | null>(null);
@@ -101,6 +152,16 @@ export function DevSeedPanel() {
         setStatus(outcome === "seeded" ? "Demo data inserted." : "Already seeded.");
       })
       .catch((error: unknown) => setStatus(`Seeding failed: ${String(error)}`))
+      .finally(() => setBusy(false));
+  };
+
+  const runAction = (action: (store: LinkyStore) => Promise<string>) => {
+    if (storeState.status !== "ready") return;
+    setBusy(true);
+    setStatus(null);
+    action(storeState.store)
+      .then(setStatus)
+      .catch((error: unknown) => setStatus(`Action failed: ${String(error)}`))
       .finally(() => setBusy(false));
   };
 
@@ -124,6 +185,20 @@ export function DevSeedPanel() {
         disabled={busy || !ready}
         onPress={() => runSeed(seedDevWallet)}
         testID="dev-seed-demo-wallet"
+      />
+      <Button
+        label="Inbound from stranger"
+        variant="secondary"
+        disabled={busy || !ready}
+        onPress={() => runAction(seedInboundFromStranger)}
+        testID="dev-seed-stranger-message"
+      />
+      <Button
+        label="List blocked senders"
+        variant="secondary"
+        disabled={busy || !ready}
+        onPress={() => runAction(listBlockedSenders)}
+        testID="dev-list-blocked"
       />
       {status !== null && <Text className="text-sm opacity-70">{status}</Text>}
     </Surface>

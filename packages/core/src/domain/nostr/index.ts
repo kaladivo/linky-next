@@ -12,6 +12,7 @@ export * from "./RelayPool.js";
 export * from "./NostrPendingQueue.js";
 export * from "./deliver.js";
 export * from "./relayLists.js";
+export * from "./muteList.js";
 export * from "./profileMetadata.js";
 export * from "./npub.js";
 export * from "./profileStatus.js";

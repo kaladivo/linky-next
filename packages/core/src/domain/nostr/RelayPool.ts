@@ -432,15 +432,28 @@ const makeRelayPool = (
           yield* Effect.addFinalizer(() =>
             Effect.gen(function* () {
               subscriptions.delete(subscriptionId);
-              yield* Effect.forEach(
-                relays,
-                (relay) =>
-                  relay.connection === null
-                    ? Effect.void
-                    : relay.connection
-                        .send(encodeClientMessage({ _tag: "ClientCloseMessage", subscriptionId }))
-                        .pipe(Effect.ignore),
-                { discard: true },
+              // The CLOSE frames are advisory (the map delete above already
+              // drops any further events), so they must never block scope
+              // close. Finalizers run with interruption masked AND — for the
+              // standard unsubscribe path, a consumer interrupted by e.g.
+              // `Stream.interruptAfter` — with an interrupt already pending,
+              // where a socket send on the consumer's own fiber either hangs
+              // (#28: every profile/mute-list fetch on device) or gets cut
+              // short. Forking into the pool scope detaches the sends from
+              // the dying fiber; they settle thanks to the transport's
+              // interruptible send race.
+              yield* Effect.forkIn(
+                Effect.forEach(
+                  relays,
+                  (relay) =>
+                    relay.connection === null
+                      ? Effect.void
+                      : relay.connection
+                          .send(encodeClientMessage({ _tag: "ClientCloseMessage", subscriptionId }))
+                          .pipe(Effect.ignore),
+                  { discard: true },
+                ).pipe(Effect.interruptible),
+                poolScope,
               );
               yield* mailbox.shutdown;
             }),
