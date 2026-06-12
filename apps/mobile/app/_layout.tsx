@@ -83,6 +83,11 @@ function RootNavigator() {
         name="settings/relays"
         options={{ headerShown: true, title: t("nostrRelay") }}
       />
+      {/* Sync server settings (#53): list/add/remove/disable + live status. */}
+      <Stack.Screen
+        name="settings/sync-servers"
+        options={{ headerShown: true, title: t("syncServersTitle") }}
+      />
       {/* Notifications (#52): enable/disable toggle (settings.notifications)
           + the advanced registration/delivery debug screen. */}
       <Stack.Screen

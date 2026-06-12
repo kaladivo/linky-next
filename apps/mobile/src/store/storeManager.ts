@@ -33,11 +33,15 @@ import "../../lib/cryptoPolyfill";
 import type { OwnerTransport } from "@evolu/common";
 import { evoluReactNativeDeps } from "@evolu/react-native/expo-sqlite";
 import type { IdentitySession } from "@linky/core";
-import { deriveOwnerLaneMnemonics } from "@linky/core";
+import {
+  SyncServerSettingsStore,
+  activeSyncServerUrls,
+  deriveOwnerLaneMnemonics,
+} from "@linky/core";
 import { createLinkyStore } from "@linky/evolu-store";
 import type { LinkyStore } from "@linky/evolu-store";
+import { Effect } from "effect";
 
-import { environment } from "../environment";
 import { runAppEffect } from "../runtime";
 
 export type LinkyStoreState =
@@ -94,6 +98,20 @@ export const subscribeToStore = (listener: Listener): (() => void) => {
   };
 };
 
+// ─── Applied sync servers (#53) ──────────────────────────────────────────
+//
+// Evolu cannot swap transports on a live instance (and instances cannot be
+// disposed), so the list captured at store creation is what actually syncs
+// until the next app restart. The sync-server settings screen compares this
+// against the current settings to decide whether to show the
+// restart-required hint.
+
+let appliedSyncServerUrls: ReadonlyArray<string> | null = null;
+
+/** Sync URLs the current store boot applied; null before any store booted. */
+export const getAppliedSyncServerUrls = (): ReadonlyArray<string> | null =>
+  appliedSyncServerUrls;
+
 /**
  * FNV-1a over the derived npub -> 8 hex chars (the PoC's db-name scheme).
  * The npub is public material; the hash only namespaces the SQLite file.
@@ -130,7 +148,16 @@ export const ensureStoreForSession = (session: IdentitySession): Promise<LinkySt
   const masterSecret = session.masterIdentity.masterSecret;
   creating = (async () => {
     const laneMnemonics = await runAppEffect(deriveOwnerLaneMnemonics(masterSecret));
-    const transports: OwnerTransport[] = environment.evoluSyncUrls.map((url) => ({
+    // The user-edited sync-server list (#53; env defaults when never
+    // edited). Evolu 7.4.1 fixes transports at creation and caches the
+    // instance per database name, so this snapshot is what THIS app run
+    // syncs through — later edits need a restart (the settings screen
+    // compares against `getAppliedSyncServerUrls` to show the hint).
+    const syncUrls = activeSyncServerUrls(
+      await runAppEffect(Effect.flatMap(SyncServerSettingsStore, (store) => store.settings)),
+    );
+    appliedSyncServerUrls = syncUrls;
+    const transports: OwnerTransport[] = syncUrls.map((url) => ({
       type: "WebSocket",
       url,
     }));

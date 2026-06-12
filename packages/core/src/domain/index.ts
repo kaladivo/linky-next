@@ -7,5 +7,6 @@ export * from "./cashu/index.js";
 export * from "./mints/index.js";
 export * from "./lightning/index.js";
 export * from "./nostr/index.js";
+export * from "./sync/index.js";
 export * from "./chat/index.js";
 export * from "./notifications/index.js";

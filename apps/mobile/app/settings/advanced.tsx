@@ -7,8 +7,8 @@ import { NostrKeysCard } from "../../src/settings/NostrKeysCard";
 
 /**
  * Advanced settings. Live today: backup keys entry (#19 — warning-gated
- * backup screen), Nostr keys (#20 — custom nsec override), and relay
- * settings (#31). The rest (mints, Evolu servers…) lands with #56.
+ * backup screen), Nostr keys (#20 — custom nsec override), relay settings
+ * (#31), and sync servers (#53). The rest (mints…) lands with #56.
  */
 export default function AdvancedSettingsScreen() {
   const t = useTranslator();
@@ -34,6 +34,14 @@ export default function AdvancedSettingsScreen() {
           variant="secondary"
           onPress={() => router.push("/settings/relays")}
           testID="open-relays"
+        />
+        {/* #53: Evolu sync-server list + live status, the PoC's "Evolu
+            server" row. */}
+        <Button
+          label={t("syncServersTitle")}
+          variant="secondary"
+          onPress={() => router.push("/settings/sync-servers")}
+          testID="open-sync-servers"
         />
         {/* #52 notifications.debug: registration + delivery state. */}
         <Button

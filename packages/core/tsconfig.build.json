@@ -13,6 +13,7 @@
     "src/**/*.test.ts",
     "src/**/__tests__/**",
     "src/domain/nostr/nostrTestKit.ts",
-    "src/domain/chat/chatTestKit.ts"
+    "src/domain/chat/chatTestKit.ts",
+    "src/domain/sync/syncTestKit.ts"
   ]
 }

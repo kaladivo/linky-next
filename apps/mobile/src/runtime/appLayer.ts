@@ -13,6 +13,8 @@ import {
   layerProfilePublisher,
   layerRelayPool,
   layerRelaySettingsStore,
+  layerSyncServerSettingsStore,
+  layerSyncServerStatusStore,
 } from "@linky/core";
 import {
   ClipboardLive,
@@ -63,6 +65,23 @@ const relaySettingsLayer = layerRelaySettingsStore.pipe(
   Layer.provide(environmentLayer), // default relay set
 );
 
+/**
+ * Sync server settings + status (#53): the persisted Evolu sync-server list
+ * (KeyValueStorage, env defaults as fallback) and the per-server
+ * reachability probes. Unlike the relay list, edits are NOT applied live —
+ * Evolu 7.4.1 fixes transports at store creation, so `storeManager` reads
+ * the active list when it boots the store and the screen shows a
+ * restart-required hint after edits.
+ */
+const syncServerSettingsLayer = layerSyncServerSettingsStore.pipe(
+  Layer.provide(KeyValueStorageLive), // persisted server list + disabled set
+  Layer.provide(environmentLayer), // per-profile default sync servers
+);
+const syncServerStatusLayer = layerSyncServerStatusStore().pipe(
+  Layer.provide(NostrTransportLive), // WebSocket connect (reachability probe)
+  Layer.provide(syncServerSettingsLayer),
+);
+
 /** Real Nostr kind-0 profile publishing (#24, replaces the #17 stub). */
 const profilePublisherLayer = layerProfilePublisher.pipe(
   Layer.provide(relayPoolLayer),
@@ -85,6 +104,9 @@ export const appLayer = Layer.mergeAll(
   nostrPendingQueueLayer, // persistent outbox, flushed on reconnect
   profilePublisherLayer, // kind-0 profile publishing through the relay pool
   relaySettingsLayer, // user-edited relay list (#31), reconciles the pool
+  // Data & sync (#53):
+  syncServerSettingsLayer, // user-edited Evolu sync-server list
+  syncServerStatusLayer, // per-server reachability probes for the settings UI
 );
 
 /** Everything the app runtime can provide; hooks accept Effects needing at most this. */
