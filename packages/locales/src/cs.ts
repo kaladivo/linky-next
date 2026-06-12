@@ -355,6 +355,26 @@ export const cs = {
   mintRefresh: "Obnovit info",
   mintDelete: "Odstranit mint",
   mintLastChecked: "Naposledy ověřeno",
+  // Mint management (#41, mints.*)
+  mintSetMain: "Nastavit jako hlavní mint",
+  mintMainBadge: "hlavní",
+  mintPresetsTitle: "Předvolené minty",
+  mintTestGroupTitle: "Testovací minty",
+  mintKnownTitle: "Známé minty",
+  mintStatusChecking: "Ověřuje se…",
+  mintStatusReachable: "Dostupný",
+  mintStatusUnreachable: "Nedostupný",
+  mintLatency: "Odezva",
+  mintSpendableHere: "K utracení zde",
+  mintTestFundsNote: "Testovací mint — zdejší tokeny nejsou skutečné peníze.",
+  mintChangeKeepsFundsTitle: "Prostředky zůstanou na současném mintu",
+  mintChangeKeepsFundsBody:
+    "Vašich {amount} sat na {fromMint} tam zůstane. Linky zatím prostředky automaticky nepřesouvá.",
+  mintDeleteHasFunds:
+    "Tento mint stále drží {amount} sat utratitelných tokenů. Odstranění tokeny nemaže ani nepřesouvá prostředky.",
+  mintDeleted: "Mint odstraněn.",
+  mintInfoRefreshed: "Informace o mintu obnoveny.",
+  mintRefreshFailed: "Mint neodpovídá.",
 
   chat: "Chat",
   sendMessage: "Zprávy",

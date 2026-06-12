@@ -1,0 +1,573 @@
+{
+  "generatedAt": "2026-06-12T11:30:21.430Z",
+  "source": "linky-poc/apps/web-app (PoC's own modules + nostr-tools as resolved by the PoC lockfile)",
+  "normalizeMintUrl": [
+    {
+      "input": "https://cashu.cz",
+      "output": "https://cashu.cz"
+    },
+    {
+      "input": "https://cashu.cz/",
+      "output": "https://cashu.cz"
+    },
+    {
+      "input": "https://cashu.cz///",
+      "output": "https://cashu.cz"
+    },
+    {
+      "input": "  https://cashu.cz  ",
+      "output": "https://cashu.cz"
+    },
+    {
+      "input": "HTTPS://CASHU.CZ",
+      "output": "https://cashu.cz"
+    },
+    {
+      "input": "https://CASHU.cz/Keys/",
+      "output": "https://cashu.cz/Keys"
+    },
+    {
+      "input": "https://testnut.cashu.space",
+      "output": "https://testnut.cashu.space"
+    },
+    {
+      "input": "https://nofees.testnut.cashu.space/",
+      "output": "https://nofees.testnut.cashu.space"
+    },
+    {
+      "input": "https://mint.minibits.cash",
+      "output": "https://mint.minibits.cash/Bitcoin"
+    },
+    {
+      "input": "https://mint.minibits.cash/",
+      "output": "https://mint.minibits.cash/Bitcoin"
+    },
+    {
+      "input": "https://mint.minibits.cash/Bitcoin",
+      "output": "https://mint.minibits.cash/Bitcoin"
+    },
+    {
+      "input": "https://mint.minibits.cash/Bitcoin/",
+      "output": "https://mint.minibits.cash/Bitcoin"
+    },
+    {
+      "input": "https://MINT.MINIBITS.CASH/whatever",
+      "output": "https://mint.minibits.cash/Bitcoin"
+    },
+    {
+      "input": "http://localhost:3338",
+      "output": "http://localhost:3338"
+    },
+    {
+      "input": "http://localhost:3338/",
+      "output": "http://localhost:3338"
+    },
+    {
+      "input": "https://example.com:443/mint",
+      "output": "https://example.com/mint"
+    },
+    {
+      "input": "http://example.com:80/mint",
+      "output": "http://example.com/mint"
+    },
+    {
+      "input": "https://example.com:8080/mint/",
+      "output": "https://example.com:8080/mint"
+    },
+    {
+      "input": "https://example.com/mint?x=1#frag",
+      "output": "https://example.com/mint"
+    },
+    {
+      "input": "https://example.com/mint/?a=b",
+      "output": "https://example.com/mint"
+    },
+    {
+      "input": "https://example.com//double//slash//",
+      "output": "https://example.com//double//slash"
+    },
+    {
+      "input": "https://user:pass@example.com/mint",
+      "output": "https://example.com/mint"
+    },
+    {
+      "input": "https://example.com/path/sub/../up",
+      "output": "https://example.com/path/up"
+    },
+    {
+      "input": "https://example.com/./x",
+      "output": "https://example.com/x"
+    },
+    {
+      "input": "wss://relay.example.com/x",
+      "output": "wss://relay.example.com/x"
+    },
+    {
+      "input": "foo://bar/baz",
+      "output": "null/baz"
+    },
+    {
+      "input": "testnut.cashu.space",
+      "output": "testnut.cashu.space"
+    },
+    {
+      "input": "mint.example.com/path",
+      "output": "mint.example.com/path"
+    },
+    {
+      "input": "not a url",
+      "output": "not a url"
+    },
+    {
+      "input": "",
+      "output": ""
+    },
+    {
+      "input": "   ",
+      "output": ""
+    }
+  ],
+  "getMintOriginAndHost": [
+    {
+      "input": "https://cashu.cz/x",
+      "output": {
+        "origin": "https://cashu.cz",
+        "host": "cashu.cz"
+      }
+    },
+    {
+      "input": "https://example.com:8080/p",
+      "output": {
+        "origin": "https://example.com:8080",
+        "host": "example.com:8080"
+      }
+    },
+    {
+      "input": "cashu.cz",
+      "output": {
+        "origin": "https://cashu.cz",
+        "host": "cashu.cz"
+      }
+    },
+    {
+      "input": "mint.example.com:8080/p",
+      "output": {
+        "origin": "null",
+        "host": ""
+      }
+    },
+    {
+      "input": "https://user@host.example/x",
+      "output": {
+        "origin": "https://host.example",
+        "host": "host.example"
+      }
+    },
+    {
+      "input": "http://localhost:3338",
+      "output": {
+        "origin": "http://localhost:3338",
+        "host": "localhost:3338"
+      }
+    },
+    {
+      "input": "not a url",
+      "output": {
+        "origin": null,
+        "host": "not a url"
+      }
+    },
+    {
+      "input": "",
+      "output": {
+        "origin": null,
+        "host": null
+      }
+    }
+  ],
+  "getMintSelectionDisplayName": [
+    {
+      "input": "https://cashu.cz",
+      "output": "cashu.cz"
+    },
+    {
+      "input": "https://mint.minibits.cash/Bitcoin",
+      "output": "mint.minibits.cash"
+    },
+    {
+      "input": "http://localhost:3338",
+      "output": "localhost:3338"
+    },
+    {
+      "input": "https://example.com:8080/mint/",
+      "output": "example.com:8080"
+    },
+    {
+      "input": "testnut.cashu.space",
+      "output": "testnut.cashu.space"
+    },
+    {
+      "input": "not a url",
+      "output": "not a url"
+    },
+    {
+      "input": "",
+      "output": ""
+    }
+  ],
+  "isTestMintUrl": [
+    {
+      "input": "https://testnut.cashu.space",
+      "output": true
+    },
+    {
+      "input": "https://testnut.cashu.space/",
+      "output": true
+    },
+    {
+      "input": "HTTPS://TESTNUT.CASHU.SPACE",
+      "output": true
+    },
+    {
+      "input": "https://nofees.testnut.cashu.space",
+      "output": false
+    },
+    {
+      "input": "https://cashu.cz",
+      "output": false
+    },
+    {
+      "input": "https://mint.minibits.cash/Bitcoin",
+      "output": false
+    },
+    {
+      "input": "http://localhost:3338",
+      "output": false
+    }
+  ],
+  "parseMintInfoPayload": [
+    {
+      "name": "testnutLike",
+      "payload": {
+        "name": "Test Nut Mint",
+        "pubkey": "02a1b2c3d4e5f60718293a4b5c6d7e8f9001122334455667788990aabbccddeeff",
+        "version": "Nutshell/0.16.0",
+        "description": "A test mint",
+        "description_long": "A longer description of the test mint.",
+        "contact": [
+          {
+            "method": "email",
+            "info": "ops@example.com"
+          }
+        ],
+        "motd": "hello",
+        "icon_url": "https://mint.example.com/icon.png",
+        "time": 1750000000,
+        "nuts": {
+          "4": {
+            "methods": [
+              {
+                "method": "bolt11",
+                "unit": "sat"
+              }
+            ],
+            "disabled": false
+          },
+          "5": {
+            "methods": [
+              {
+                "method": "bolt11",
+                "unit": "sat"
+              }
+            ],
+            "disabled": false
+          },
+          "15": {
+            "methods": [
+              {
+                "method": "bolt11",
+                "unit": "sat"
+              }
+            ]
+          }
+        }
+      },
+      "output": {
+        "supportsMpp": "1",
+        "feesJson": null,
+        "infoJson": "{\"name\":\"Test Nut Mint\",\"pubkey\":\"02a1b2c3d4e5f60718293a4b5c6d7e8f9001122334455667788990aabbccddeeff\",\"version\":\"Nutshell/0.16.0\",\"description\":\"A test mint\",\"description_long\":\"A longer description of the test mint.\",\"contact\":[{\"method\":\"email\",\"info\":\"ops@example.com\"}],\"motd\":\"hello\",\"icon_url\":\"https://mint.example.com/icon.png\",\"time\":1750000000,\"nuts\":{\"4\":{\"methods\":[{\"method\":\"bolt11\",\"unit\":\"sat\"}],\"disabled\":false},\"5\":{\"methods\":[{\"method\":\"bolt11\",\"unit\":\"sat\"}],\"disabled\":false},\"15\":{\"methods\":[{\"method\":\"bolt11\",\"unit\":\"sat\"}]}}}"
+      }
+    },
+    {
+      "name": "noNut15",
+      "payload": {
+        "name": "Plain Mint",
+        "nuts": {
+          "4": {
+            "methods": [
+              {
+                "method": "bolt11",
+                "unit": "sat"
+              }
+            ]
+          }
+        }
+      },
+      "output": {
+        "supportsMpp": null,
+        "feesJson": null,
+        "infoJson": "{\"name\":\"Plain Mint\",\"nuts\":{\"4\":{\"methods\":[{\"method\":\"bolt11\",\"unit\":\"sat\"}]}}}"
+      }
+    },
+    {
+      "name": "feesPpk",
+      "payload": {
+        "name": "Fee Mint",
+        "fees": {
+          "ppk": 100
+        }
+      },
+      "output": {
+        "supportsMpp": null,
+        "feesJson": "{\"ppk\":100,\"raw\":{\"ppk\":100}}",
+        "infoJson": "{\"name\":\"Fee Mint\",\"fees\":{\"ppk\":100}}"
+      }
+    },
+    {
+      "name": "feeNumber",
+      "payload": {
+        "name": "Flat Fee Mint",
+        "fee": 2
+      },
+      "output": {
+        "supportsMpp": null,
+        "feesJson": "2",
+        "infoJson": "{\"name\":\"Flat Fee Mint\",\"fee\":2}"
+      }
+    },
+    {
+      "name": "feesNestedPpkString",
+      "payload": {
+        "fees": {
+          "sat": {
+            "ppk": "150"
+          }
+        }
+      },
+      "output": {
+        "supportsMpp": null,
+        "feesJson": "{\"ppk\":150,\"raw\":{\"sat\":{\"ppk\":\"150\"}}}",
+        "infoJson": "{\"fees\":{\"sat\":{\"ppk\":\"150\"}}}"
+      }
+    },
+    {
+      "name": "topLevelPpk",
+      "payload": {
+        "ppk": 42,
+        "nuts": {}
+      },
+      "output": {
+        "supportsMpp": null,
+        "feesJson": "{\"ppk\":42,\"raw\":null}",
+        "infoJson": "{\"ppk\":42,\"nuts\":{}}"
+      }
+    },
+    {
+      "name": "uppercaseNuts",
+      "payload": {
+        "NUTS": {
+          "nut15": {
+            "methods": []
+          }
+        }
+      },
+      "output": {
+        "supportsMpp": "1",
+        "feesJson": null,
+        "infoJson": "{\"NUTS\":{\"nut15\":{\"methods\":[]}}}"
+      }
+    },
+    {
+      "name": "longInfoTruncates",
+      "payload": {
+        "name": "Big",
+        "description_long": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "output": {
+        "supportsMpp": null,
+        "feesJson": null,
+        "infoJson": "{\"name\":\"Big\",\"description_long\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+    },
+    {
+      "name": "empty",
+      "payload": {},
+      "output": {
+        "supportsMpp": null,
+        "feesJson": null,
+        "infoJson": null
+      }
+    }
+  ],
+  "getMintInfoIconUrl": [
+    {
+      "name": "absoluteIcon",
+      "mintUrl": "https://mint.example.com/Bitcoin",
+      "infoJson": "{\"icon_url\":\"https://cdn.example.com/i.png\"}",
+      "output": "https://cdn.example.com/i.png"
+    },
+    {
+      "name": "rootRelative",
+      "mintUrl": "https://mint.example.com/Bitcoin",
+      "infoJson": "{\"icon_url\":\"/icon.png\"}",
+      "output": "https://mint.example.com/icon.png"
+    },
+    {
+      "name": "relativeReplacesLastSegment",
+      "mintUrl": "https://mint.example.com/Bitcoin",
+      "infoJson": "{\"icon_url\":\"icon.png\"}",
+      "output": "https://mint.example.com/icon.png"
+    },
+    {
+      "name": "relativeWithDirs",
+      "mintUrl": "https://mint.example.com/a/b",
+      "infoJson": "{\"iconUrl\":\"img/x.png\"}",
+      "output": "https://mint.example.com/a/img/x.png"
+    },
+    {
+      "name": "protocolRelative",
+      "mintUrl": "https://mint.example.com",
+      "infoJson": "{\"logo\":\"//cdn.example.com/l.png\"}",
+      "output": "https://cdn.example.com/l.png"
+    },
+    {
+      "name": "dataUrl",
+      "mintUrl": "https://mint.example.com",
+      "infoJson": "{\"image\":\"data:image/png;base64,AAAA\"}",
+      "output": "data:image/png;base64,AAAA"
+    },
+    {
+      "name": "nestedIcon",
+      "mintUrl": "https://mint.example.com",
+      "infoJson": "{\"info\":{\"branding\":{\"image\":\"https://cdn.example.com/n.png\"}}}",
+      "output": "https://cdn.example.com/n.png"
+    },
+    {
+      "name": "priorityIconUrlFirst",
+      "mintUrl": "https://mint.example.com",
+      "infoJson": "{\"logo\":\"https://cdn.example.com/logo.png\",\"icon_url\":\"https://cdn.example.com/first.png\"}",
+      "output": "https://cdn.example.com/first.png"
+    },
+    {
+      "name": "whitespaceIconSkipped",
+      "mintUrl": "https://mint.example.com",
+      "infoJson": "{\"icon\":\"   \",\"logo\":\"https://cdn.example.com/l2.png\"}",
+      "output": "https://cdn.example.com/l2.png"
+    },
+    {
+      "name": "invalidJson",
+      "mintUrl": "https://mint.example.com",
+      "infoJson": "{nope",
+      "output": null
+    },
+    {
+      "name": "nullInfo",
+      "mintUrl": "https://mint.example.com",
+      "infoJson": null,
+      "output": null
+    },
+    {
+      "name": "rootMintTrailingResolved",
+      "mintUrl": "https://mint.example.com/",
+      "infoJson": "{\"icon_url\":\"icon.png\"}",
+      "output": "https://mint.example.com/icon.png"
+    }
+  ],
+  "resolveNpubCashServerBaseUrl": [
+    {
+      "input": "npub1abc@linky.fit",
+      "output": "https://npub.linky.fit"
+    },
+    {
+      "input": "someone@npub.cash",
+      "output": "https://npub.cash"
+    },
+    {
+      "input": "user@other.example",
+      "output": "https://npub.cash"
+    },
+    {
+      "input": "user@LINKY.FIT",
+      "output": "https://npub.linky.fit"
+    },
+    {
+      "input": "no-at-sign",
+      "output": "https://npub.cash"
+    },
+    {
+      "input": "",
+      "output": "https://npub.cash"
+    },
+    {
+      "input": null,
+      "output": "https://npub.cash"
+    }
+  ],
+  "resolveMintSyncServerBaseUrl": [
+    {
+      "name": "noOwnedAddresses",
+      "args": {
+        "npubCashServerBaseUrl": "https://npub.cash",
+        "ownedLightningAddresses": [],
+        "profileClaimLightningAddressServerBaseUrl": "https://npub.linky.fit"
+      },
+      "output": "https://npub.cash"
+    },
+    {
+      "name": "ownedAddressPresent",
+      "args": {
+        "npubCashServerBaseUrl": "https://npub.cash",
+        "ownedLightningAddresses": [
+          "alice@linky.fit"
+        ],
+        "profileClaimLightningAddressServerBaseUrl": "https://npub.linky.fit"
+      },
+      "output": "https://npub.linky.fit"
+    }
+  ],
+  "nip98": {
+    "privHex": "91359bc27d67c1238d6a61d83709ebfdf12749bf47747b9f0a326839fb41034f",
+    "cases": [
+      {
+        "name": "linkyFitHosted",
+        "baseUrl": "https://npub.linky.fit",
+        "inputMintUrl": "https://cashu.cz",
+        "nowSec": 1750000000,
+        "request": {
+          "url": "https://npub.linky.fit/api/v1/info/mint",
+          "method": "PUT",
+          "contentType": "application/json",
+          "body": "{\"mintUrl\":\"https://cashu.cz\"}"
+        },
+        "authorizationScheme": "Nostr ",
+        "eventJsonSigMasked": "{\"kind\":27235,\"tags\":[[\"u\",\"https://npub.linky.fit/api/v1/info/mint\"],[\"method\",\"PUT\"],[\"payload\",\"cf3bbba3db31046e083047b262b447e92ffa7d755e5724ae571011e1bc8d90fd\"]],\"created_at\":1750000000,\"content\":\"\",\"pubkey\":\"3326f790ad573066d4e0acde640cb3a4a05c4cf99a6d7611852fb3e67e47feef\",\"id\":\"6b3c289bb91ebde9f8129d05fe4701abfc9fc6babe71f58bac0fccde761bcc1e\",\"sig\":\"SIG\"}",
+        "payloadHashHex": "cf3bbba3db31046e083047b262b447e92ffa7d755e5724ae571011e1bc8d90fd"
+      },
+      {
+        "name": "npubCashDefault",
+        "baseUrl": "https://npub.cash",
+        "inputMintUrl": "https://testnut.cashu.space",
+        "nowSec": 1777777777,
+        "request": {
+          "url": "https://npub.cash/api/v1/info/mint",
+          "method": "PUT",
+          "contentType": "application/json",
+          "body": "{\"mintUrl\":\"https://testnut.cashu.space\"}"
+        },
+        "authorizationScheme": "Nostr ",
+        "eventJsonSigMasked": "{\"kind\":27235,\"tags\":[[\"u\",\"https://npub.cash/api/v1/info/mint\"],[\"method\",\"PUT\"],[\"payload\",\"efbb3c2b881baf187918f976cdc42202b02e01bafa2cdaf96e53f258a25922b7\"]],\"created_at\":1777777777,\"content\":\"\",\"pubkey\":\"3326f790ad573066d4e0acde640cb3a4a05c4cf99a6d7611852fb3e67e47feef\",\"id\":\"99c686c9d11c7820667a3de93d9e63f02406e639e21a1c26ebcdd2f762aa567b\",\"sig\":\"SIG\"}",
+        "payloadHashHex": "efbb3c2b881baf187918f976cdc42202b02e01bafa2cdaf96e53f258a25922b7"
+      }
+    ]
+  }
+}

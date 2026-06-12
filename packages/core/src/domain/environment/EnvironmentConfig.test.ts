@@ -34,6 +34,7 @@ describe("environmentForProfile — defaults match the spec table", () => {
       profile: "development",
       network: "test",
       cashuMintUrl: "https://testnut.cashu.space",
+      presetMintUrls: ["https://testnut.cashu.space", "https://nofees.testnut.cashu.space"],
       nostrRelayUrls: SPEC_RELAYS,
       evoluSyncUrls: ["wss://free.evoluhq.com"],
     });
@@ -44,6 +45,7 @@ describe("environmentForProfile — defaults match the spec table", () => {
       profile: "staging",
       network: "test",
       cashuMintUrl: "https://testnut.cashu.space",
+      presetMintUrls: ["https://testnut.cashu.space", "https://nofees.testnut.cashu.space"],
       nostrRelayUrls: SPEC_RELAYS,
       evoluSyncUrls: ["wss://free.evoluhq.com"],
     });
@@ -54,6 +56,13 @@ describe("environmentForProfile — defaults match the spec table", () => {
       profile: "production",
       network: "main",
       cashuMintUrl: "https://cashu.cz",
+      presetMintUrls: [
+        "https://cashu.cz",
+        "https://testnut.cashu.space",
+        "https://mint.minibits.cash/Bitcoin",
+        "https://kashu.me",
+        "https://cashu.21m.lol",
+      ],
       nostrRelayUrls: SPEC_RELAYS,
       evoluSyncUrls: ["wss://evolu.linky.fit", "wss://free.evoluhq.com"],
     });
@@ -62,6 +71,7 @@ describe("environmentForProfile — defaults match the spec table", () => {
 
 describe("structural mainnet guard", () => {
   const base = {
+    presetMintUrls: ["https://testnut.cashu.space"],
     nostrRelayUrls: ["wss://relay.damus.io"],
     evoluSyncUrls: ["wss://free.evoluhq.com"],
   };
@@ -137,9 +147,22 @@ describe("structural mainnet guard", () => {
       profile: "production",
       network: "main",
       cashuMintUrl: "https://cashu.cz",
+      presetMintUrls: ["https://cashu.cz", "https://testnut.cashu.space"],
       evoluSyncUrls: ["wss://evolu.linky.fit", "wss://free.evoluhq.com"],
     });
     expect(config.network).toBe("main");
+  });
+
+  it("refuses a mainnet preset mint for non-production profiles (mints.presets guard)", () => {
+    expect(() =>
+      decodeEnvironmentConfig({
+        ...base,
+        profile: "development",
+        network: "test",
+        cashuMintUrl: "https://testnut.cashu.space",
+        presetMintUrls: ["https://testnut.cashu.space", "https://cashu.cz"],
+      }),
+    ).toThrow();
   });
 
   it("rejects malformed endpoint URLs", () => {

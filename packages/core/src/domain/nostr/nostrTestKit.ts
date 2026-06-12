@@ -49,6 +49,7 @@ export const testEnvironmentLayer = (
       profile: "development",
       network: "test",
       cashuMintUrl: "https://testnut.cashu.space",
+      presetMintUrls: ["https://testnut.cashu.space"],
       nostrRelayUrls: relayUrls,
       evoluSyncUrls: ["wss://free.evoluhq.com"],
     }),

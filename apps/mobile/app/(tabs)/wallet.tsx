@@ -162,6 +162,16 @@ export default function WalletScreen() {
       >
         <Text className="text-primary">{t("transactionsTitle")}</Text>
       </Pressable>
+
+      {/* Mint management (#41). */}
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.push("/wallet/mints")}
+        testID="wallet-mints"
+        className="items-center py-2"
+      >
+        <Text className="text-primary">{t("mints")}</Text>
+      </Pressable>
     </ScrollView>
   );
 }

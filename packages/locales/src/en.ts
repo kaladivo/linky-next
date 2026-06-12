@@ -353,6 +353,26 @@ export const en = {
   mintRefresh: "Refresh info",
   mintDelete: "Delete mint",
   mintLastChecked: "Last checked",
+  // Mint management (#41, mints.*)
+  mintSetMain: "Set as main mint",
+  mintMainBadge: "main",
+  mintPresetsTitle: "Preset mints",
+  mintTestGroupTitle: "Test mints",
+  mintKnownTitle: "Known mints",
+  mintStatusChecking: "Checking…",
+  mintStatusReachable: "Reachable",
+  mintStatusUnreachable: "Unreachable",
+  mintLatency: "Latency",
+  mintSpendableHere: "Spendable here",
+  mintTestFundsNote: "Test mint — tokens here are not real money.",
+  mintChangeKeepsFundsTitle: "Funds stay on the current mint",
+  mintChangeKeepsFundsBody:
+    "Your {amount} sat on {fromMint} stay there. Linky does not move funds automatically yet.",
+  mintDeleteHasFunds:
+    "This mint still holds {amount} sat of spendable tokens. Removing it does not delete tokens or move funds.",
+  mintDeleted: "Mint removed.",
+  mintInfoRefreshed: "Mint info refreshed.",
+  mintRefreshFailed: "Mint is not responding.",
 
   chat: "Chat",
   sendMessage: "Messages",
