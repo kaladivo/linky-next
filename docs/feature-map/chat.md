@@ -29,7 +29,7 @@ This is a deliberately simple messenger. There are no group conversations, chann
 - Malformed or spoofed events (nested encrypted payloads, mismatched sender identity) are ignored.
 - After switching to a custom key, events older than the switch can be filtered out.
 - Message history must not duplicate the same message arriving via different sync paths.
-- Users can delete a chat with the common messenger delete UX; the exact deletion semantics behind it (local-only vs stronger) are an implementation decision.
+- Users can delete a chat with the common messenger delete UX; the exact deletion semantics behind it (local-only vs stronger) are an implementation decision. Decided (#29): account-local "delete for me" — all message/reaction rows of the conversation are soft-deleted (tombstones sync to the user's own devices via the messages lane; rumor-id dedup keeps re-synced wraps from resurrecting them), no Nostr deletion event is sent (the peer keeps their copy), and a NEW inbound message restarts the conversation (recreating the unknown thread when the sender is not a contact).
 
 ## Open Questions
 

@@ -190,6 +190,12 @@ export interface ChatEventValidationError {
   readonly reason: string;
 }
 
+/** What deleting a conversation did (`chat.*` delete-chat, #29). */
+export interface ConversationDeleted {
+  readonly deletedMessages: number;
+  readonly deletedReactions: number;
+}
+
 export interface MessagesRepository {
   /**
    * Applies one validated chat event from the NIP-17 engine. Idempotent for
@@ -213,6 +219,18 @@ export interface MessagesRepository {
    * (`chat.react` — one visible reaction per user).
    */
   readonly latestReactions: (messageRumorId: string) => Promise<ReadonlyArray<ReactionRecord>>;
+  /**
+   * Delete-chat (#29): soft-deletes every message of the conversation with
+   * `peerNpub` plus every reaction attached to those messages. LOCAL to the
+   * account — tombstones sync to the user's own devices on the messages
+   * lane, but no Nostr event is sent (the peer keeps their copy, standard
+   * messenger "delete chat for me"). Idempotent: already-deleted rows are
+   * skipped, and because dedup lookups see soft-deleted rows, the same
+   * rumors re-arriving via sync can never resurrect the conversation.
+   */
+  readonly deleteConversation: (
+    peerNpub: string,
+  ) => Promise<RepoResult<ConversationDeleted, ChatEventValidationError>>;
 }
 
 // ─── Implementation ──────────────────────────────────────────────────────
@@ -311,6 +329,72 @@ export const loadConversationPreviews = async (
     });
   }
   return previews;
+};
+
+const toReactionRecord = (row: {
+  readonly id: unknown;
+  readonly rumorId: unknown;
+  readonly messageRumorId: unknown;
+  readonly reactorNpub: unknown;
+  readonly emoji: unknown;
+  readonly sentAtSec: unknown;
+  readonly status: unknown;
+}): ReactionRecord => ({
+  id: String(row.id),
+  rumorId: String(row.rumorId),
+  messageRumorId: String(row.messageRumorId),
+  reactorNpub: String(row.reactorNpub),
+  emoji: String(row.emoji),
+  sentAtSec: Number(row.sentAtSec),
+  status: toStatus(row.status),
+});
+
+/**
+ * All active (non-deleted) reaction events for the given message rumor ids,
+ * in one query — the conversation screen's per-page reaction load (#29).
+ * Latest-per-person display reduction is the caller's concern (it also
+ * needs the full set to delete superseded own reactions on toggle).
+ */
+export const loadActiveReactions = async (
+  store: LinkyStore,
+  messageRumorIds: ReadonlyArray<string>,
+): Promise<ReadonlyArray<ReactionRecord>> => {
+  if (messageRumorIds.length === 0) return [];
+  const query = store.evolu.createQuery((db) =>
+    db
+      .selectFrom("reaction")
+      .selectAll()
+      .where("isDeleted", "is not", 1)
+      .where("messageRumorId", "in", messageRumorIds.map(asParam)),
+  );
+  const rows = await store.evolu.loadQuery(query);
+  return rows.map(toReactionRecord);
+};
+
+/**
+ * Every rumor id storage already knows: message rumor ids (incl. soft
+ * deleted — tombstones must stay deleted), reaction rumor ids, and applied
+ * edit-event ids from edit histories. Seeds `runChatInbox`'s
+ * `knownRumorIds` so a restart skips re-applying the whole history (#29).
+ */
+export const loadKnownRumorIds = async (store: LinkyStore): Promise<ReadonlyArray<string>> => {
+  const messagesQuery = store.evolu.createQuery((db) =>
+    db.selectFrom("message").select(["rumorId", "editHistoryJson"]),
+  );
+  const reactionsQuery = store.evolu.createQuery((db) =>
+    db.selectFrom("reaction").select("rumorId"),
+  );
+  const [messageRows, reactionRows] = await Promise.all([
+    store.evolu.loadQuery(messagesQuery),
+    store.evolu.loadQuery(reactionsQuery),
+  ]);
+  const ids = new Set<string>();
+  for (const row of messageRows) {
+    ids.add(String(row.rumorId));
+    for (const edit of parseEditHistory(row.editHistoryJson)) ids.add(edit.editId);
+  }
+  for (const row of reactionRows) ids.add(String(row.rumorId));
+  return [...ids];
 };
 
 /** True when an active (non-deleted) blocked-sender row exists for `npub`. */
@@ -640,18 +724,47 @@ export const createMessagesRepository = (store: LinkyStore): MessagesRepository 
         }
       }
       return [...latestByReactor.values()]
-        .map(
-          (row): ReactionRecord => ({
-            id: String(row.id),
-            rumorId: String(row.rumorId),
-            messageRumorId: String(row.messageRumorId),
-            reactorNpub: String(row.reactorNpub),
-            emoji: String(row.emoji),
-            sentAtSec: Number(row.sentAtSec),
-            status: toStatus(row.status),
-          }),
-        )
+        .map(toReactionRecord)
         .sort((a, b) => a.sentAtSec - b.sentAtSec || (a.rumorId < b.rumorId ? -1 : 1));
+    },
+
+    deleteConversation: async (peerNpub) => {
+      const messagesQuery = store.evolu.createQuery((db) =>
+        db
+          .selectFrom("message")
+          .select(["id", "rumorId", "isDeleted"])
+          .where("peerNpub", "=", asParam(peerNpub)),
+      );
+      const messageRows = await store.evolu.loadQuery(messagesQuery);
+      const messageRumorIds = messageRows.map((row) => String(row.rumorId));
+
+      const reactionRows =
+        messageRumorIds.length === 0
+          ? []
+          : await store.evolu.loadQuery(
+              store.evolu.createQuery((db) =>
+                db
+                  .selectFrom("reaction")
+                  .select(["id", "isDeleted"])
+                  .where("messageRumorId", "in", messageRumorIds.map(asParam)),
+              ),
+            );
+
+      let deletedMessages = 0;
+      for (const row of messageRows) {
+        if (row.isDeleted === 1) continue;
+        const result = store.update("message", { id: row.id, isDeleted: 1 });
+        if (!result.ok) return validationErr(formatTypeError(result.error as never));
+        deletedMessages += 1;
+      }
+      let deletedReactions = 0;
+      for (const row of reactionRows) {
+        if (row.isDeleted === 1) continue;
+        const result = store.update("reaction", { id: row.id, isDeleted: 1 });
+        if (!result.ok) return validationErr(formatTypeError(result.error as never));
+        deletedReactions += 1;
+      }
+      return repoOk({ deletedMessages, deletedReactions });
     },
   };
 };

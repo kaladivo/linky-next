@@ -5,7 +5,12 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { isValidNpub, normalizeNpubIdentifier, npubToPublicKeyHex } from "./npub.js";
+import {
+  isValidNpub,
+  normalizeNpubIdentifier,
+  npubToPublicKeyHex,
+  publicKeyHexToNpub,
+} from "./npub.js";
 
 /** dev/test-identities/bob.json */
 const BOB_NPUB = "npub1swl0lmqxtuz75j6chdq9p3lntq5ruf792458fhdty7wlm4kw7ecq47mgja";
@@ -71,5 +76,24 @@ describe("npubToPublicKeyHex", () => {
   it("returns null for invalid input", () => {
     expect(npubToPublicKeyHex("npub1notvalid")).toBeNull();
     expect(npubToPublicKeyHex("")).toBeNull();
+  });
+});
+
+describe("publicKeyHexToNpub", () => {
+  it("encodes the NIP-01 hex pubkey to its npub (golden: committed dev identities)", () => {
+    expect(publicKeyHexToNpub(BOB_PUBKEY_HEX)).toBe(BOB_NPUB);
+    expect(publicKeyHexToNpub(ALICE_PUBKEY_HEX)).toBe(ALICE_NPUB);
+  });
+
+  it("round-trips with npubToPublicKeyHex and accepts uppercase/whitespace", () => {
+    expect(publicKeyHexToNpub(` ${BOB_PUBKEY_HEX.toUpperCase()} `)).toBe(BOB_NPUB);
+    expect(npubToPublicKeyHex(publicKeyHexToNpub(ALICE_PUBKEY_HEX) ?? "")).toBe(ALICE_PUBKEY_HEX);
+  });
+
+  it("returns null for non-32-byte or non-hex input", () => {
+    expect(publicKeyHexToNpub("")).toBeNull();
+    expect(publicKeyHexToNpub("abcd")).toBeNull();
+    expect(publicKeyHexToNpub(`${BOB_PUBKEY_HEX}00`)).toBeNull();
+    expect(publicKeyHexToNpub("z".repeat(64))).toBeNull();
   });
 });
