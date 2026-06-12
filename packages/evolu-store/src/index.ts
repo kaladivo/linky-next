@@ -18,6 +18,7 @@ export * from "./counterStore";
 export * from "./createLinkyEvolu";
 export * from "./createLinkyStore";
 export * from "./domains";
+export * from "./rotation";
 export * from "./owner";
 export * from "./repositories/repository";
 export * from "./repositories/contactsRepository";

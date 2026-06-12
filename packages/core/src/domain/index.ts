@@ -9,3 +9,4 @@ export * from "./lightning/index.js";
 export * from "./nostr/index.js";
 export * from "./chat/index.js";
 export * from "./notifications/index.js";
+export * from "./sync/index.js";
