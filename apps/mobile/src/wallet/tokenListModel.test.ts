@@ -96,6 +96,7 @@ describe("tokenDetailActions", () => {
       canReserve: true,
       canReturn: false,
       canReaccept: false,
+      canWriteNfc: true,
     });
     expect(tokenDetailActions("reserved").canReturn).toBe(true);
     expect(tokenDetailActions("externalized").canReturn).toBe(true);
@@ -104,6 +105,15 @@ describe("tokenDetailActions", () => {
     expect(tokenDetailActions("error").canReaccept).toBe(true);
     expect(tokenDetailActions("spent").canCheck).toBe(false);
     expect(tokenDetailActions("deleted").canCheck).toBe(false);
+  });
+
+  it("offers the NFC write exactly where Externalize is legal (#50)", () => {
+    // #33 table: Externalize: accepted | issued → externalized.
+    expect(tokenDetailActions("accepted").canWriteNfc).toBe(true);
+    expect(tokenDetailActions("issued").canWriteNfc).toBe(true);
+    for (const state of ["pending", "reserved", "externalized", "spent", "deleted", "error"] as const) {
+      expect(tokenDetailActions(state).canWriteNfc).toBe(false);
+    }
   });
 });
 

@@ -16,6 +16,9 @@ import { Pressable, ScrollView, Share, View } from "react-native";
 
 import { QrCode } from "../../../src/components/QrCode";
 import { useLocale } from "../../../src/locales";
+import { buildTokenTagUrl } from "../../../src/nfc/nfcPayload";
+import { cancelNfcSession, writeNfcTagUri } from "../../../src/nfc/nfcSession";
+import { useNfcSupported } from "../../../src/nfc/nfcSupport";
 import { useEffectQuery } from "../../../src/runtime";
 import { useSession } from "../../../src/session/useSession";
 import { copyToClipboard } from "../../../src/settings/nostrKeyActions";
@@ -26,6 +29,7 @@ import { useAmountDisplay } from "../../../src/wallet/AmountDisplayProvider";
 import {
   checkToken,
   deleteToken,
+  externalizeToken,
   loadTokenDetail,
   reacceptToken,
   reserveToken,
@@ -58,6 +62,10 @@ export default function TokenDetailScreen() {
 
   const [busy, setBusy] = useState(false);
   const [deleteArmed, setDeleteArmed] = useState(false);
+
+  /** `cashu.write-nfc` (#50): gated on device support, like every NFC UI. */
+  const nfcSupported = useNfcSupported();
+  const [nfcWriting, setNfcWriting] = useState(false);
 
   const record = detail.status === "success" ? detail.data : null;
 
@@ -181,6 +189,61 @@ export default function TokenDetailScreen() {
     }
   };
 
+  /**
+   * `cashu.write-nfc` + `cashu.externalize-token` (#50). Ordering is the
+   * PoC's (`writeCashuTokenToNfc`), and it is the fund-safe direction: the
+   * row is externalized ONLY after the tag write is CONFIRMED — a failed/
+   * cancelled write leaves the token exactly as it was. (The write puts the
+   * linky.fit share URL on the tag — see nfcPayload.ts for the deliberate
+   * PoC divergence from `cashu://`.) Should the local state write fail
+   * after a confirmed tag write (concurrent state change), the row keeps
+   * its old state: same proofs, first redeemer wins — bookkeeping only,
+   * the user can retry or Reserve manually.
+   */
+  const runWriteNfc = async () => {
+    if (store === null || busy || nfcWriting) return;
+    const url = buildTokenTagUrl(record.token);
+    if (url === null) {
+      toast.error(t("cashuInvalid"));
+      return;
+    }
+    setNfcWriting(true);
+    try {
+      const outcome = await writeNfcTagUri(url, {
+        prompt: t("nfcWriteTapPrompt"),
+        success: t("nfcWriteTokenSuccess"),
+      });
+      switch (outcome.kind) {
+        case "written": {
+          const ok = await externalizeToken(store, record.id);
+          if (ok) toast.success(t("nfcWriteTokenSuccess"));
+          else toast.error(`${t("errorPrefix")}: IllegalTokenStateTransitionError`);
+          return;
+        }
+        case "cancelled":
+          return;
+        case "busy":
+          toast.error(t("nfcWriteBusy"));
+          return;
+        case "disabled":
+          toast.error(t("nfcWriteDisabled"));
+          return;
+        case "unavailable":
+          toast.error(t("nfcWriteUnsupported"));
+          return;
+        case "failed":
+          toast.error(
+            outcome.message === null
+              ? t("nfcWriteFailed")
+              : `${t("nfcWriteFailed")}: ${outcome.message}`,
+          );
+          return;
+      }
+    } finally {
+      setNfcWriting(false);
+    }
+  };
+
   const runDelete = async () => {
     if (store === null || busy) return;
     // PoC two-tap arm: first tap arms the button, second deletes.
@@ -265,6 +328,24 @@ export default function TokenDetailScreen() {
             onPress={shareLink}
             testID="token-detail-share"
           />
+          {/* cashu.write-nfc: NFC-capable devices + Externalize-legal states only. */}
+          {nfcSupported && actions.canWriteNfc && (
+            <Button
+              label={t("uploadToNfc")}
+              variant="secondary"
+              disabled={busy || nfcWriting || store === null || shareUrl === null}
+              onPress={() => void runWriteNfc()}
+              testID="token-detail-write-nfc"
+            />
+          )}
+          {/* iOS shows the system NFC sheet; Android writes silently, so
+              this inline prompt (with cancel) is its UI. */}
+          {nfcWriting && (
+            <Surface className="gap-3" testID="token-detail-nfc-pending">
+              <Text className="text-sm opacity-70">{t("nfcWriteTapPrompt")}</Text>
+              <Button label={t("cancel")} variant="secondary" onPress={() => cancelNfcSession()} />
+            </Surface>
+          )}
 
           {actions.canCheck && (
             <Button

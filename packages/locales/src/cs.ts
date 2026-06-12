@@ -765,6 +765,11 @@ export const cs = {
   nfcWriteReadyTokenBody: "Na tag se zapíše token jako cashu://cashu...",
   nfcWriteTokenSuccess: "Token byl nahrán na NFC.",
   nfcWriteProfileSuccess: "npub byl nahrán na NFC.",
+  nfcReadTag: "NFC",
+  nfcReadPrompt: "Přiložte NFC tag k telefonu.",
+  nfcReadSuccess: "Tag načten.",
+  nfcReadEmpty: "Na tagu není žádná čitelná hodnota.",
+  nfcReadFailed: "Nepodařilo se načíst NFC tag.",
 
   allowPromises: "Povolit sliby",
   totalBalanceWithPromises: "Celková bilance (vč. slibů)",

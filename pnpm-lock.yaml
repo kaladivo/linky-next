@@ -119,6 +119,9 @@ importers:
       react-native-gesture-handler:
         specifier: ~2.31.1
         version: 2.31.2(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
+      react-native-nfc-manager:
+        specifier: 4.0.0-beta.7
+        version: 4.0.0-beta.7(@expo/config-plugins@56.0.8(typescript@5.9.3))
       react-native-pager-view:
         specifier: 8.0.1
         version: 8.0.1(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
@@ -3731,6 +3734,14 @@ packages:
     peerDependencies:
       react: '*'
       react-native: '*'
+
+  react-native-nfc-manager@4.0.0-beta.7:
+    resolution: {integrity: sha512-HAhmqp6ZM5rb3/Q+rb+Sgk2A5x4ZskARB0x/Hf9F54PO3FZ0T1tp0D5YIRwwv6Ym41L3kY8NfoUP/y2POM/y1Q==}
+    peerDependencies:
+      '@expo/config-plugins': '*'
+    peerDependenciesMeta:
+      '@expo/config-plugins':
+        optional: true
 
   react-native-pager-view@8.0.1:
     resolution: {integrity: sha512-pGOne2o0y0HOQLrlTLcGgOE48uJlqSZHRRwdW8nL6JJozMkPGJYi/G9e0EsJoWFpXYONjiDgr8IwxC4F6/r7Lg==}
@@ -8208,6 +8219,10 @@ snapshots:
     dependencies:
       react: 19.2.3
       react-native: 0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3)
+
+  react-native-nfc-manager@4.0.0-beta.7(@expo/config-plugins@56.0.8(typescript@5.9.3)):
+    optionalDependencies:
+      '@expo/config-plugins': 56.0.8(typescript@5.9.3)
 
   react-native-pager-view@8.0.1(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3):
     dependencies:

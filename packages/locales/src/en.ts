@@ -762,6 +762,11 @@ export const en = {
   nfcWriteReadyTokenBody: "The token will be written as cashu://cashu...",
   nfcWriteTokenSuccess: "Token written to NFC.",
   nfcWriteProfileSuccess: "npub written to NFC.",
+  nfcReadTag: "NFC",
+  nfcReadPrompt: "Hold an NFC tag near your phone.",
+  nfcReadSuccess: "Tag read.",
+  nfcReadEmpty: "No readable value on this tag.",
+  nfcReadFailed: "Failed to read NFC tag.",
 
   allowPromises: "Allow promises",
   totalBalanceWithPromises: "Total balance (incl. promises)",

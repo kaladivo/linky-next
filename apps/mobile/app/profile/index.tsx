@@ -12,10 +12,14 @@
 import { parseProfileGeneralStatus } from "@linky/core";
 import { Button, Surface, Text, colors } from "@linky/ui";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Image, Pressable, ScrollView, View } from "react-native";
 
 import { QrCode } from "../../src/components/QrCode";
 import { useLocale } from "../../src/locales";
+import { buildProfileTagUrl } from "../../src/nfc/nfcPayload";
+import { cancelNfcSession, writeNfcTagUri } from "../../src/nfc/nfcSession";
+import { useNfcSupported } from "../../src/nfc/nfcSupport";
 import { toAvatarDisplayUrl } from "../../src/onboarding/avatarDisplay";
 import { loadOwnProfile } from "../../src/profile/ownProfile";
 import { useOwnProfileVersion } from "../../src/profile/ownProfileStore";
@@ -49,6 +53,56 @@ export default function ProfileScreen() {
       if (ok) toast.success(t("copiedToClipboard"));
       else toast.error(t("copyFailed"));
     });
+  };
+
+  /** `profile.share-nfc` (#50): gated on device support, like every NFC UI. */
+  const nfcSupported = useNfcSupported();
+  const [nfcWriting, setNfcWriting] = useState(false);
+
+  /**
+   * Writes `nostr://<npub>` as one URI NDEF record (PoC
+   * `writeCurrentNpubToNfc` parity) — a tag tap then routes through the
+   * #48 contact flow on any Linky phone. Cancel is silent; failures toast.
+   */
+  const writeProfileTag = async (npub: string) => {
+    if (nfcWriting) return;
+    const url = buildProfileTagUrl(npub);
+    if (url === null) {
+      toast.error(t("profileMissingNpub"));
+      return;
+    }
+    setNfcWriting(true);
+    try {
+      const outcome = await writeNfcTagUri(url, {
+        prompt: t("nfcWriteTapPrompt"),
+        success: t("nfcWriteProfileSuccess"),
+      });
+      switch (outcome.kind) {
+        case "written":
+          toast.success(t("nfcWriteProfileSuccess"));
+          return;
+        case "cancelled":
+          return;
+        case "busy":
+          toast.error(t("nfcWriteBusy"));
+          return;
+        case "disabled":
+          toast.error(t("nfcWriteDisabled"));
+          return;
+        case "unavailable":
+          toast.error(t("nfcWriteUnsupported"));
+          return;
+        case "failed":
+          toast.error(
+            outcome.message === null
+              ? t("nfcWriteFailed")
+              : `${t("nfcWriteFailed")}: ${outcome.message}`,
+          );
+          return;
+      }
+    } finally {
+      setNfcWriting(false);
+    }
   };
 
   if (query.status === "loading") {
@@ -110,6 +164,24 @@ export default function ProfileScreen() {
           onPress={() => copy(profile.npub)}
           testID="profile-copy-npub"
         />
+        {/* profile.share-nfc: rendered ONLY on NFC-capable devices. */}
+        {nfcSupported && (
+          <Button
+            label={t("uploadProfileToNfc")}
+            variant="secondary"
+            disabled={nfcWriting}
+            onPress={() => void writeProfileTag(profile.npub)}
+            testID="profile-write-nfc"
+          />
+        )}
+        {/* iOS shows the system NFC sheet; Android writes silently, so
+            this inline prompt (with cancel) is its UI. */}
+        {nfcWriting && (
+          <Surface className="gap-3" testID="profile-nfc-pending">
+            <Text className="text-sm opacity-70">{t("nfcWriteTapPrompt")}</Text>
+            <Button label={t("cancel")} variant="secondary" onPress={() => cancelNfcSession()} />
+          </Surface>
+        )}
       </View>
 
       {profile.lightningAddress !== "" && (
