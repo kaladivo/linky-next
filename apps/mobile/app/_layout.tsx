@@ -59,7 +59,12 @@ function RootNavigator() {
       <Stack.Screen name="contact/new" options={{ headerShown: true, title: t("newContact") }} />
       <Stack.Screen name="contact/[id]" options={{ headerShown: true }} />
       <Stack.Screen name="chat/[id]" options={{ headerShown: true }} />
-      <Stack.Screen name="wallet/token/[id]" options={{ headerShown: true }} />
+      <Stack.Screen
+        name="wallet/token/[id]"
+        options={{ headerShown: true, title: t("cashuToken") }}
+      />
+      {/* Token list & detail (#38). */}
+      <Stack.Screen name="wallet/tokens" options={{ headerShown: true, title: t("tokens") }} />
       {/* Wallet home entry points (#36); receive/top-up flow is #37. */}
       <Stack.Screen
         name="wallet/receive"
