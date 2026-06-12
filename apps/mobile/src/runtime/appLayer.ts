@@ -12,6 +12,7 @@ import {
   layerNostrPendingQueue,
   layerProfilePublisher,
   layerRelayPool,
+  layerRelaySettingsStore,
 } from "@linky/core";
 import {
   ClipboardLive,
@@ -49,6 +50,19 @@ const nostrPendingQueueLayer = layerNostrPendingQueue.pipe(
   Layer.provide(KeyValueStorageLive), // persistent outbox
 );
 
+/**
+ * User-editable relay settings (#31): the persisted relay list
+ * (KeyValueStorage, env defaults as fallback) that reconciles the relay
+ * pool on load and on every edit. Building this layer applies the persisted
+ * list to the pool; the deferred startup task touches it so user edits hold
+ * from app start, not first screen visit.
+ */
+const relaySettingsLayer = layerRelaySettingsStore.pipe(
+  Layer.provide(relayPoolLayer),
+  Layer.provide(KeyValueStorageLive), // persisted relay list
+  Layer.provide(environmentLayer), // default relay set
+);
+
 /** Real Nostr kind-0 profile publishing (#24, replaces the #17 stub). */
 const profilePublisherLayer = layerProfilePublisher.pipe(
   Layer.provide(relayPoolLayer),
@@ -66,10 +80,11 @@ export const appLayer = Layer.mergeAll(
   ClipboardLive, // expo-clipboard → Clipboard
   DeepLinksLive, // expo-linking → DeepLinks
   HttpClientLive, // RN fetch → HttpClient
-  // Nostr domain services (#21/#24):
+  // Nostr domain services (#21/#24/#31):
   relayPoolLayer, // relay connections, publish retry, subscriptions, status
   nostrPendingQueueLayer, // persistent outbox, flushed on reconnect
   profilePublisherLayer, // kind-0 profile publishing through the relay pool
+  relaySettingsLayer, // user-edited relay list (#31), reconciles the pool
 );
 
 /** Everything the app runtime can provide; hooks accept Effects needing at most this. */

@@ -1,17 +1,24 @@
 /**
- * RelayPool — one service managing the configured relay set
- * (`CurrentEnvironment.nostrRelayUrls`): connections with automatic
- * reconnect, publish with per-relay retry, pooled subscriptions with dedup,
- * and a live per-relay status map (`nostr.probe-relays`,
+ * RelayPool — one service managing the live relay set: connections with
+ * automatic reconnect, publish with per-relay retry, pooled subscriptions
+ * with dedup, and a live per-relay status map (`nostr.probe-relays`,
  * `nostr.publish-retry` in the feature map).
+ *
+ * The pool starts on the configured relay set
+ * (`CurrentEnvironment.nostrRelayUrls`) and the set is DYNAMIC:
+ * `setRelayUrls` reconciles the pool against a new list (#31 user-edited
+ * relay settings) — added relays get a connection loop and a status entry,
+ * removed relays are disconnected and disappear from the status map.
+ * Active subscriptions are re-issued to relays that join the set (the
+ * reconnect path already re-REQs on connect).
  *
  * Behavior contract:
  *
- * - **Status** — every relay is always `"checking" | "connected" |
- *   "disconnected"`; the map is queryable (`status`) and observable
- *   (`statusChanges`, a SubscriptionRef-backed stream that replays the
- *   current value). Designed for the deferred-startup probe and the relay
- *   settings screen (#31).
+ * - **Status** — every relay in the current set is always `"checking" |
+ *   "connected" | "disconnected"`; the map is queryable (`status`) and
+ *   observable (`statusChanges`, a SubscriptionRef-backed stream that
+ *   replays the current value). Designed for the deferred-startup probe and
+ *   the relay settings screen (#31).
  * - **Publish** — the event is offered to *every* relay. The returned
  *   effect succeeds as soon as one relay ACKs (NIP-20 `OK true`) and keeps
  *   retrying the remaining relays in background fibers (owned by the pool's
@@ -35,6 +42,7 @@ import {
   Deferred,
   Duration,
   Effect,
+  Fiber,
   Layer,
   Mailbox,
   Schedule,
@@ -98,8 +106,15 @@ export const defaultRelayPoolConfig: RelayPoolConfig = {
 };
 
 export interface RelayPoolService {
-  /** The configured relay set (deduplicated, in configuration order). */
-  readonly relayUrls: ReadonlyArray<string>;
+  /** The current relay set (deduplicated, in list order). */
+  readonly relayUrls: Effect.Effect<ReadonlyArray<string>>;
+  /**
+   * Reconciles the pool against a new relay list (#31 relay settings):
+   * relays not yet in the pool are added (connection loop + status entry),
+   * relays missing from the list are disconnected and dropped from the
+   * status map. Idempotent; the list is deduplicated preserving order.
+   */
+  readonly setRelayUrls: (urls: ReadonlyArray<string>) => Effect.Effect<void>;
   /**
    * Publishes a signed event to all relays. Succeeds on first acceptance;
    * passing an unsigned/tampered event is a defect.
@@ -193,26 +208,39 @@ const makeRelayPool = (
     const environment = yield* CurrentEnvironment;
     const poolScope = yield* Effect.scope;
 
-    const relayUrls = [...new Set<string>(environment.nostrRelayUrls)];
-    const relays: ReadonlyArray<RelayState> = relayUrls.map((url) => ({
-      url,
-      connection: null,
-      pendingAcks: new Map(),
-    }));
+    // The live relay set, keyed by URL in list order (Map preserves
+    // insertion order). Entries carry the per-relay connection-loop fiber so
+    // `setRelayUrls` can retire removed relays. The fiber slot is filled
+    // right after forking — the entry must exist in the map BEFORE the loop
+    // fiber runs so its status writes pass the membership guard below.
+    interface RelayEntry {
+      readonly state: RelayState;
+      fiber: Fiber.RuntimeFiber<unknown, unknown> | null;
+    }
+    const relays = new Map<string, RelayEntry>();
+    const currentRelayStates = () => [...relays.values()].map((entry) => entry.state);
 
     // All mutable collections below are only touched from effects running on
     // this runtime (single-threaded), never across `yield*` boundaries
-    // within one logical update — no extra locking needed.
+    // within one logical update — no extra locking needed (the reconcile in
+    // setRelayUrls, which does cross `yield*`, serializes via its own lock).
     const subscriptions = new Map<string, SubscriptionState>();
     let subscriptionCounter = 0;
 
-    const statusRef = yield* SubscriptionRef.make<ReadonlyMap<string, RelayStatus>>(
-      new Map(relayUrls.map((url) => [url, "checking" as RelayStatus])),
-    );
+    const statusRef = yield* SubscriptionRef.make<ReadonlyMap<string, RelayStatus>>(new Map());
     const setStatus = (url: string, status: RelayStatus) =>
       SubscriptionRef.update(statusRef, (current) =>
-        current.get(url) === status ? current : new Map(current).set(url, status),
+        !relays.has(url) || current.get(url) === status
+          ? current
+          : new Map(current).set(url, status),
       );
+    const dropStatus = (url: string) =>
+      SubscriptionRef.update(statusRef, (current) => {
+        if (!current.has(url)) return current;
+        const next = new Map(current);
+        next.delete(url);
+        return next;
+      });
 
     // -- frame handling ------------------------------------------------------
 
@@ -308,9 +336,55 @@ const makeRelayPool = (
         }
       });
 
-    yield* Effect.forEach(relays, (relay) => Effect.forkScoped(relayLoop(relay)), {
-      discard: true,
-    });
+    // -- relay set reconciliation ---------------------------------------------
+
+    const reconcileLock = yield* Effect.makeSemaphore(1);
+
+    const addRelay = (url: string) =>
+      Effect.gen(function* () {
+        const entry: RelayEntry = {
+          state: { url, connection: null, pendingAcks: new Map() },
+          fiber: null,
+        };
+        relays.set(url, entry);
+        yield* setStatus(url, "checking");
+        entry.fiber = yield* Effect.forkIn(relayLoop(entry.state), poolScope);
+      });
+
+    const removeRelay = (url: string) =>
+      Effect.gen(function* () {
+        const entry = relays.get(url);
+        if (entry === undefined) return;
+        relays.delete(url);
+        yield* dropStatus(url);
+        // Interrupting the loop fiber tears down the live session scope,
+        // which closes the transport socket. In-flight publish retries
+        // against this relay fail with "relay not connected" and exhaust
+        // their attempts harmlessly.
+        if (entry.fiber !== null) yield* Fiber.interrupt(entry.fiber);
+      });
+
+    const setRelayUrls = (urls: ReadonlyArray<string>): Effect.Effect<void> =>
+      reconcileLock.withPermits(1)(
+        Effect.gen(function* () {
+          const next = [...new Set(urls)];
+          const nextSet = new Set(next);
+          for (const url of [...relays.keys()]) {
+            if (!nextSet.has(url)) yield* removeRelay(url);
+          }
+          for (const url of next) {
+            if (!relays.has(url)) yield* addRelay(url);
+          }
+          // Re-key the map into list order so `relayUrls` mirrors the input.
+          const ordered = next
+            .map((url) => [url, relays.get(url)] as const)
+            .filter((pair): pair is readonly [string, RelayEntry] => pair[1] !== undefined);
+          relays.clear();
+          for (const [url, entry] of ordered) relays.set(url, entry);
+        }),
+      );
+
+    yield* setRelayUrls(environment.nostrRelayUrls);
 
     // -- publish ---------------------------------------------------------------
 
@@ -377,13 +451,21 @@ const makeRelayPool = (
             new Error("RelayPool.publish requires a validly signed NostrEvent"),
           );
         }
+        // Snapshot: relays added after this point are not part of this
+        // publish; removed relays just fail their remaining attempts.
+        const targets = currentRelayStates();
+        if (targets.length === 0) {
+          // Cannot happen through relay settings (min-one rule), but a
+          // hang would be the alternative.
+          return yield* Effect.fail(new NostrPublishError({ eventId: event.id, failures: [] }));
+        }
         const result = yield* Deferred.make<PublishOutcome, NostrPublishError>();
         const acceptedBy: Array<string> = [];
         const failures: Array<RelayPublishFailure> = [];
-        let remaining = relays.length;
+        let remaining = targets.length;
 
         yield* Effect.forEach(
-          relays,
+          targets,
           (relay) =>
             publishToRelay(relay, event).pipe(
               Effect.matchEffect({
@@ -444,7 +526,7 @@ const makeRelayPool = (
               // interruptible send race.
               yield* Effect.forkIn(
                 Effect.forEach(
-                  relays,
+                  currentRelayStates(),
                   (relay) =>
                     relay.connection === null
                       ? Effect.void
@@ -460,7 +542,7 @@ const makeRelayPool = (
           );
 
           yield* Effect.forEach(
-            relays,
+            currentRelayStates(),
             (relay) =>
               relay.connection === null
                 ? Effect.void
@@ -477,7 +559,8 @@ const makeRelayPool = (
       );
 
     return {
-      relayUrls,
+      relayUrls: Effect.sync(() => [...relays.keys()]),
+      setRelayUrls,
       publish,
       subscribe,
       status: SubscriptionRef.get(statusRef),

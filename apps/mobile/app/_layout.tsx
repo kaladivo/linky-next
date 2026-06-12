@@ -65,6 +65,11 @@ function RootNavigator() {
         name="settings/backup"
         options={{ headerShown: true, title: t("backupTitle") }}
       />
+      {/* Relay settings (#31): list/add/remove + live status. */}
+      <Stack.Screen
+        name="settings/relays"
+        options={{ headerShown: true, title: t("nostrRelay") }}
+      />
       <Stack.Screen name="contact/new" options={{ headerShown: true, title: t("newContact") }} />
       <Stack.Screen name="contact/[id]" options={{ headerShown: true }} />
       <Stack.Screen name="chat/[id]" options={{ headerShown: true }} />

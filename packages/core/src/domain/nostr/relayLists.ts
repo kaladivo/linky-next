@@ -31,13 +31,14 @@
  * the same second with the same settings even produces the identical event
  * id (a relay-side no-op).
  *
- * ## Relay settings source (#31 slot)
+ * ## Relay settings source
  *
  * The relay set is a PARAMETER ({@link RelaySettings}), not something this
- * module reads from a hardcoded source: today the only producer is the
- * environment config ({@link currentRelaySettings}); when #31 lands
- * user-editable relay settings, its service simply produces the
- * `RelaySettings` value instead and the workflows here are unchanged.
+ * module reads from a hardcoded source. The user-editable producer is
+ * `RelaySettingsStore` (#31, `relaySettings.ts`) — settings-screen changes
+ * read it and call {@link publishRelayLists} with the new value.
+ * {@link currentRelaySettings} (environment config) remains the fallback
+ * producer for contexts without the store.
  *
  * ## Delivery (offline tolerance)
  *

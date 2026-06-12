@@ -175,6 +175,13 @@ export const en = {
   nostrPasteInvalid: "Invalid Nostr key (expected nsec…).",
 
   nostrRelay: "Nostr relay",
+  // Relay settings screen (#31).
+  relayStatusConnected: "Connected",
+  relayStatusChecking: "Checking…",
+  relayStatusDisconnected: "Disconnected",
+  relayKeepAtLeastOne: "At least one relay must remain.",
+  relayInvalidUrl: "Invalid relay URL (expected wss://…)",
+  relayUpdateFailed: "Couldn't update relays.",
   evoluServer: "Evolu server",
   addRelay: "Add relay",
   newRelay: "Add relay",

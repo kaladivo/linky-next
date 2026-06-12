@@ -63,7 +63,7 @@ describe("relay status", () => {
   it("connects to every configured relay and dedups the relay set", async () => {
     await withPool({ relayUrls: [RELAY_A, RELAY_B, RELAY_A] }, (pool, network) =>
       Effect.gen(function* () {
-        expect(pool.relayUrls).toStrictEqual([RELAY_A, RELAY_B]);
+        expect(yield* pool.relayUrls).toStrictEqual([RELAY_A, RELAY_B]);
         yield* awaitCondition(statusIs(pool, RELAY_A, "connected"), "A connected");
         yield* awaitCondition(statusIs(pool, RELAY_B, "connected"), "B connected");
         const relayA = yield* network.relay(RELAY_A);
@@ -110,6 +110,92 @@ describe("relay status", () => {
           expect(["checking", "connected", "disconnected"]).toContain(status);
         }
         yield* Fiber.interrupt(collector);
+      }),
+    );
+  });
+});
+
+describe("setRelayUrls (dynamic relay set, #31)", () => {
+  const RELAY_C = "wss://relay-c.test";
+
+  it("adds a relay: connection loop starts, status appears, publishes reach it", async () => {
+    await withPool({ relayUrls: [RELAY_A] }, (pool, network) =>
+      Effect.gen(function* () {
+        yield* awaitCondition(statusIs(pool, RELAY_A, "connected"), "A connected");
+        expect((yield* pool.status).has(RELAY_C)).toBe(false);
+
+        yield* pool.setRelayUrls([RELAY_A, RELAY_C]);
+        expect(yield* pool.relayUrls).toStrictEqual([RELAY_A, RELAY_C]);
+        yield* awaitCondition(statusIs(pool, RELAY_C, "connected"), "C connected");
+
+        const event = yield* makeSignedEvent({ content: "to the newcomer too" });
+        yield* pool.publish(event);
+        yield* awaitCondition(
+          Effect.map(storedIds(network, RELAY_C), (ids) => ids.includes(event.id)),
+          "C stored",
+        );
+      }),
+    );
+  });
+
+  it("re-issues active subscriptions to a relay that joins the set", async () => {
+    await withPool({ relayUrls: [RELAY_A] }, (pool, network) =>
+      Effect.gen(function* () {
+        yield* awaitCondition(statusIs(pool, RELAY_A, "connected"), "A connected");
+
+        const received = yield* Ref.make<ReadonlyArray<NostrEvent>>([]);
+        const consumer = yield* Effect.fork(
+          Stream.runForEach(pool.subscribe([{ kinds: [1] }]), (event) =>
+            Ref.update(received, (events) => [...events, event]),
+          ),
+        );
+        yield* Effect.yieldNow();
+
+        yield* pool.setRelayUrls([RELAY_A, RELAY_C]);
+        yield* awaitCondition(statusIs(pool, RELAY_C, "connected"), "C connected");
+
+        const event = yield* makeSignedEvent({ content: "via the new relay" });
+        const relayC = yield* network.relay(RELAY_C);
+        yield* relayC.emitEvent(event);
+        yield* awaitCondition(
+          Effect.map(Ref.get(received), (events) => events.some((seen) => seen.id === event.id)),
+          "event from new relay received",
+        );
+        yield* Fiber.interrupt(consumer);
+      }),
+    );
+  });
+
+  it("removes a relay: connection closes and the status entry disappears", async () => {
+    await withPool({}, (pool, network) =>
+      Effect.gen(function* () {
+        yield* awaitCondition(statusIs(pool, RELAY_B, "connected"), "B connected");
+
+        yield* pool.setRelayUrls([RELAY_A]);
+        expect(yield* pool.relayUrls).toStrictEqual([RELAY_A]);
+        expect((yield* pool.status).has(RELAY_B)).toBe(false);
+
+        const relayB = yield* network.relay(RELAY_B);
+        yield* awaitCondition(
+          Effect.map(relayB.connectionCount, (count) => count === 0),
+          "B connection closed",
+        );
+        // A keeps its loop and status.
+        yield* awaitCondition(statusIs(pool, RELAY_A, "connected"), "A still connected");
+      }),
+    );
+  });
+
+  it("is idempotent and dedups the provided list", async () => {
+    await withPool({}, (pool, network) =>
+      Effect.gen(function* () {
+        yield* awaitCondition(statusIs(pool, RELAY_A, "connected"), "A connected");
+        yield* pool.setRelayUrls([RELAY_A, RELAY_B, RELAY_A]);
+        yield* pool.setRelayUrls([RELAY_A, RELAY_B]);
+        expect(yield* pool.relayUrls).toStrictEqual([RELAY_A, RELAY_B]);
+        const relayA = yield* network.relay(RELAY_A);
+        // The existing loop was not restarted by the no-op reconciles.
+        expect(yield* relayA.connectionCount).toBe(1);
       }),
     );
   });

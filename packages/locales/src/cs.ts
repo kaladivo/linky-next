@@ -176,6 +176,13 @@ export const cs = {
   nostrPasteInvalid: "Neplatný Nostr klíč (očekávám nsec…).",
 
   nostrRelay: "Nostr relay",
+  // Relay settings screen (#31).
+  relayStatusConnected: "Připojeno",
+  relayStatusChecking: "Kontroluji…",
+  relayStatusDisconnected: "Odpojeno",
+  relayKeepAtLeastOne: "Musí zůstat alespoň jeden relay.",
+  relayInvalidUrl: "Neplatná URL relaye (očekávám wss://…)",
+  relayUpdateFailed: "Relaye se nepodařilo upravit.",
   evoluServer: "Evolu server",
   addRelay: "Přidat relay",
   newRelay: "Přidat relay",

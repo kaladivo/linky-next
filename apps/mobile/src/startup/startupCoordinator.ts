@@ -17,6 +17,7 @@
  * end to end (runtime → Effect.log → dev-only debug toast) and is the
  * template for real tasks later.
  */
+import { RelaySettingsStore } from "@linky/core";
 import type { Translator } from "@linky/locales";
 import { Effect } from "effect";
 
@@ -52,8 +53,27 @@ const demoStartupTask: DeferredStartupTask = {
     ),
 };
 
+/**
+ * Relay warm-up (#31): touching `RelaySettingsStore` builds its Layer,
+ * which loads the persisted user relay list and reconciles the relay pool —
+ * so a relay the user removed stays gone from the next cold start, not just
+ * from the next settings-screen visit.
+ */
+const relaySettingsWarmupTask: DeferredStartupTask = {
+  name: "relay-settings-apply",
+  task: () =>
+    Effect.gen(function* () {
+      const store = yield* RelaySettingsStore;
+      const settings = yield* store.settings;
+      yield* Effect.log(`relay settings applied: ${settings.relayUrls.join(", ")}`);
+    }),
+};
+
 /** Real deferred work (sync refresh, relay warm-up, …) appends here. */
-export const deferredStartupTasks: readonly DeferredStartupTask[] = [demoStartupTask];
+export const deferredStartupTasks: readonly DeferredStartupTask[] = [
+  demoStartupTask,
+  relaySettingsWarmupTask,
+];
 
 let hasRun = false;
 
