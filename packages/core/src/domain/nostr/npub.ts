@@ -67,9 +67,10 @@ export const isValidNpub = (value: string): boolean => decodeNip19Key("npub", va
 
 /**
  * Decodes an npub to its 64-char lowercase hex pubkey (NIP-01 form), or
- * `null` when the input is not a valid npub.
+ * `null` when the input is not a valid npub. Trims surrounding whitespace
+ * (mute-list callers pass user-stored values, #28).
  */
 export const npubToPublicKeyHex = (value: string): string | null => {
-  const bytes = decodeNip19Key("npub", value);
+  const bytes = decodeNip19Key("npub", value.trim());
   return bytes === null ? null : bytesToHex(bytes);
 };

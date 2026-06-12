@@ -43,11 +43,9 @@
  */
 import type { Duration } from "effect";
 import { Clock, Effect, Stream } from "effect";
-import { bytesToHex } from "@noble/hashes/utils.js";
 
 import type { Randomness, RandomnessError } from "../../ports/Randomness.js";
 import type { ActiveNostrIdentity } from "../identity/customNostrKey.js";
-import { decodeNip19Key } from "../identity/nip19.js";
 import type { NostrEventDelivery } from "./deliver.js";
 import { deliverNostrEvent } from "./deliver.js";
 import type { NostrFilter } from "./filter.js";
@@ -70,15 +68,8 @@ export const normalizePubkeyHex = (value: string): string | null => {
   return HEX_PUBKEY_RE.test(normalized) ? normalized : null;
 };
 
-/**
- * NIP-19 npub → hex pubkey, or null for anything undecodable. The app
- * stores blocked senders by npub (`BlocksRepository`); mute-list entries
- * are hex p-tags — this is the bridge.
- */
-export const npubToPublicKeyHex = (npub: string): string | null => {
-  const bytes = decodeNip19Key("npub", npub.trim());
-  return bytes === null ? null : bytesToHex(bytes);
-};
+// npub → hex bridging for mute-list p-tags lives in ./npub.ts
+// (npubToPublicKeyHex) — #27 and #28 converged on one implementation.
 
 /** Normalizes + dedups, dropping invalid entries, first occurrence wins. */
 export const normalizeMutedPubkeys = (

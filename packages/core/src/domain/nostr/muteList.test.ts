@@ -31,9 +31,9 @@ import {
   muteListTemplate,
   mutedPubkeysOfEvent,
   normalizeMutedPubkeys,
-  npubToPublicKeyHex,
   publishMuteList,
 } from "./muteList.js";
+import { npubToPublicKeyHex } from "./npub.js";
 import type { PublishMuteListResult } from "./muteList.js";
 import {
   RandomnessFixed,
