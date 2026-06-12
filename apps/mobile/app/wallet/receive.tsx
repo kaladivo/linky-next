@@ -96,6 +96,14 @@ export default function WalletReceiveScreen() {
         onPress={() => router.push("/wallet/receive-address")}
         testID="topup-no-amount"
       />
+
+      {/* LNURL-withdraw (#40): manual entry until the scanner lands (#48). */}
+      <Button
+        label={t("lnurlWithdrawEntry")}
+        variant="secondary"
+        onPress={() => router.push("/wallet/lnurl-withdraw")}
+        testID="receive-lnurl-withdraw"
+      />
     </ScrollView>
   );
 }

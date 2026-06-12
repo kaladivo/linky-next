@@ -92,6 +92,11 @@ function RootNavigator() {
         name="wallet/receive-address"
         options={{ headerShown: true, title: t("topupNoAmountTitle") }}
       />
+      {/* LNURL-withdraw (#40). */}
+      <Stack.Screen
+        name="wallet/lnurl-withdraw"
+        options={{ headerShown: true, title: t("lnurlWithdrawTitle") }}
+      />
       <Stack.Screen name="wallet/send" options={{ headerShown: true, title: t("walletSend") }} />
 {/* Mint management (#41): presets/custom/main-mint + detail. */}
       <Stack.Screen name="wallet/mints" options={{ headerShown: true, title: t("mints") }} />
