@@ -6,6 +6,7 @@ This folder tracks product and engineering planning for the Linky rewrite.
 
 - [Initial rewrite discussion](./initial-rewrite-discussion.md) - summary of the first planning conversation and agreed rewrite constraints.
 - [Feature map](./feature-map/index.md) - concise inventory of what Linky does before rewrite spec and roadmap planning.
+- [Decisions](./decisions/) - durable product and engineering decisions that constrain later implementation work.
 - [Rewrite tech spec](./rewrite-spec.md) - engineering spec for the rewrite: stack, monorepo layout, core architecture, environments, dev workflow.
 - [Effect ↔ React bridge](./effect-react-bridge.md) - how apps/mobile runs @linky/core workflows: the one ManagedRuntime, appLayer composition, useEffectQuery hook, error mapping rules.
 - [Planning handout prompt](./planning-handout-prompt.md) - reusable prompt for brainstorming `rewrite-spec.md` and `feature-map.md`.

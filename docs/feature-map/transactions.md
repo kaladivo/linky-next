@@ -1,6 +1,6 @@
 # Transactions
 
-Scope: Local payment history and payment telemetry.
+Scope: Local payment history.
 
 ## Features
 
@@ -13,14 +13,19 @@ Scope: Local payment history and payment telemetry.
 | `tx.details` | Transaction details | Shows copyable support details such as mint, errors, tokens, invoice/preimage, and pay-success data. | Transaction list | Must not expose private keys or raw proofs. The user-facing vs support-only field split is decided and documented during implementation (track with a ticket). |
 | `tx.request-status` | Request status | Shows pending/paid/declined state for payment requests. | Transaction list | Mirrors chat request outcomes. |
 | `tx.merge-issued-token-spend` | Merge issued spend | Hides an emitted-token entry when that exact token is later spent successfully. | Transaction list | Emit-then-send appears as one history item. |
-| `tx.telemetry` | Anonymous telemetry | Queues anonymized payment telemetry. | Background | Dropped for now; create a ticket during implementation to decide later. Privacy-sensitive. |
 
 ## Contracts
 
 - History must not expose secrets, raw proofs, or private keys.
 - Error records are valuable for support and should not be discarded.
-- If telemetry is ever revived, it stays distinct from local transaction history, must not block payment completion, and uses coarse buckets with anonymous sender identity.
+- Payment telemetry is not implemented; `tx.telemetry` was permanently dropped by [decision #60](../decisions/payment-telemetry.md).
 - Payment history avoids duplicate-looking entries for one logical emit-and-send flow.
+
+## Dropped Features
+
+| ID | Feature | Decision |
+|---|---|---|
+| `tx.telemetry` | Anonymous payment telemetry | Permanently dropped by [decision #60](../decisions/payment-telemetry.md). Any future telemetry proposal needs a new feature ID, privacy review, and explicit opt-in constraints before implementation. |
 
 ## Implementation notes (#43)
 
