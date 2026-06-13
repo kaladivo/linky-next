@@ -8,8 +8,10 @@ import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
+  canRenderTokenDetailQr,
   groupTokenRecords,
   mintDisplayName,
+  TOKEN_DETAIL_QR_MAX_BYTES,
   tokenDetailActions,
   tokenShareUrl,
   tokenStateLabelKey,
@@ -114,6 +116,25 @@ describe("tokenDetailActions", () => {
     for (const state of ["pending", "reserved", "externalized", "spent", "deleted", "error"] as const) {
       expect(tokenDetailActions(state).canWriteNfc).toBe(false);
     }
+  });
+});
+
+describe("canRenderTokenDetailQr", () => {
+  it("allows payloads at the low-ECC QR byte capacity", () => {
+    expect(canRenderTokenDetailQr("a".repeat(TOKEN_DETAIL_QR_MAX_BYTES))).toBe(true);
+  });
+
+  it("selects the copy-only fallback above the QR byte capacity", () => {
+    expect(canRenderTokenDetailQr("a".repeat(TOKEN_DETAIL_QR_MAX_BYTES + 1))).toBe(false);
+  });
+
+  it("counts UTF-8 bytes, not JavaScript code units", () => {
+    expect(canRenderTokenDetailQr("€".repeat(Math.floor(TOKEN_DETAIL_QR_MAX_BYTES / 3)))).toBe(
+      true,
+    );
+    expect(canRenderTokenDetailQr("€".repeat(Math.floor(TOKEN_DETAIL_QR_MAX_BYTES / 3) + 1))).toBe(
+      false,
+    );
   });
 });
 

@@ -36,6 +36,7 @@ import {
   returnTokenToWallet,
 } from "../../../src/wallet/tokenActions";
 import {
+  canRenderTokenDetailQr,
   mintDisplayName,
   tokenDetailActions,
   tokenShareUrl,
@@ -95,6 +96,7 @@ export default function TokenDetailScreen() {
   const actions = tokenDetailActions(record.state);
   const shareUrl = tokenShareUrl(record.token);
   const tone = tokenStateTone(record.state);
+  const canShowQr = canRenderTokenDetailQr(record.token);
 
   const copyTokenText = () => {
     void copyToClipboard(record.token).then((ok) => {
@@ -303,9 +305,16 @@ export default function TokenDetailScreen() {
         )}
 
         {/* Raw token: QR + copy only — never rendered as text. */}
-        <Pressable accessibilityRole="button" onPress={copyTokenText} testID="token-detail-qr">
-          <QrCode value={record.token} size={240} />
-        </Pressable>
+        {canShowQr ? (
+          <Pressable accessibilityRole="button" onPress={copyTokenText} testID="token-detail-qr">
+            <QrCode value={record.token} size={240} ecl="L" />
+          </Pressable>
+        ) : (
+          <Surface className="gap-2" testID="token-detail-qr-fallback">
+            <Text weight="semibold">{t("cashuTokenQrTooLargeTitle")}</Text>
+            <Text className="text-sm opacity-70">{t("cashuTokenQrTooLargeBody")}</Text>
+          </Surface>
+        )}
 
         <View className="gap-3">
           <Button

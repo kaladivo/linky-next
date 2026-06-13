@@ -175,3 +175,39 @@ export const tokenDetailActions = (state: TokenState): TokenDetailActions => ({
   canReaccept: state === "error",
   canWriteNfc: canTransitionTokenState(state, "Externalize"),
 });
+
+// ---------------------------------------------------------------------------
+// Detail QR rendering guard
+// ---------------------------------------------------------------------------
+
+/**
+ * QR Code version 40 byte-mode capacity at low error correction. The token
+ * detail QR uses `react-native-qrcode-svg` with `ecl="L"`; larger byte
+ * payloads make the underlying qrcode encoder throw.
+ */
+export const TOKEN_DETAIL_QR_MAX_BYTES = 2_953;
+
+const utf8ByteLength = (value: string): number => {
+  let bytes = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code < 0x80) bytes += 1;
+    else if (code < 0x800) bytes += 2;
+    else if (code >= 0xd800 && code <= 0xdbff && index + 1 < value.length) {
+      const next = value.charCodeAt(index + 1);
+      if (next >= 0xdc00 && next <= 0xdfff) {
+        bytes += 4;
+        index += 1;
+      } else {
+        bytes += 3;
+      }
+    } else {
+      bytes += 3;
+    }
+  }
+  return bytes;
+};
+
+/** True when token detail can safely hand the payload to the QR renderer. */
+export const canRenderTokenDetailQr = (token: string): boolean =>
+  utf8ByteLength(token) <= TOKEN_DETAIL_QR_MAX_BYTES;

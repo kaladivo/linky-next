@@ -774,6 +774,9 @@ export const cs = {
   cashuCleanupMintFailed: "Některé mincovny se nepodařilo zkontrolovat.",
   cashuCheckUnknown: "Mincovna zatím nemohla token potvrdit.",
   cashuCopyShareLink: "Kopírovat odkaz",
+  cashuTokenQrTooLargeTitle: "Token je pro QR příliš velký",
+  cashuTokenQrTooLargeBody:
+    "Token má příliš mnoho důkazů na jeden QR kód. Použijte kopírování, odkaz, sdílení nebo export na NFC.",
   cashuReaccept: "Znovu přijmout token",
   cashuReaccepted: "Token byl znovu přijat.",
   cashuReacceptFailed: "Opětovné přijetí selhalo",
