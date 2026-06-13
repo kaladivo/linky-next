@@ -31,9 +31,10 @@
  *   existing unknown thread creates the local-only `_unknownThread` row
  *   (`contacts.unknown`).
  */
-import { createFormatTypeError, NonEmptyString1000 } from "@evolu/common";
+import { createFormatTypeError, createIdFromString, NonEmptyString1000 } from "@evolu/common";
 
 import type { LinkyStore } from "../createLinkyStore";
+import type { MessageId, ReactionId } from "../schema";
 import { repoErr, repoOk } from "./repository";
 import type { RepoResult } from "./repository";
 
@@ -240,6 +241,12 @@ const formatTypeError = createFormatTypeError();
 /** Casts a validated plain value to a branded query-builder value. */
 const asParam = (value: string | number): never => value as never;
 
+const messageRowId = (rumorId: string): MessageId =>
+  createIdFromString<"Message">(`chat-message:${rumorId}`);
+
+const reactionRowId = (rumorId: string): ReactionId =>
+  createIdFromString<"Reaction">(`chat-reaction:${rumorId}`);
+
 const parseEditHistory = (json: unknown): ReadonlyArray<MessageEdit> => {
   if (typeof json !== "string" || json.length === 0) return [];
   try {
@@ -437,6 +444,28 @@ export const isNpubBlocked = async (store: LinkyStore, npub: string): Promise<bo
 };
 
 export const createMessagesRepository = (store: LinkyStore): MessagesRepository => {
+  const rumorLocks = new Map<string, Promise<void>>();
+
+  const withRumorLock = async <A>(rumorId: string, task: () => Promise<A>): Promise<A> => {
+    const previous = rumorLocks.get(rumorId) ?? Promise.resolve();
+    let release: () => void = () => undefined;
+    const current = previous.then(
+      () =>
+        new Promise<void>((resolve) => {
+          release = resolve;
+        }),
+    );
+    rumorLocks.set(rumorId, current);
+
+    await previous;
+    try {
+      return await task();
+    } finally {
+      release();
+      if (rumorLocks.get(rumorId) === current) rumorLocks.delete(rumorId);
+    }
+  };
+
   // Dedup lookups must see soft-deleted rows too: a deleted message that
   // re-arrives via another sync path must stay deleted, not resurrect.
   const messageByRumorId = async (rumorId: string) => {
@@ -540,7 +569,8 @@ export const createMessagesRepository = (store: LinkyStore): MessagesRepository 
       return repoOk(applied("duplicate"));
     }
 
-    const result = store.insert("message", {
+    const result = store.upsert("message", {
+      id: messageRowId(event.rumorId),
       rumorId: event.rumorId,
       peerNpub: event.peerNpub,
       direction: event.direction,
@@ -596,7 +626,8 @@ export const createMessagesRepository = (store: LinkyStore): MessagesRepository 
   const applyReaction = async (event: ChatReactionEvent) => {
     const existing = await reactionByRumorId(event.rumorId);
     if (existing !== null) return repoOk(applied("duplicate"));
-    const result = store.insert("reaction", {
+    const result = store.upsert("reaction", {
+      id: reactionRowId(event.rumorId),
       rumorId: event.rumorId,
       messageRumorId: event.targetRumorId,
       reactorNpub: event.senderNpub,
@@ -648,22 +679,24 @@ export const createMessagesRepository = (store: LinkyStore): MessagesRepository 
       const rumorId = NonEmptyString1000.fromUnknown(event.rumorId);
       if (!rumorId.ok) return validationErr("rumorId must be a non-empty string (max 1000)");
 
-      // Inbox safety: drop every inbound event from a blocked sender before
-      // touching any table — a block must prevent thread recreation.
-      if (event.direction === "in" && (await isNpubBlocked(store, event.senderNpub))) {
-        return repoOk(applied("blocked"));
-      }
+      return withRumorLock(rumorId.value, async () => {
+        // Inbox safety: drop every inbound event from a blocked sender before
+        // touching any table — a block must prevent thread recreation.
+        if (event.direction === "in" && (await isNpubBlocked(store, event.senderNpub))) {
+          return repoOk(applied("blocked"));
+        }
 
-      switch (event.kind) {
-        case "message":
-          return applyMessage(event);
-        case "edit":
-          return applyEdit(event);
-        case "reaction":
-          return applyReaction(event);
-        case "delete":
-          return applyDelete(event);
-      }
+        switch (event.kind) {
+          case "message":
+            return applyMessage(event);
+          case "edit":
+            return applyEdit(event);
+          case "reaction":
+            return applyReaction(event);
+          case "delete":
+            return applyDelete(event);
+        }
+      });
     },
 
     markSent: async (rumorId, wrapId) => {

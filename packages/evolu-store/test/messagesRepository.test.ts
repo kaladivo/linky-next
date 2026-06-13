@@ -50,6 +50,13 @@ const inboundMessage = (overrides: Partial<ChatMessageEvent> & { rumorId: string
   ...overrides,
 });
 
+const rowsByRumorId = (table: "message" | "reaction", rumorId: string) => {
+  const query = store.evolu.createQuery((db) =>
+    db.selectFrom(table).selectAll().where("rumorId", "=", rumorId as never),
+  );
+  return store.evolu.loadQuery(query);
+};
+
 beforeAll(async () => {
   process.chdir(mkdtempSync(join(tmpdir(), "linky-messages-repo-test-")));
 
@@ -120,6 +127,31 @@ describe("message events", () => {
 
     const record = await repository.getByRumorId("rumor-m1");
     expect(record?.content).toBe("hi there"); // first write wins, no double-apply
+  });
+
+  it("converges concurrent same-rumor message application to one row", async () => {
+    const event = inboundMessage({
+      rumorId: "rumor-race-message",
+      content: "same relay replay",
+      wrapId: "wrap-race-a",
+      sentAtSec: 1_718_000_015,
+    });
+
+    const results = await Promise.all([
+      repository.applyChatEvent(event),
+      repository.applyChatEvent({ ...event, wrapId: "wrap-race-b" }),
+    ]);
+
+    expect(results.every((result) => result.ok)).toBe(true);
+    expect(results.map((result) => (result.ok ? result.value.outcome : "error")).sort()).toEqual([
+      "applied",
+      "duplicate",
+    ]);
+
+    const rows = await rowsByRumorId("message", "rumor-race-message");
+    expect(rows).toHaveLength(1);
+    const page = await repository.listPage({ peerNpub: ALICE_NPUB, limit: 100 });
+    expect(page.items.filter((message) => message.rumorId === "rumor-race-message")).toHaveLength(1);
   });
 
   it("stores reply references", async () => {
@@ -322,6 +354,35 @@ describe("reaction events (chat.react)", () => {
     expect(await repository.latestReactions("rumor-m1")).toHaveLength(2);
   });
 
+  it("converges concurrent same-rumor reaction application to one row", async () => {
+    const event = {
+      kind: "reaction" as const,
+      rumorId: "react-race",
+      targetRumorId: "rumor-m1",
+      peerNpub: ALICE_NPUB,
+      senderNpub: ALICE_NPUB,
+      direction: "in" as const,
+      emoji: "👍",
+      sentAtSec: 1_718_002_030,
+    };
+
+    const results = await Promise.all([
+      repository.applyChatEvent(event),
+      repository.applyChatEvent(event),
+    ]);
+
+    expect(results.every((result) => result.ok)).toBe(true);
+    expect(results.map((result) => (result.ok ? result.value.outcome : "error")).sort()).toEqual([
+      "applied",
+      "duplicate",
+    ]);
+
+    const rows = await rowsByRumorId("reaction", "react-race");
+    expect(rows).toHaveLength(1);
+    const reactions = await loadActiveReactions(store, ["rumor-m1"]);
+    expect(reactions.filter((reaction) => reaction.rumorId === "react-race")).toHaveLength(1);
+  });
+
   it("applies a delete of a reaction event and never double-applies it (chat.delete)", async () => {
     // Alice deletes her latest reaction -> her previous one becomes visible.
     const deleted = await repository.applyChatEvent({
@@ -459,8 +520,8 @@ describe("conversation reaction/known-id loaders (#29)", () => {
   it("loadActiveReactions returns all active reactions for the given messages in one query", async () => {
     const reactions = await loadActiveReactions(store, ["rumor-m1"]);
     // From the reaction tests above: react-1 (Alice 👍), react-2 (me 🔥);
-    // react-3 was deleted and must not appear.
-    expect(reactions.map((r) => r.rumorId).sort()).toEqual(["react-1", "react-2"]);
+    // react-race; react-3 was deleted and must not appear.
+    expect(reactions.map((r) => r.rumorId).sort()).toEqual(["react-1", "react-2", "react-race"]);
     expect(await loadActiveReactions(store, [])).toEqual([]);
     expect(await loadActiveReactions(store, ["rumor-no-reactions"])).toEqual([]);
   });
