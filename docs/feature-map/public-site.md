@@ -26,7 +26,7 @@ The public site is separate from the app rewrite scope for now; this file invent
 - Public Cashu links work without installing the app.
 - Opening a token prefers the installed app over the web app.
 - Token links must not send the token to any server.
-- Public Cashu redemption must not lose change tokens if forwarding or telemetry fails.
+- Public Cashu redemption must not lose change tokens if forwarding fails.
 - Hosted address and identity endpoints remain compatible with the npub.cash-style service.
 
 ## Open Questions

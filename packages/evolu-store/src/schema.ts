@@ -290,7 +290,7 @@ export const linkySchema = {
     /**
      * Last reached flow phase (`tx.record` "intermediate phases"), e.g.
      * "quote" | "swap" | "melt" | "deliver" | "settle". Free-form: phases
-     * are per-flow telemetry breadcrumbs, not a state machine.
+     * are per-flow progress breadcrumbs, not a state machine.
      */
     phase: nullOr(NonEmptyString100),
     /** Amount in `unit` when known. */

@@ -47,7 +47,7 @@ A Cashu ecash wallet with Lightning in and out.
 | [Cashu](cashu.md) | Ecash token lifecycle: receive, top-up, send, validate, restore. |
 | [Lightning & LNURL](lightning-lnurl.md) | Paying invoices, Lightning addresses, LNURL pay/withdraw. |
 | [Mints](mints.md) | Main mint choice, multi-mint balances, consolidation, hosted address sync. |
-| [Transactions](transactions.md) | Local payment history and payment telemetry. |
+| [Transactions](transactions.md) | Local payment history. |
 
 ### Where the Pillars Meet
 
