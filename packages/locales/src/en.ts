@@ -770,6 +770,9 @@ export const en = {
   cashuCleanupMintFailed: "Some mints could not be checked.",
   cashuCheckUnknown: "The mint could not confirm this token yet.",
   cashuCopyShareLink: "Copy link",
+  cashuTokenQrTooLargeTitle: "Token is too large for QR",
+  cashuTokenQrTooLargeBody:
+    "This token has too many proofs to fit in a QR code. Use copy, link, share, or NFC export instead.",
   cashuReaccept: "Re-accept token",
   cashuReaccepted: "Token re-accepted.",
   cashuReacceptFailed: "Re-accept failed",

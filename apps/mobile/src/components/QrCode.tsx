@@ -15,17 +15,19 @@ export interface QrCodeProps {
   readonly value: string;
   /** Module-area edge length in px (default 240). */
   readonly size?: number;
+  /** QR error correction level. */
+  readonly ecl?: "L" | "M" | "Q" | "H";
   readonly testID?: string;
 }
 
-export function QrCode({ value, size = 240, testID }: QrCodeProps) {
+export function QrCode({ value, size = 240, ecl = "M", testID }: QrCodeProps) {
   return (
     <View
       className="items-center justify-center self-center rounded-2xl bg-white p-4"
       testID={testID}
       accessibilityLabel="QR code"
     >
-      <QRCodeSvg value={value} size={size} backgroundColor="#ffffff" color="#000000" />
+      <QRCodeSvg value={value} size={size} backgroundColor="#ffffff" color="#000000" ecl={ecl} />
     </View>
   );
 }
