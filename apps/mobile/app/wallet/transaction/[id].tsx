@@ -7,7 +7,7 @@
  * Below: the user-facing fields, then the collapsed "Support details"
  * section — every support row copies on tap and a button copies the whole
  * support dump (whitelisted JSON; never tokens/proofs/keys — split per the
- * #59-pending decision documented in transactionsModel.ts).
+ * #59 decision documented in transactionsModel.ts).
  */
 import { Amount, Button, Surface, Text } from "@linky/ui";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -211,7 +211,7 @@ export default function TransactionDetailScreen() {
           </Surface>
         )}
 
-        {/* Support-only section (`tx.details`, split pending #59). */}
+        {/* Support-only section (`tx.details`, split #59). */}
         <Surface className="gap-3" testID="transaction-detail-support">
           <Pressable
             accessibilityRole="button"

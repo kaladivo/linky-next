@@ -38,19 +38,20 @@
  * hid ANY row sharing a fulfilled request's `requestId`, including failed
  * attempts.)
  *
- * ## User-facing vs support-only fields (`tx.details`, pending #59)
+ * ## User-facing vs support-only fields (`tx.details`, #59)
  *
- * Decision ticket #59 (open) will finalize the split; until then this
- * module implements the following documented split (see also
+ * This module implements the documented split (see also
  * docs/feature-map/transactions.md):
  *
  * - **User-facing**: amount, fee, date, direction, status, counterparty
  *   contact, mint display name, note, error message, payment-request text,
- *   LNURL success message/URL, lightning memo, lightning address.
+ *   human-readable LNURL/pay-success message and URL, lightning memo,
+ *   lightning address.
  * - **Support-only** (collapsed behind "Support details", all copyable):
  *   transaction id, category/method, phase breadcrumb, full mint URL,
  *   source mint (consolidations), BOLT11 invoice, payment preimage, quote
- *   id, request id, issued/used token ROW references.
+ *   id, request id, opaque pay-success correlation values, issued/used
+ *   token ROW references.
  * - **Never surfaced anywhere**: serialized tokens, raw proofs, private
  *   keys — they are never written to `detailsJson` in the first place
  *   (TransactionsRepository contract), and this module additionally
@@ -412,7 +413,7 @@ export const transactionStatusLabelKey = (
 };
 
 // ---------------------------------------------------------------------------
-// Detail fields (`tx.details`) — user-facing vs support-only split (#59 pending)
+// Detail fields (`tx.details`) — user-facing vs support-only split (#59)
 // ---------------------------------------------------------------------------
 
 export type TransactionDetailLabelKey = Extract<
@@ -471,8 +472,8 @@ const present = (
   fields.filter((entry): entry is TransactionDetailField => entry !== null);
 
 /**
- * The detail screen's field lists, split per the documented #59-pending
- * decision (module doc). Every detail key is explicitly whitelisted —
+ * The detail screen's field lists, split per the documented #59 decision
+ * (module doc). Every detail key is explicitly whitelisted —
  * unknown `detailsJson` keys never reach the UI.
  */
 export const transactionDetailSections = (item: HistoryItem): TransactionDetailSections => {

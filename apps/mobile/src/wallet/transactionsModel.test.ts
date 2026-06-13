@@ -290,7 +290,7 @@ describe("titles", () => {
   });
 });
 
-describe("detail sections + support dump (tx.details, #59-pending split)", () => {
+describe("detail sections + support dump (tx.details, #59 split)", () => {
   it("compacts long invoices/preimages but copies the full value", () => {
     const invoice = `lnbc100u1${"p".repeat(60)}`;
     const row = record({ detailsJson: json({ lightningInvoice: invoice }) });
